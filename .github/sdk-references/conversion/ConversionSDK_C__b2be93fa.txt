@@ -1,0 +1,1507 @@
+How to convert a password-free PowerPoint file to a PDF file using a file path as the first parameter.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Set up the PDF to Office conversion settings:
+
+```c
+FSOffice2PDFSettingData setting_data;
+// Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path.str = (wchar_t*)resource_folder_path;
+setting_data.resource_folder_path.len = wcslen(resource_folder_path);
+```
+
+5. Start the conversion process:
+
+```c
+FS_BOOL is_susccees;
+FSDK_Office2PDF_ConvertFromPowerPoint("input.docx", NULL, "output.pdf", setting_data, &is_susccees);
+```
+
+6. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to define StreamCallback callback functions for pdf conversion by steam.
+
+int ref = 0;
+FS_INT64 cur_pos = 0;
+
+```
+void gOpenFile(FILE** p_file, wchar_t* filename, const char *mode) {
+	FS_WSTR wstr;
+	FS_BSTR bstr;
+	*p_file = NULL;
+	if (!p_file || !filename || !mode) return;
+	wstr.str = filename;
+	wstr.len = wcslen(filename);
+	FSDK_WStr_UTF8Encode(&wstr, &bstr);
+#if defined(_WIN32) || defined(_WIN64)
+	fopen_s(p_file, bstr.str, mode);
+#elif defined(__linux__)
+	*p_file = fopen(bstr.str, mode);
+#endif
+	FSDK_BStr_Clear(&bstr);
+}
+
+FS_INT64 gGetSizeFileStream(void* user_data) {
+	if (!user_data) return 0;
+	fseek(filestream, 0, SEEK_END);
+	return (FS_INT64)ftell(filestream);
+}
+
+FS_BOOL gFlushFileStream(void* user_data) {
+	fflush(filestream);
+	return TRUE;
+}
+
+FS_INT64 gGetPositionFileStream(void* user_data) {
+	return cur_pos;
+}
+
+FS_BOOL gReadBlockFileStream(void* user_data, void* buffer, FS_INT64 offset, size_t size) {
+	if (0 != fseek(filestream, (long)offset, 0))
+ return FALSE;
+	if (0 == fread(buffer, size, sizeof(char), filestream))
+ return FALSE;
+
+	cur_pos = offset + size;
+	return TRUE;
+}
+
+size_t gReadBlock0FileStream(void* user_data, void* buffer, size_t size) {
+	if (gReadBlock(user_data, buffer, gGetSize(user_data), size))
+ return size;
+	else
+ return 0;
+}
+
+FS_BOOL gWriteBlockFileStream(void* user_data, const void* buffer, FS_INT64 offset, size_t size) {
+	FS_INT64 write_size = 0;
+	fseek(filestream, (long)offset, SEEK_SET);
+	write_size = fwrite(buffer, sizeof(char), size, filestream);
+	if (write_size == size) {
+ cur_pos = offset + size;
+ return TRUE;
+	}
+	return FALSE;
+}
+
+FSIFX_FileStream* gRetainFileStream(void* user_data) {
+	ref++;
+	return ((FSStreamCallback*)user_data);
+}
+
+FS_BOOL gIsEOFFileStream(void* user_data) {
+	fseek(filestream, 0, SEEK_END);
+	if (cur_pos < (FS_INT64)ftell(filestream))
+ return FALSE;
+	return TRUE;
+}
+
+void gReleaseFileStream(void* user_data) {
+	ref--;
+	if (ref > 0) return;
+
+	fclose(filestream);
+	free(user_data);
+}
+```How to define FileReader inheriting from FileReaderCallback for convert a PDF to Word by streaming.
+
+```
+class FileReader : public FSReaderCallback {
+public:
+ FileReader() : file_(NULL) {
+ user_data = this;
+ ifx_streamread = NULL;
+ Release = gRelease;
+ ReadBlock = gReadBlock;
+ GetSize = gGetSize;
+ }
+
+ ~FileReader() {}
+
+ bool LoadFile(const char* file_path) {
+#if defined(_WIN32) || defined(_WIN64)
+ fopen_s(&file_, file_path, "rb");
+#else
+ file_ = fopen(file_path, "rb");
+#endif
+ if (!file_) return 0;
+ return 1;
+ }
+
+ static FS_INT64 gGetSize(void* user_data) {
+ if (!((FileReader*)user_data)->file_) return 0;
+ fseek(((FileReader*)user_data)->file_, 0, SEEK_END);
+ return (FS_INT64)ftell(((FileReader*)user_data)->file_);
+ }
+
+ static FS_BOOL gReadBlock(void* user_data, void* buffer, FS_INT64 offset, size_t size) {
+ if (!((FileReader*)user_data)->file_) return false;
+ if (0 != fseek(((FileReader*)user_data)->file_, (long)offset, 0))
+ return 0;
+ return fread(buffer, size, 1, ((FileReader*)user_data)->file_);
+ }
+
+ static void gRelease(void* user_data) {
+ if (((FileReader*)user_data)->file_)
+ fclose(((FileReader*)user_data)->file_);
+ ((FileReader*)user_data)->file_ = NULL;
+ delete ((FileReader*)user_data);
+ }
+
+private:
+ FILE* file_;
+};
+
+```
+
+---
+
+How to convert a password-free PDF file to an Excel file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```c
+class CustomConvertCallback : public FSConvertCallback {
+ public:
+ CustomConvertCallback() {
+ user_data = this;
+ NeedToPause = gNeedToPause;
+ ProgressNotify = gProgressNotify;
+ }
+
+ ~CustomConvertCallback() {}
+
+ static FS_BOOL gNeedToPause(void* user_data) {
+ return true;
+ }
+
+ static void gProgressNotify(void* user_data, int converted_count, int total_count) {
+ }
+};
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```c
+PDF2OfficeSettingData setting_data;
+FSPDF2WordSettingData word_setting_data;
+FSPDF2PowerPointSettingData power_point_setting_data;
+FSPDF2ExcelSettingData excel_setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path.str = L"../../../res/metrics_data";
+setting_data.metrics_data_folder_path.len = wcslen(metrics_data_folder_path);
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+setting_data.include_pdf_comments = TRUE;
+setting_data.page_range = NULL;
+word_setting_data.enable_retain_page_layout = FALSE;
+word_setting_data.enable_generate_headers_and_footers = FALSE;
+word_setting_data.enable_generate_footnotes_and_endnotes = FALSE;
+setting_data.word_setting_data = word_setting_data;
+power_point_setting_data.enable_aggressively_split_sections = FALSE;
+setting_data.power_point_setting_data = power_point_setting_data;
+excel_setting_data.decimal_symbol.str = NULL;
+excel_setting_data.decimal_symbol.len = 0;
+excel_setting_data.thousands_separator.str = NULL;
+excel_setting_data.thousands_separator.len = 0;
+setting_data.excel_setting_data = excel_setting_data;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```c
+CustomConvertCallback callback;
+```
+
+7. Start the conversion process:
+
+```c
+FS_PROGRESSIVE_HANDLE progressive_handle;
+FSErrorCode error_code = FSDK_PDF2Office_StartConvertToExcel("input.pdf", NULL, "output.xlxs", setting_data, &callback, progressive_handle);
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```c
+if (error_code != e_FSErrSuccess) {
+ FSDK_Progressive_Release(progressive_handle);
+ return 1;
+}
+int rate;
+FSDK_Progressive_GetRateOfProgress(progressive_handle, rate);
+if (rate != 100) {
+ FSState state = e_FSToBeContinued;
+ while (e_FSToBeContinued == state) {
+ FSDK_Progressive_Continue(progressive_handle, state);
+ }
+}
+FSDK_Progressive_Release(progressive_handle);
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert from a PDF to an RTF file?
+
+No, the SDK does not provide the ability to convert PDF files to RTF files.
+
+---
+
+How to convert a password-free PDF file to a PowerPoint file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```c
+class CustomConvertCallback : public FSConvertCallback {
+ public:
+ CustomConvertCallback() {
+ user_data = this;
+ NeedToPause = gNeedToPause;
+ ProgressNotify = gProgressNotify;
+ }
+
+ ~CustomConvertCallback() {}
+
+ static FS_BOOL gNeedToPause(void* user_data) {
+ return true;
+ }
+
+ static void gProgressNotify(void* user_data, int converted_count, int total_count) {
+ }
+};
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```c
+PDF2OfficeSettingData setting_data;
+FSPDF2WordSettingData word_setting_data;
+FSPDF2PowerPointSettingData power_point_setting_data;
+FSPDF2ExcelSettingData excel_setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path.str = L"../../../res/metrics_data";
+setting_data.metrics_data_folder_path.len = wcslen(metrics_data_folder_path);
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+setting_data.include_pdf_comments = TRUE;
+setting_data.page_range = NULL;
+word_setting_data.enable_retain_page_layout = FALSE;
+word_setting_data.enable_generate_headers_and_footers = FALSE;
+word_setting_data.enable_generate_footnotes_and_endnotes = FALSE;
+setting_data.word_setting_data = word_setting_data;
+power_point_setting_data.enable_aggressively_split_sections = FALSE;
+setting_data.power_point_setting_data = power_point_setting_data;
+excel_setting_data.decimal_symbol.str = NULL;
+excel_setting_data.decimal_symbol.len = 0;
+excel_setting_data.thousands_separator.str = NULL;
+excel_setting_data.thousands_separator.len = 0;
+setting_data.excel_setting_data = excel_setting_data;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```c
+CustomConvertCallback callback;
+```
+
+7. Start the conversion process:
+
+```c
+FS_PROGRESSIVE_HANDLE progressive_handle;
+FSErrorCode error_code = FSDK_PDF2Office_StartConvertToPowerPoint("input.pdf", NULL, "output.ppt", setting_data, &callback, progressive_handle);
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```c
+if (error_code != e_FSErrSuccess) {
+ FSDK_Progressive_Release(progressive_handle);
+ return 1;
+}
+int rate;
+FSDK_Progressive_GetRateOfProgress(progressive_handle, rate);
+if (rate != 100) {
+ FSState state = e_FSToBeContinued;
+ while (e_FSToBeContinued == state) {
+ FSDK_Progressive_Continue(progressive_handle, state);
+ }
+}
+FSDK_Progressive_Release(progressive_handle);
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free Word file to a PDF file using a file path as the first parameter.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Set up the PDF to Office conversion settings:
+
+```c
+FSOffice2PDFSettingData setting_data;
+// Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path.str = (wchar_t*)resource_folder_path;
+setting_data.resource_folder_path.len = wcslen(resource_folder_path);
+```
+
+5. Create a File Reader Callback to load a Word document.
+```c
+FILE* file = NULL;
+callback_filereader = (FSReaderCallback*)malloc(sizeof(FSReaderCallback));
+gOpenFile(&file, "input.docx", "rb");
+callback_filereader->user_data = callback_filereader;
+callback_filereader->ReadBlock = gReadBlock;
+callback_filereader->Release = gRelease;
+callback_filereader->GetSize = gGetSize;
+```
+
+6. Create a FileStream object to write the converted PDF file.
+```c
+FILE* filestream = NULL;
+callback_filestream = (FSStreamCallback*)malloc(sizeof(FSStreamCallback));
+gOpenFile(&filestream, "output.pdf", "wb");
+callback_filestream->Flush = gFlushFileStream;
+callback_filestream->GetPosition = gGetPositionFileStream;
+callback_filestream->GetSize = gGetSizeFileStream;
+callback_filestream->IsEOF = gIsEOFFileStream;
+callback_filestream->ReadBlock = gReadBlockFileStream;
+callback_filestream->ReadBlock0 = gReadBlock0FileStream;
+callback_filestream->WriteBlock = gWriteBlockFileStream;
+callback_filestream->Release = gReleaseFileStream;
+callback_filestream->Retain = gRetainFileStream;
+callback_filestream->user_data = callback_filestream;
+ref = 0;
+cur_pos = 0;
+```
+
+7. Start the conversion process:
+
+```c
+FS_BOOL is_susccees;
+FSDK_Office2PDF_ConvertFromWord0(callback_filereader, L"", callback_filestream,setting_data, &is_susccees);
+```
+
+8. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PDF file to a word file using a file path as the first parameter. The machine learning-based recognition is disable and not using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Set up the PDF to Office conversion settings:
+
+```c
+PDF2OfficeSettingData setting_data;
+FSPDF2WordSettingData word_setting_data;
+FSPDF2PowerPointSettingData power_point_setting_data;
+FSPDF2ExcelSettingData excel_setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path.str = L"../../../res/metrics_data";
+setting_data.metrics_data_folder_path.len = wcslen(metrics_data_folder_path);
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+setting_data.include_pdf_comments = TRUE;
+setting_data.page_range = NULL;
+word_setting_data.enable_retain_page_layout = FALSE;
+word_setting_data.enable_generate_headers_and_footers = FALSE;
+word_setting_data.enable_generate_footnotes_and_endnotes = FALSE;
+setting_data.word_setting_data = word_setting_data;
+power_point_setting_data.enable_aggressively_split_sections = FALSE;
+setting_data.power_point_setting_data = power_point_setting_data;
+excel_setting_data.decimal_symbol.str = NULL;
+excel_setting_data.decimal_symbol.len = 0;
+excel_setting_data.thousands_separator.str = NULL;
+excel_setting_data.thousands_separator.len = 0;
+setting_data.excel_setting_data = excel_setting_data;
+```
+
+5. Start the conversion process:
+
+```c
+FS_PROGRESSIVE_HANDLE progressive_handle;
+ // Not using convert callback, The fifth parameter of the function is passed as NULL.
+FSDK_PDF2Office_StartConvertToWord("input.pdf", NULL, "output.docx", setting_data, NULL, progressive_handle);
+FSDK_Progressive_Release(progressive_handle);
+```
+
+6. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PDF file to a Word file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```c
+class CustomConvertCallback : public FSConvertCallback {
+ public:
+ CustomConvertCallback() {
+ user_data = this;
+ NeedToPause = gNeedToPause;
+ ProgressNotify = gProgressNotify;
+ }
+
+ ~CustomConvertCallback() {}
+
+ static FS_BOOL gNeedToPause(void* user_data) {
+ return true;
+ }
+
+ static void gProgressNotify(void* user_data, int converted_count, int total_count) {
+ }
+};
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```c
+PDF2OfficeSettingData setting_data;
+FSPDF2WordSettingData word_setting_data;
+FSPDF2PowerPointSettingData power_point_setting_data;
+FSPDF2ExcelSettingData excel_setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path.str = L"../../../res/metrics_data";
+setting_data.metrics_data_folder_path.len = wcslen(metrics_data_folder_path);
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+setting_data.include_pdf_comments = TRUE;
+setting_data.page_range = NULL;
+word_setting_data.enable_retain_page_layout = FALSE;
+word_setting_data.enable_generate_headers_and_footers = FALSE;
+word_setting_data.enable_generate_footnotes_and_endnotes = FALSE;
+setting_data.word_setting_data = word_setting_data;
+power_point_setting_data.enable_aggressively_split_sections = FALSE;
+setting_data.power_point_setting_data = power_point_setting_data;
+excel_setting_data.decimal_symbol.str = NULL;
+excel_setting_data.decimal_symbol.len = 0;
+excel_setting_data.thousands_separator.str = NULL;
+excel_setting_data.thousands_separator.len = 0;
+setting_data.excel_setting_data = excel_setting_data;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```c
+CustomConvertCallback callback;
+```
+
+7. Start the conversion process:
+
+```c
+FS_PROGRESSIVE_HANDLE progressive_handle;
+FSErrorCode error_code = FSDK_PDF2Office_StartConvertToWord("input.pdf", NULL, "output.docx", setting_data, &callback, progressive_handle);
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```c
+if (error_code != e_FSErrSuccess) {
+ FSDK_Progressive_Release(progressive_handle);
+ return 1;
+}
+int rate;
+FSDK_Progressive_GetRateOfProgress(progressive_handle, rate);
+if (rate != 100) {
+ FSState state = e_FSToBeContinued;
+ while (e_FSToBeContinued == state) {
+ FSDK_Progressive_Continue(progressive_handle, state);
+ }
+}
+FSDK_Progressive_Release(progressive_handle);
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PowerPoint file to a PDF file using a file path as the first parameter.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Set up the PDF to Office conversion settings:
+
+```c
+FSOffice2PDFSettingData setting_data;
+// Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path.str = (wchar_t*)resource_folder_path;
+setting_data.resource_folder_path.len = wcslen(resource_folder_path);
+```
+
+5. Create a File Reader Callback to load a PowerPoint document.
+```c
+FILE* file = NULL;
+callback_filereader = (FSReaderCallback*)malloc(sizeof(FSReaderCallback));
+gOpenFile(&file, "input.pptx", "rb");
+callback_filereader->user_data = callback_filereader;
+callback_filereader->ReadBlock = gReadBlock;
+callback_filereader->Release = gRelease;
+callback_filereader->GetSize = gGetSize;
+```
+
+6. Create a FileStream object to write the converted PDF file.
+```c
+FILE* filestream = NULL;
+callback_filestream = (FSStreamCallback*)malloc(sizeof(FSStreamCallback));
+gOpenFile(&filestream, "output.pdf", "wb");
+callback_filestream->Flush = gFlushFileStream;
+callback_filestream->GetPosition = gGetPositionFileStream;
+callback_filestream->GetSize = gGetSizeFileStream;
+callback_filestream->IsEOF = gIsEOFFileStream;
+callback_filestream->ReadBlock = gReadBlockFileStream;
+callback_filestream->ReadBlock0 = gReadBlock0FileStream;
+callback_filestream->WriteBlock = gWriteBlockFileStream;
+callback_filestream->Release = gReleaseFileStream;
+callback_filestream->Retain = gRetainFileStream;
+callback_filestream->user_data = callback_filestream;
+ref = 0;
+cur_pos = 0;
+```
+
+7. Start the conversion process:
+
+```c
+FS_BOOL is_susccees;
+FSDK_Office2PDF_ConvertFromPowerPoint0(callback_filereader, L"", callback_filestream,setting_data, &is_susccees);
+```
+
+8. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free Excel file to a PDF file using a file path as the first parameter.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Set up the PDF to Office conversion settings:
+
+```c
+FSOffice2PDFSettingData setting_data;
+// Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path.str = (wchar_t*)resource_folder_path;
+setting_data.resource_folder_path.len = wcslen(resource_folder_path);
+```
+
+5. Create a File Reader Callback to load a Excel document.
+```c
+FILE* file = NULL;
+callback_filereader = (FSReaderCallback*)malloc(sizeof(FSReaderCallback));
+gOpenFile(&file, "input.xlsx", "rb");
+callback_filereader->user_data = callback_filereader;
+callback_filereader->ReadBlock = gReadBlock;
+callback_filereader->Release = gRelease;
+callback_filereader->GetSize = gGetSize;
+```
+
+6. Create a FileStream object to write the converted PDF file.
+```c
+FILE* filestream = NULL;
+callback_filestream = (FSStreamCallback*)malloc(sizeof(FSStreamCallback));
+gOpenFile(&filestream, "output.pdf", "wb");
+callback_filestream->Flush = gFlushFileStream;
+callback_filestream->GetPosition = gGetPositionFileStream;
+callback_filestream->GetSize = gGetSizeFileStream;
+callback_filestream->IsEOF = gIsEOFFileStream;
+callback_filestream->ReadBlock = gReadBlockFileStream;
+callback_filestream->ReadBlock0 = gReadBlock0FileStream;
+callback_filestream->WriteBlock = gWriteBlockFileStream;
+callback_filestream->Release = gReleaseFileStream;
+callback_filestream->Retain = gRetainFileStream;
+callback_filestream->user_data = callback_filestream;
+ref = 0;
+cur_pos = 0;
+```
+
+7. Start the conversion process:
+
+```c
+FS_BOOL is_susccees;
+FSDK_Office2PDF_ConvertFromExcel0(callback_filereader, L"", callback_filestream,setting_data, &is_susccees);
+```
+
+8. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to define FileReaderCallback callback functions for pdf conversion by stream.
+
+```
+void gOpenFile(FILE** p_file, wchar_t* filename, const char *mode) {
+	FS_WSTR wstr;
+	FS_BSTR bstr;
+	*p_file = NULL;
+	if (!p_file || !filename || !mode) return;
+	wstr.str = filename;
+	wstr.len = wcslen(filename);
+	FSDK_WStr_UTF8Encode(&wstr, &bstr);
+#if defined(_WIN32) || defined(_WIN64)
+	fopen_s(p_file, bstr.str, mode);
+#elif defined(__linux__)
+	*p_file = fopen(bstr.str, mode);
+#endif
+	FSDK_BStr_Clear(&bstr);
+}
+
+FS_INT64 gGetSize(void* user_data) {
+	if (!user_data) return 0;
+	if (is_large_file) {
+ long long size_long;
+#if defined(_WIN32) || defined(_WIN64)
+ _fseeki64(file, 0, SEEK_END);
+ size_long = _ftelli64(file);
+#elif defined(__linux__)
+ fseeko(file, 0, SEEK_END);
+ size_long = ftello(file);
+#endif
+ return size_long;
+	} else {
+ fseek(file, 0, SEEK_END);
+ return (FS_INT64)ftell(file);
+	}
+	return 0;
+}
+
+FS_BOOL gReadBlock(void* user_data, void* buffer, FS_INT64 offset, size_t size) {
+	if (is_large_file) {
+ long long read_size;
+#if defined(_WIN32) || defined(_WIN64)
+ _fseeki64(file, 0, SEEK_END);
+#elif defined(__linux__) || defined(__APPLE__)
+ fseeko(file, 0, SEEK_END);
+#endif
+ read_size = fread(buffer, 1, size, file);
+ return read_size == size ? TRUE : FALSE;
+	} else {
+ if (!file)
+ return FALSE;
+ if (0 != fseek(file, (long)offset, 0))
+ return FALSE;
+ if (0 == fread(buffer, size, 1, file))
+ return FALSE;
+ return TRUE;
+	}
+	return FALSE;
+}
+
+static void gRelease(void* user_data) {
+	if (file) {
+ fclose(file);
+ file = NULL;
+	}
+	if (user_data)
+ free(user_data);
+}
+
+```
+
+---
+
+How to convert a PDF file with the password "123456" to a Word file by steaming and reader callback. It use a reader callback and filestream. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```c
+class CustomConvertCallback : public FSConvertCallback {
+ public:
+ CustomConvertCallback() {
+ user_data = this;
+ NeedToPause = gNeedToPause;
+ ProgressNotify = gProgressNotify;
+ }
+ ~CustomConvertCallback() {}
+ static FS_BOOL gNeedToPause(void* user_data) {
+ return true;
+ }
+ static void gProgressNotify(void* user_data, int converted_count, int total_count) {
+ }
+};
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```c
+PDF2OfficeSettingData setting_data;
+FSPDF2WordSettingData word_setting_data;
+FSPDF2PowerPointSettingData power_point_setting_data;
+FSPDF2ExcelSettingData excel_setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path.str = L"../../../res/metrics_data";
+setting_data.metrics_data_folder_path.len = wcslen(metrics_data_folder_path);
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+setting_data.include_pdf_comments = TRUE;
+setting_data.page_range = NULL;
+word_setting_data.enable_retain_page_layout = FALSE;
+word_setting_data.enable_generate_headers_and_footers = FALSE;
+word_setting_data.enable_generate_footnotes_and_endnotes = FALSE;
+setting_data.word_setting_data = word_setting_data;
+power_point_setting_data.enable_aggressively_split_sections = FALSE;
+setting_data.power_point_setting_data = power_point_setting_data;
+excel_setting_data.decimal_symbol.str = NULL;
+excel_setting_data.decimal_symbol.len = 0;
+excel_setting_data.thousands_separator.str = NULL;
+excel_setting_data.thousands_separator.len = 0;
+setting_data.excel_setting_data = excel_setting_data;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```c
+CustomConvertCallback callback;
+```
+
+7. Create a File Reader Callback to load a PDF document.
+
+```c
+FILE* file = NULL;
+file_reader= (FSReaderCallback*)malloc(sizeof(FSReaderCallback));
+gOpenFile(&file, "input.pdf", "rb");
+callback_filereader_excel->user_data = callback_filereader_word;
+callback_filereader_excel->ReadBlock = gReadBlock;
+callback_filereader_excel->Release = gRelease;
+callback_filereader_excel->GetSize = gGetSize;
+```
+
+8. Create a FileStream object to write the converted Word file.
+
+```c
+FILE* filestream = NULL;
+file_stream = (FSStreamCallback*)malloc(sizeof(FSStreamCallback));
+gOpenFile(&filestream, "output.docx", "wb");
+file_stream->Flush = gFlushFileStream;
+file_stream->GetPosition = gGetPositionFileStream;
+file_stream->GetSize = gGetSizeFileStream;
+file_stream->IsEOF = gIsEOFFileStream;
+file_stream->ReadBlock = gReadBlockFileStream;
+file_stream->ReadBlock0 = gReadBlock0FileStream;
+file_stream->WriteBlock = gWriteBlockFileStream;
+file_stream->Release = gReleaseFileStream;
+file_stream->Retain = gRetainFileStream;
+file_stream->user_data = file_stream;
+ref = 0;
+cur_pos = 0;
+```
+9. Start the conversion process:
+
+```c
+FS_PROGRESSIVE_HANDLE progressive_handle;
+// the password of PDF is 123456 as the second parameter of StartConvertToWord function.
+FSErrorCode error_code = FSDK_PDF2Office_StartConvertToWord0(file_reader, "123456", file_stream, setting_data, &callback, progressive_handle);
+```
+
+10. Check the conversion progress and continue until it's completed:
+
+```c
+if (error_code != e_FSErrSuccess) {
+ FSDK_Progressive_Release(progressive_handle);
+ return 1;
+}
+int rate;
+FSDK_Progressive_GetRateOfProgress(progressive_handle, rate);
+if (rate != 100) {
+ FSState state = e_FSToBeContinued;
+ while (e_FSToBeContinued == state) {
+ FSDK_Progressive_Continue(progressive_handle, state);
+ }
+}
+FSDK_Progressive_Release(progressive_handle);
+```
+11. Release the Foxit PDF Conversion SDK:
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resourcesr.
+
+---
+
+How to convert a PDF file with the password "123456" to a Word file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```c
+class CustomConvertCallback : public FSConvertCallback {
+ public:
+ CustomConvertCallback() {
+ user_data = this;
+ NeedToPause = gNeedToPause;
+ ProgressNotify = gProgressNotify;
+ }
+
+ ~CustomConvertCallback() {}
+
+ static FS_BOOL gNeedToPause(void* user_data) {
+ return true;
+ }
+
+ static void gProgressNotify(void* user_data, int converted_count, int total_count) {
+ }
+};
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```c
+PDF2OfficeSettingData setting_data;
+FSPDF2WordSettingData word_setting_data;
+FSPDF2PowerPointSettingData power_point_setting_data;
+FSPDF2ExcelSettingData excel_setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path.str = L"../../../res/metrics_data";
+setting_data.metrics_data_folder_path.len = wcslen(metrics_data_folder_path);
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+setting_data.include_pdf_comments = TRUE;
+setting_data.page_range = NULL;
+word_setting_data.enable_retain_page_layout = FALSE;
+word_setting_data.enable_generate_headers_and_footers = FALSE;
+word_setting_data.enable_generate_footnotes_and_endnotes = FALSE;
+setting_data.word_setting_data = word_setting_data;
+power_point_setting_data.enable_aggressively_split_sections = FALSE;
+setting_data.power_point_setting_data = power_point_setting_data;
+excel_setting_data.decimal_symbol.str = NULL;
+excel_setting_data.decimal_symbol.len = 0;
+excel_setting_data.thousands_separator.str = NULL;
+excel_setting_data.thousands_separator.len = 0;
+setting_data.excel_setting_data = excel_setting_data;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```c
+CustomConvertCallback callback;
+```
+
+7. Start the conversion process:
+
+```c
+FS_PROGRESSIVE_HANDLE progressive_handle;
+FSErrorCode error_code = FSDK_PDF2Office_StartConvertToWord("input.pdf", "123456", "output.docx", setting_data, &callback, progressive_handle);
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```c
+if (error_code != e_FSErrSuccess) {
+ FSDK_Progressive_Release(progressive_handle);
+ return 1;
+}
+int rate;
+FSDK_Progressive_GetRateOfProgress(progressive_handle, rate);
+if (rate != 100) {
+ FSState state = e_FSToBeContinued;
+ while (e_FSToBeContinued == state) {
+ FSDK_Progressive_Continue(progressive_handle, state);
+ }
+}
+FSDK_Progressive_Release(progressive_handle);
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free Excel file to a PDF file using a file path as the first parameter.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Set up the PDF to Office conversion settings:
+
+```c
+FSOffice2PDFSettingData setting_data;
+// Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path.str = (wchar_t*)resource_folder_path;
+setting_data.resource_folder_path.len = wcslen(resource_folder_path);
+```
+
+5. Start the conversion process:
+
+```c
+FS_BOOL is_susccees;
+FSDK_Office2PDF_ConvertFromExcel("input.docx", NULL, "output.pdf", setting_data, &is_susccees);
+```
+
+6. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a PDF file to a Word file by steaming and reader callback. It use a reader callback and filestream. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```c
+class CustomConvertCallback : public FSConvertCallback {
+ public:
+ CustomConvertCallback() {
+ user_data = this;
+ NeedToPause = gNeedToPause;
+ ProgressNotify = gProgressNotify;
+ }
+
+ ~CustomConvertCallback() {}
+
+ static FS_BOOL gNeedToPause(void* user_data) {
+ return true;
+ }
+
+ static void gProgressNotify(void* user_data, int converted_count, int total_count) {
+ }
+};
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```c
+PDF2OfficeSettingData setting_data;
+FSPDF2WordSettingData word_setting_data;
+FSPDF2PowerPointSettingData power_point_setting_data;
+FSPDF2ExcelSettingData excel_setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path.str = L"../../../res/metrics_data";
+setting_data.metrics_data_folder_path.len = wcslen(metrics_data_folder_path);
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+setting_data.include_pdf_comments = TRUE;
+setting_data.page_range = NULL;
+word_setting_data.enable_retain_page_layout = FALSE;
+word_setting_data.enable_generate_headers_and_footers = FALSE;
+word_setting_data.enable_generate_footnotes_and_endnotes = FALSE;
+setting_data.word_setting_data = word_setting_data;
+power_point_setting_data.enable_aggressively_split_sections = FALSE;
+setting_data.power_point_setting_data = power_point_setting_data;
+excel_setting_data.decimal_symbol.str = NULL;
+excel_setting_data.decimal_symbol.len = 0;
+excel_setting_data.thousands_separator.str = NULL;
+excel_setting_data.thousands_separator.len = 0;
+setting_data.excel_setting_data = excel_setting_data;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```c
+CustomConvertCallback callback;
+```
+
+7. Create a File Reader Callback to load a PDF document.
+
+```c
+FILE* file = NULL;
+file_reader= (FSReaderCallback*)malloc(sizeof(FSReaderCallback));
+gOpenFile(&file, "input.pdf", "rb");
+callback_filereader_excel->user_data = callback_filereader_word;
+callback_filereader_excel->ReadBlock = gReadBlock;
+callback_filereader_excel->Release = gRelease;
+callback_filereader_excel->GetSize = gGetSize;
+```
+
+8. Create a FileStream object to write the converted Word file.
+
+```c
+FILE* filestream = NULL;
+file_stream = (FSStreamCallback*)malloc(sizeof(FSStreamCallback));
+gOpenFile(&filestream, "output.docx", "wb");
+file_stream->Flush = gFlushFileStream;
+file_stream->GetPosition = gGetPositionFileStream;
+file_stream->GetSize = gGetSizeFileStream;
+file_stream->IsEOF = gIsEOFFileStream;
+file_stream->ReadBlock = gReadBlockFileStream;
+file_stream->ReadBlock0 = gReadBlock0FileStream;
+file_stream->WriteBlock = gWriteBlockFileStream;
+file_stream->Release = gReleaseFileStream;
+file_stream->Retain = gRetainFileStream;
+file_stream->user_data = file_stream;
+ref = 0;
+cur_pos = 0;
+```
+
+9. Start the conversion process:
+
+```c
+FS_PROGRESSIVE_HANDLE progressive_handle;
+FSErrorCode error_code = FSDK_PDF2Office_StartConvertToWord0(file_reader, NULL, file_stream, setting_data, &callback, progressive_handle);
+```
+
+10. Check the conversion progress and continue until it's completed:
+
+```c
+if (error_code != e_FSErrSuccess) {
+ FSDK_Progressive_Release(progressive_handle);
+ return 1;
+}
+int rate;
+FSDK_Progressive_GetRateOfProgress(progressive_handle, rate);
+if (rate != 100) {
+ FSState state = e_FSToBeContinued;
+ while (e_FSToBeContinued == state) {
+ FSDK_Progressive_Continue(progressive_handle, state);
+ }
+}
+FSDK_Progressive_Release(progressive_handle);
+```
+
+11. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free Word file to a PDF file using a file path as the first parameter.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```c
+#include <string>
+#include <direct.h>
+#include <iostream>
+
+#include "../../../include/fs_basictypes_c.h"
+#include "../../../include/fs_common_c.h"
+#include "../../../include/fx_stream_c.h"
+#include "../../../include/fs_pdf2office_c.h"
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c
+static const char* sn = "";
+static const char* key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c
+FSErrorCode error_code = FSDK_Library_Initialize(sn, key);
+if (error_code != e_FSErrSuccess) {
+ return 1;
+}
+```
+
+4. Set up the PDF to Office conversion settings:
+
+```c
+FSOffice2PDFSettingData setting_data;
+// Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path.str = (wchar_t*)resource_folder_path;
+setting_data.resource_folder_path.len = wcslen(resource_folder_path);
+```
+
+5. Start the conversion process:
+
+```c
+FS_BOOL is_susccees;
+FSDK_Office2PDF_ConvertFromWord("input.docx", NULL, "output.pdf", setting_data, &is_susccees);
+```
+
+6. Release the Foxit PDF Conversion SDK:
+
+```c
+FSDK_Library_Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.

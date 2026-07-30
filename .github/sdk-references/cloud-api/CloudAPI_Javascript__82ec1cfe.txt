@@ -1,0 +1,4113 @@
+概要
+欢迎使用福昕PDF Embed API！我们的API是一个基于云的平台，专注于简化在Web应用程序中嵌入PDF显示功能的工具。利用我们的API，您可以在短短几分钟内轻松部署高性能的PDF查看器，无需进行复杂的开发或服务器配置。
+
+福昕Embed API不仅提供了基础的阅读功能，包括高性能PDF查看，文本处理，以及注释，填表功能的能力（不支持带JavaScript的表单填写），PDF文件的朗读功能，还允许用户自定义PDF查看器的外观，包括主题、工具栏设置和导航功能等。作为基于云的解决方案，我们的API具备跨平台兼容性，可适用于各种Web环境。
+
+**由福昕高保真渲染PDF引擎驱动**
+
+福昕Cloud API的核心是福昕PDF引擎，该引擎得到许多知名公司的信任。福昕强大的引擎使文档在所有环境中的查看速度快且一致。
+此外，如果您购买了该产品的支持和维护，它将得到专业支持工程师的支持，并定期发布更新。
+
+---
+
+应用原理和快速上手
+请参考<span style="border-bottom: 1px solid #186ce2; color: #186ce2;">[快速上手指南](https://cloudapi.fuxinsoft.cn/zh-CN/docs/embed/quick-start)</span>
+
+---
+
+打开PDF文件
+通过Embed PDF Viewer打开文档：
+
+- 从[福昕开发者控制台](https://cloudapi.fuxinsoft.cn/dev-console)生成一个有效的客户端ID，
+ 并添加 `<src>` 标签通过URL加载PDF Viewer APIs:
+ <https://servicesapi.foxitsoftware.cn/api/embview-sdk/js>。**请别忘记添加客户端ID到参数'clientId'**。
+
+- 设置渲染区域：使用ID为'foxit-embed-view'的div标记。
+
+- 通过传递的客户端ID来初始化PDF Embedded Viewer，调用`previewFile`，并传递PDF文件URL和文件名来打开PDF文件。
+
+如下所示，PDF详细信息将在以下两个参数的对象中传递：
+
+- content：文件URL或文件内容，文件内容对象类型可以为`File`，`Blob`，`ArrayBuffer`或`TypedArray`。
+
+- metaData：文件元数据信息。
+
+- metaData.fileName：文件名。请注意，如果参数`content`不是`string`或`File`类型，则这是必须项。
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <meta
+ name="viewport"
+ content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
+ />
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+ <meta name="renderer" content="webkit" />
+ <title>Foxit Embed Viewer - Full Window</title>
+ <style>
+ html,
+ body {
+ width: 100%;
+ height: 100%;
+ }
+
+ #foxit-embed-view {
+ height: 100%;
+ }
+ </style>
+</head>
+
+<body>
+<div id="foxit-embed-view"></div>
+<script src="https://servicesapi.foxitsoftware.cn/api/embview-sdk/js?clientId=REPLACE_YOUR_CLIENT_ID"></script>
+<script>
+ var embedView = new FoxitEmbed.View({
+ clientId: '<REPLACE_YOUR_CLIENT_ID>',
+ divId: 'foxit-embed-view',
+ });
+ var pdfUrl = 'https://cloudapi.fuxinsoft.cn/view-sdk-demo/Embed API Demo.pdf';
+ embedView.previewFile({
+ content: pdfUrl,
+ metaData: { fileName: 'Embed API Demo.pdf' },
+ });
+</script>
+</body>
+</html>
+```
+
+---
+
+嵌入模式
+福昕PDF Embed Viewer支持四种嵌入式模式来管理PDF查看区域在网页中的大小和位置。为了可以任意切换可用的嵌入模式，您可以将模式名称与其他预览配置一起传递到预览文件API（默认为FULL_WINDOW）。
+例如，您可以设置IN_LINE作为embedMode值：
+
+```javascript
+var pdfUrl = 'https://cloudapi.fuxinsoft.cn/view-sdk-demo/Embed API Demo.pdf';
+
+embedView.previewFile({
+ content: pdfUrl,
+ metaData: {
+ fileName: 'Embed API Demo.pdf',
+ },
+}, {
+ embedMode: 'some value such as: IN_LINE',
+});
+```
+
+**嵌入模式概要**
+
+| **嵌入模式** | **描述** | **示例** |
+|-----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------|
+| 全屏窗口(FULL_WINDOW，默认模式) | PDF阅读器显示在浏览器窗口的全屏中，方便用户阅读和操作文档。 | ![](/docs/embed/images/demo_guide.jpg) |
+| 指定尺寸容器(SIZED_CONTAINER) | PDF阅读器嵌入指定大小的容器中（需要指定宽度和高度）。 | ![](/docs/embed/images/sizecontainer.jpg) |
+| 内联显示(IN_LINE) | PDF阅读器嵌入在网页内容的中间。在此模式下，所有PDF页面将同时显示。您需要在\<div>标记中指定嵌入查看器的宽度，查看器将根据PDF页面的宽度和页数自动调整大小和长度（指定宽度，而不是高度）。 | ![](/docs/embed/images/welcome_api_demo.jpg) |
+| 弹出框(LIGHT_BOX) | PDF阅读器在页面上弹出一个窗口，您可以关闭该窗口并返回上一页。 | ![](/docs/embed/images/lightbox.jpg) |
+
+---
+
+viewer.destroy
+销毁当前的Viewer实例。在多次调用`new FoxitEmbed.View()`进行初始化实例的使用场景中，请确保在不再需要实例时调用此方法，以释放资源。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.destroy();
+```
+
+---
+
+UI定制化
+嵌入式查看器API支持许多选项，用于可以使用接口来自定义UI。可选配置如下：
+
+- 管理页面控件
+
+- 隐藏和显示左侧窗格
+
+- 启用和禁用评论、表单填写和其他用户交互
+
+- 启用和禁用PDF下载和打印选项
+
+- 修改PDF显示
+
+- 更改Logo和UI主题
+
+| **变量** | **类型** | **默认值** | **描述** |
+|-------------------|-------------------------------------------------|------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| showToolControls | boolean | true | 是否显示工具栏。 |
+| showLeftHandPanel | boolean | true | 是否显示左侧窗格。 |
+| defaultViewMode | boolean | null | __FIT\_WIDTH__: 适应页面。在这种模式下，PDF 查看器会自动调整缩放比例，使得当前页面的内容完全适应查看器窗口的大小，同时保持页面的原始比例，不留任何空白。也就是说，整个页面（包括页边距）会填充窗口，可能会有一部分超出窗口的可见范围，需要滚动才能看到。<br>__FIT\_PAGE__: 适应宽度。该模式下，PDF 查看器会调整缩放比例，使得当前页面的宽度正好填满查看器窗口的宽度，而页面的高度可能小于窗口高度，留下一部分垂直空白。这样做的好处是，用户无需水平滚动就能看到页面的全部内容，尤其适合阅读宽幅图表或横版排版的文档。 <br>__CONTINUOUS__: 连续滚动（或连续视图）。在连续模式下，PDF 查看器会将多页内容连续排列在窗口中。SINGLE_PAGE: 单页模式。在这种模式下，PDF 查看器每次只显示一页文档内容，占据整个查看器窗口。<br>__HORIZONTAL_PAGE__: 水平页面模式（或连续水平模式，双页展开）。这种模式通常用于模拟纸质书籍或杂志的阅读体验，特别是在阅读横版排版或双栏排版的文档时。 |
+| showDownloadPDF | boolean | true | 是否显示下载PDF的按钮。 |
+| showPrintPDF | boolean | true | 是否显示打印PDF的按钮。 |
+| theme | {primaryColor: string; secondaryColor: string;} | {primaryColor: '#F58220', secondaryColor: '#F4F4F4'} | 设置颜色主题。primaryColor用于设置选中、激活等位置的颜色。secondaryColor用于设置文档视图的背景色。 |
+| showIcon | string | 福昕Logo默认URL | 设置Logo URL，替换福昕默认的Logo，例如左上角的Logo，需要是以Https开头的完整URL。 |
+
+---
+
+setCustomLogo
+设置自定义Logo。
+
+参数：
+
+- options: object - 选项对象，包含以下属性：<br>
+- options.url: string - Logo的URL，如果有showIcon，则使用showIcon。<br>
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.setCustomLogo({
+ url: 'https://www.example.com/logo.png',
+});
+```
+
+---
+
+setCustomProgress
+设置自定义进度条。
+
+参数：
+
+- options: object - 选项对象，包含以下属性：<br>
+- options.url: string - 进度条的URL。<br>
+- options.text: string - 加载文案。<br>
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.setCustomProgress({
+ url: 'https://www.example.com/logo.png',
+ text: 'Loading...',
+});
+```
+
+---
+
+setCustomToolbarButton
+设置自定义工具栏按钮。
+
+参数：
+
+- options: array - 选项数组，包含以下属性：<br>
+- options[index].position: string - 按钮位置，支持的值为：'left'、'right'。<br>
+- options[index].type: string - 按钮类型，支持的值为：'button'。<br>
+- options[index].icon: string - 按钮图标的URL。<br>
+- options[index].tooltip: string - 按钮提示文本。<br>
+- options[index].onClick: function - 按钮点击事件。<br>
+- [options[index].active]: boolean - 按钮是否处于激活状态。<br>
+- [options[index].disabled]: boolean - 按钮是否禁用。<br>
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.setCustomToolbarButton([
+ {
+ position: 'right',
+ type: 'button',
+ icon: 'https://www.example.com/icon.svg',
+ tooltip: 'tooltip',
+ onClick: () => {
+ console.log('on click');
+ },
+ },
+]);
+```
+
+---
+
+setUIElementsVisible
+设置UI功能是否可见。在使用此函数之前，请确保已调用过previewFile，否则部分功能的设置将被覆盖。
+
+参数:
+
+- elements: string[] - 功能值。请参考 ***Features*** 。
+- visible: boolean - 是否可见。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.setUIElementsVisible([FoxitEmbed.Constants.Features.UndoRedo],false);
+```
+
+返回：`void`
+
+---
+
+setUIGroupVisible
+设置UI组是否可见。在使用此函数之前，请确保已调用过previewFile，否则部分功能的设置将被覆盖。
+
+参数:
+
+- group: string[] - 功能值。请参考 ***FeatureGroup*** 。
+- visible: boolean - 是否可见。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.setUIGroupVisible([FoxitEmbed.Constants.FeatureGroup.Toolbar],false);
+```
+
+返回：`void`
+
+---
+
+openSidebar
+展开指定侧边栏面板。目前仅支持Bookmark，Search和Comment，请参考 ***Features*** 。
+
+参数:
+
+- feature: string - 功能值。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.openSidebar(FoxitEmbed.Constants.Features.Comment);
+```
+
+返回：`void`
+
+---
+
+回调和工作流
+福昕PDF Embed API支持通过回调进行工作流定制。在使用指定参数注册回调后，网站开发人员可以控制打开文件、更改查看器、选择文本等相关的工作流程。
+
+```javascript
+FoxitEmbedViewer.addListener(
+ <Callback Type>,
+ <Function>,
+ options
+ );
+```
+
+回调详细信息如下：
+
+| **回调类型** | **回调函数参数** | **描述** |
+|------------------|----------------------------------------------|-----------------------|
+| File_Opened | 输入参数：pdfDoc | 在文档被显示后触发。 |
+| Viewer_Zoomed | 输入参数：newScale, oldScale | 在页面缩放完成后触发。 |
+| Viewmode_Changed | 输入参数：NewViewModeType, OldViewModeType | 改变视图模式后触发。 |
+| Text_Selected | 输入参数：text content | 在选择文本后触发。 |
+| PageNum_Changed | 输入参数：newPageNumber | 在当前页面号改变后触发。 |
+| Viewer_Rotated | 输入参数：newRotationDegree, originRotationDegree | 在页面试图旋转后触发。 |
+
+---
+
+Viewer APIs
+福昕PDF Embed API有许多用于用户与PDF进行交互的API。这些API可用于在运行时以编程方式执行UI自定义。
+
+API使用说明如下:
+
+---
+
+getBookmarks
+API返回现有PDF书签的列表。该列表中的每个书签项都显示为JSON，其中包含重要信息，如ID、标题和位于该书签下的嵌套书签列表。
+
+```javascript
+{
+ id: Number // Unique identifier of the bookmark
+ title: String, // Title of the bookmark
+ children
+:
+ [CHILD_BOOKMARK_1, CHILD_BOOKMARK_2, ...] // List of the nested bookmarks under this bookmark
+}
+```
+
+返回一个Promise:
+
+- Resolves返回PDF中存在的书签列表。 [ Bookmark_1, Bookmark_2, ...]
+
+---
+
+openBookmark(bookmarkId)
+API接受书签ID作为输入，并导航到指定的PDF书签。
+
+参数: \<BOOKMARK_ID> .
+
+返回一个Promise
+
+- API调用成功后，Resolves将返回true，并且导航到指定的PDF书签。
+
+- 当PDF中不存在指定书签，Resolves将返回false。
+
+---
+
+pdfDoc.getStream
+获取PDF文档的流。
+
+参数：
+
+-- callback: function - 片段流形式的回调函数：function ({arrayBuffer, offset, size}) {} - arrayBuffer：片段流，offset：片段偏移量，size：片段大小
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let bufferArray = [];
+embedView.pdfDoc.getStream(function ({arrayBuffer, offset, size}) {
+ bufferArray.push(arrayBuffer);
+}).then(function (size) {
+ return new Blob(bufferArray, {type: 'application/pdf'});
+});
+```
+
+返回：`Promise<number>` - PDF文档的大小
+
+---
+
+pdfDoc.autoRecognitionForm
+自动识别PDF文档的表单。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.pdfDoc.autoRecognitionForm();
+```
+
+返回：`Promise<number>` - 0 表示没有发现，1 表示识别成功。
+
+---
+
+pdfDoc.getPageCount
+获取PDF文档的页面计数。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.pdfDoc.getPageCount();
+```
+
+返回：`Promise<number>`
+
+---
+
+pdfDoc.getPageByIndex
+获取指定索引的PDF页面。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = embedView.pdfDoc.getPageByIndex(0);
+```
+
+返回：`Promise<PDFPage>` - 返回指定索引的PDF页面。
+
+---
+
+pdfDoc.activateAnnotation
+激活指定的注释。
+
+参数：
+
+- options: object - 选项对象，包含以下属性：<br>
+ - annotId: number - 注释的唯一标识符。<br>
+ - pageIndex: number - 页面索引，从0开始作为第一页。<br>
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.pdfDoc.activateAnnotation({annotId: 123, pageIndex: 0});
+```
+
+返回：`Promise<boolean>`
+
+---
+
+pdfDoc.deactivateAnnotation
+取消激活注释。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.pdfDoc.deactivateAnnotation();
+```
+
+返回：`Promise<boolean>`
+
+---
+
+pdfDoc.exportAnnotsToFDF
+导出PDF文档的注释到FDF格式。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.pdfDoc.exportAnnotsToFDF();
+```
+
+返回：`Promise<Blob>`
+
+---
+
+pdfDoc.importAnnotsFromFDF
+从FDF文件导入注释到PDF文档。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.pdfDoc.importAnnotsFromFDF(fdfFile);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfPage.addAnnot
+添加注释到PDF页面。
+
+参数：
+
+- annotJson: object - 注释的JSON对象<br>
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = pdfPage.addAnnot({
+ type: 'square',
+ rect: { left: 100, right: 200, top: 200, bottom: 100 },
+ content: 'This is a text annotation',
+});
+```
+
+返回：`Promise<Annot[]>`
+
+---
+
+pdfPage.removeAnnotById
+从PDF页面中删除指定ID的注释。
+
+参数：
+
+- annotId: number - 注释的唯一标识符。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = pdfPage.removeAnnotById(123);
+```
+
+返回：`Promise<Annot[]>`
+
+---
+
+pdfPage.getAnnots
+获取PDF页面上的所有注释。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = await pdfPage.getAnnots();
+```
+
+返回：`Promise<Annot[]>`
+
+---
+
+pdfPage.getAnnotsByIds
+获取PDF页面上指定ID的注释。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = await pdfPage.getAnnotsByIds([123, 456]);
+```
+
+返回：`Promise<Annot[]>`
+
+---
+
+annot.getObjectNumber
+获取注释的唯一标识符。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = await pdfPage.getAnnots();
+let annot = annots[0];
+let annotId = annot.getObjectNumber();
+```
+
+返回：`number`
+
+---
+
+annot.setRect
+设置注释的矩形位置。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = await pdfPage.getAnnotsByIds([123]);
+let annot = annots[0];
+annot.setRect({
+ left: 100,
+ right: 200,
+ top: 200,
+ bottom: 100,
+});
+```
+
+返回：`Promise<void>`
+
+---
+
+annot.setContent
+设置注释的内容。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = await pdfPage.getAnnotsByIds([123]);
+let annot = annots[0];
+annot.setContent('This is a new content for the annotation');
+```
+
+返回：`Promise<void>`
+
+---
+
+widget.getControl
+获取注释的表单控件。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = await pdfPage.getAnnotsByIds([123]);
+let widget = annots[0];
+let control = widget.getControl();
+```
+
+返回：`PDFControl`
+
+---
+
+widget.getField
+获取注释的表单域。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfPage = await embedView.pdfDoc.getPageByIndex(0);
+let annots = await pdfPage.getAnnotsByIds([123]);
+let widget = annots[0];
+let field = widget.getField();
+```
+
+返回：`PDFField`
+
+---
+
+pdfForm.getFieldCount
+获取表单签名域的计数，包括不支持的签名域
+
+返回：`number`
+
+---
+
+pdfForm.getFieldByIndex
+获取由索引指定的表单域
+
+返回：`PDFField`
+
+---
+
+pdfForm.getField
+获取由名称指定的表单域
+
+参数:
+
+- fieldName: string - 表单域名
+
+返回：`PDFField`
+
+---
+
+pdfForm.removeField
+删除表单域
+
+参数:
+
+- fieldName: string - 表单域名
+
+返回：`Promise<boolean>`
+
+---
+
+pdfForm.exportFormToFile
+将文档表单数据导出到文件
+
+参数:
+
+- fileType: number - 文件类型，0: FDF, 1: XFDF, 2: XML, 3: CSV, 4: TXT, 5: JSON
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let fileType; // 文件类型
+let pdfForm = await embedView.pdfDoc.loadPDFForm();
+pdfForm.exportFormToFile(fileType);
+```
+
+返回：`void`
+
+---
+
+pdfForm.importFormFromFile
+从文件导入表单数据。
+
+参数:
+
+- file: File | Blob - File或Blob对象
+- fileType: number - 文件类型，0: FDF, 1: XFDF, 2: XML, 3: CSV, 4: TXT, 5: JSON
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let file = e.target.files[0]; // <input type="file">标签选取的文件
+let fileType; // 文件类型
+let pdfForm = await embedView.pdfDoc.loadPDFForm();
+pdfForm.importFormFromFile(file, fileType);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfForm.addControl
+将新的表单控件添加到指定的表单域。如果表单域不存在，此函数也将添加一个表单域。（不支持签名域）。
+
+参数:
+
+- pageIndex: number - 页面索引，从0开始作为第一页。
+- fieldName: string - 完整的表单域名。它不应该是空字符串。
+- fieldType: number - 表单域类型。请参考 ***Field_Type***，但 ***Field_Type.Unknown*** 除外。
+- rect: Rect - 新表单控件的矩形，指定PDF页面中的位置。它应该在PDF坐标系中。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfForm = await embedView.pdfDoc.loadPDFForm();
+await pdfForm.addControl(0,'test',FoxitEmbed.Constants.Field_Type.Text, {
+ left:100,
+ right:200,
+ top: 200,
+ bottom: 100,
+});
+```
+
+返回：`Promise<PDFField>`
+
+---
+
+pdfForm.addSignature
+添加未签名的签名域。
+
+参数:
+
+- pageIndex: number - 页面索引，从0开始作为第一页。
+- rect: Rect - 新表单控件的矩形，指定PDF页面中的位置。它应该在PDF坐标系中。
+- fieldName: string - 完整的表单域名。它不应该是空字符串。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfForm = await embedView.pdfDoc.loadPDFForm();
+await pdfForm.addSignature(0,{
+ left:100,
+ right:200,
+ top: 200,
+ bottom: 100,
+},'test');
+```
+
+返回：`Promise<PDFField>`
+
+---
+
+pdfField.getName
+获取表单域名称。
+
+示例：
+
+```javascript
+PDFField.getName();
+```
+
+返回：`string`
+
+---
+
+pdfField.getType
+获取表单域类型。
+
+示例：
+
+```javascript
+PDFField.getType();
+```
+
+返回：`number` - 请参考 ***Field_Type*** 。
+
+---
+
+pdfField.getControlsCount
+获取表单控件的计数。
+
+示例：
+
+```javascript
+PDFField.getControlsCount();
+```
+
+返回：`number`
+
+---
+
+pdfField.getControlByIndex
+根据索引获取指定的表单控件。请调用 ***PDFField.getControlsCount*** 来获取计数。
+
+示例：
+
+```javascript
+PDFField.getControlByIndex();
+```
+
+返回：`PDFControl`
+
+---
+
+pdfField.getWidget
+获取表单域的widget注释。
+
+参数：
+
+- index: number - PDFControl的索引，默认为0。
+
+示例：
+
+```javascript
+PDFField.getWidget();
+```
+
+返回：`Promise<Widget>`
+
+---
+
+pdfField.setValue
+设置表单域值。
+适用于除按钮和签名之外的所有表单域。对于combo box表单域，应用程序应验证新值；对于可编辑的combo box表单域，值可以是任何字符串；对于不可编辑的combo box表单域，只有选项数组中的值有效。
+
+参数:
+
+- value: string - 值。
+- annotationId: <Annotation_ID> - annotation的唯一标识。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfForm = await embedView.pdfDoc.loadPDFForm();
+let pdfField = await pdfForm.addControl(0,'test',FoxitEmbed.Constants.Field_Type.Text, {
+ left:100,
+ right:200,
+ top: 200,
+ bottom: 100,
+});
+const pdfControl = await pdfField.getControlByIndex(0);
+const widget = await pdfControl.getWidget();
+await pdfField.setValue('123', widget.getObjectNumber());
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getValue
+获取表单域值。
+
+示例：
+
+```javascript
+PDFField.getValue();
+```
+
+返回：`string`
+
+---
+
+pdfField.setFlags
+设置表单域flags。
+
+参数:
+
+- flags: number - flags值。请参考 ***Field_Flag*** 。这应该是这些值中的一个或组合。
+
+示例：
+
+```javascript
+await pdfField.setFlags(FoxitEmbed.Constants.Field_Flag.ReadOnly);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getFlags
+获取表单域flags。
+
+示例：
+
+```javascript
+pdfField.getFlags();
+```
+
+返回：`number` - 请参考 ***Field_Flag***。这应该是这些值中的一个或组合。
+
+---
+
+pdfField.setAlignment
+设置表单域的对齐方式。（不支持签名域）
+
+参数:
+
+- alignment: number - alignment值。请参考 ***Alignment***。
+
+示例：
+
+```javascript
+await pdfField.setAlignment(FoxitEmbed.Constants.Alignment.right);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getAlignment
+获取表单域的对齐方式。
+
+示例：
+
+```javascript
+pdfField.getAlignment();
+```
+
+返回：`number` - 请参考 ***Alignment***。
+
+---
+
+pdfField.setAlternateName
+设置备用表单域名称。在用户界面中必须标识表单域的地方（例如在引用该表单域的错误或状态消息中），将使用备用表单域名代替实际表单域名。在提取文档内容以支持残疾用户访问或用于其他目的时，此文本也很有用。
+
+参数:
+
+- alternateName: string - 备用名称。
+
+示例：
+
+```javascript
+await pdfField.setAlternateName(alternateName);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getAlternateName
+获取表单域的备用表单域名称。
+
+示例：
+
+```javascript
+pdfField.getAlternateName();
+```
+
+返回：`string`
+
+---
+
+pdfField.setBorderColor
+设置表单域的边框颜色（不支持签名域）。在调用此函数之前加载所有相对注释，否则将返回错误的值。
+
+参数:
+
+- borderColor: number|[string,number,number,number]|string - 边框颜色。支持的颜色格式:
+ - 数字，例如0xff0000、16711680
+ - PDF颜色数组，例如['RGB'，1,1,1]，表示白色。范围：0.0~1.0，与HTML颜色格式的比例为1:255。
+ - HTML颜色格式，如“#ff0000”、“rgb（255.0,0）”、“argba（255.0,0,1）”
+
+示例：
+
+```javascript
+await pdfField.setBorderColor(borderColor);
+```
+
+返回：`Promise<boolean>` - 成功为true，失败为false。
+
+---
+
+pdfField.getBorderColor
+获取表单域的边框颜色（不支持签名域）。在调用此函数之前加载所有相对注释，否则将返回错误的值。
+
+示例：
+
+```javascript
+pdfField.getBorderColor();
+```
+
+返回：`number`
+
+---
+
+pdfField.setBorderStyle
+设置表单域的边框样式。在调用此函数之前加载所有相对注释，否则将返回错误的值。
+
+参数:
+
+- style: string - 边框样式，请参考 ***Field_Border_Style***
+
+示例：
+
+```javascript
+await pdfField.setBorderStyle(style);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getBorderStyle
+获取表单域的边框样式。在调用此函数之前加载所有相对注释，否则将返回错误的值。
+
+示例：
+
+```javascript
+pdfField.getBorderStyle();
+```
+
+返回：`string` - 请参考 ***Field_Border_Style***。
+
+---
+
+pdfField.setFillColor
+设置表单域的填充颜色（不支持签名域）。在调用此函数之前加载所有相对注释，否则将返回错误的值。
+
+参数:
+
+- fillColor: number|[T']|[string，number，number，number]|string - 指定表单域的填充颜色。（不支持alpha）。支持的颜色格式:
+ - 0 或 [T'] 表示透明
+ - 数字，例如0xff0000、16711680
+ - PDF颜色数组，例如['RGB'，1,1,1]，表示白色。范围：0.0~1.0，与HTML颜色格式的比例为1:255。
+ - HTML颜色格式，如“#ff0000”、“rgb（255.0,0）”、“argba（255.0,0,1）”
+
+示例：
+
+```javascript
+await pdfField.setFillColor(fillColor);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getFillColor
+获取表单域的填充颜色。在调用此函数之前加载所有相对注释，否则将返回错误的值。
+
+示例：
+
+```javascript
+pdfField.getFillColor();
+```
+
+返回：`number`
+
+---
+
+pdfField.setMappingName
+设置映射名称（不支持签名域）。从文档导出交互式表单域数据时将使用映射名称。
+
+参数:
+
+- mappingName: string - 映射名称
+
+示例：
+
+```javascript
+await pdfField.setMappingName(mappingName);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getMappingName
+获取映射名称。从文档导出交互式表单域数据时将使用映射名称。
+
+示例：
+
+```javascript
+pdfField.getMappingName();
+```
+
+返回：`string`
+
+---
+
+pdfField.setMaxLength
+设置文本类型表单域的最大长度。
+
+参数:
+
+- maxLength: number - 最大长度。
+
+示例：
+
+```javascript
+await pdfField.setMaxLength(maxLength);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getMaxLength
+获取文本类型表单域的最大长度。
+
+示例：
+
+```javascript
+pdfField.getMaxLength();
+```
+
+返回：`number`
+
+---
+
+pdfField.setOptions
+设置列表框或组合框的选项（项目）。仅适用于列表框或组合框的表单域。
+
+参数: 以下option数据的列表。 [ Option_1, Option_2, ...]
+
+- label: string — 显示的选项值。
+- value: string — 选项值。
+- selected: boolean — 是否已选中。
+- defaultSelected:boolean — 是否默认选中。
+
+示例：
+
+```javascript
+let options = [{
+ label: 'test',
+ value: "111",
+ selected: false,
+ defaultSelected: false,
+},{
+ label: 'label',
+ value: "222",
+ selected: false,
+ defaultSelected: true,
+}]
+await pdfField.setOptions(options);
+```
+
+返回：`Promise<void>`
+
+---
+
+pdfField.getOptions
+获取列表框或组合框的选项（项目）。
+
+示例：
+
+```javascript
+pdfField.getOptions();
+```
+
+返回：option数据的列表。 [ Option_1, Option_2, ...]
+
+---
+
+pdfControl.getWidgetAnnot
+获取wiget数据。数据将以JSON数组返回，并且具体的数据格式将按照”注释数据规范“中描述的返回。
+
+注意：`pdfControl.getWidgetAnnot`将在未来版本中被弃用，建议使用`pdfControl.getWidget`替代。
+
+示例：
+
+```javascript
+await PDFControl.getWidgetAnnot();
+```
+
+返回一个Promise的json注释数据
+
+---
+
+pdfControl.getWidget
+获取表单域的widget注释。
+
+示例：
+
+```javascript
+PDFControl.getWidget();
+```
+
+返回：`Promise<Widget>`
+
+---
+
+pdfControl.setDefaultAppearance
+设置表单域的默认外观。
+
+参数：
+- defaultAppearance: object - 默认外观对象。
+- defaultAppearance.fontName: string - 默认外观字体名称，空格需要用`-`代替，例如：`Times-Bold`，`Helvetica-Oblique`。
+- defaultAppearance.textColor: number - 默认外观文本颜色 (0xRRGGBB)。
+- defaultAppearance.textSize: number - 默认外观文本大小。范围: 6~40;
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+let pdfForm = await embedView.pdfDoc.loadPDFForm();
+let pdfField = await pdfForm.getField('fieldName');
+let pdfControl = await pdfField.getControlByIndex(0);
+pdfControl.setDefaultAppearance({
+ fontName: 'Times-Bold',
+ textColor: 0xFF0000,
+ textSize: 24,
+});
+```
+
+---
+
+search(keywords,startPageNumber,endPageNumber,matchRule)
+此类API可用于在所有的嵌入模式中，以编程方式搜索PDF中的文本。
+
+参数:
+
+- keywords: 被搜索的关键字
+
+- startPageNumber , endPageNumber: 搜索的页面返回，在‘startPageNumber’到‘endPageNumber’之间。
+
+- matchRule: WholeWordsOnly \| CaseSensitive
+
+返回一个Promise
+
+- Resolves返回包含以下接口的JSON对象:
+ onResultUpdate() ,next(), Previous() ,clear()
+
+---
+
+onResultUpdate
+用户可以注册一个回调函数，该函数将作为输入传递给onResultUpdate（）函数。
+每当搜索API执行搜索操作并且搜索结果在PDF中突出显示时，都会触发此回调函数。
+回调函数将以JSON的形式接收有关当前搜索结果的重要信息。
+JSON将包括当前页码、当前搜索结果索引、搜索结果总数和状态等信息。
+
+JSON信息如下:
+
+```json
+{
+ "currentResult": {
+ "pageNumber": Integer,
+ // Current page number in the view
+ "index": Integer
+ // Index of the current highlighted search result
+ },
+ "totalResults": Integer,
+ // Total number of search results found till the time callback function is executed
+ "status": String
+ // Status of search result till the time callback function is executed. Values can be "IN_PROGRESS" or "COMPLETED".
+}
+```
+
+返回一个Promise
+
+- 操作成功时Resolves将返回true。操作成功后，将执行回调函数，并以JSON的形式接收有关搜索结果的信息。
+
+- 操作失败时Resolves将返回false。
+
+**onResultUpdate示例**
+
+```javascript
+function callbackFunction(searchResult) {
+ console.log('search result: ', searchResult);
+}
+
+FoxitEmbedViewer.search('<KEY_STRING>').then((searchObj) => {
+ searchObj.onResultUpdate(callbackFunction);
+
+ // call searchObj.next() or searchObj.previous() to navigate to the next or previous search result
+ searchObj.next();
+});
+```
+
+---
+
+next()
+此功能将高亮并导航到PDF中的下一个搜索结果。
+
+返回一个Promise
+
+- 当操作成功时Resolves将返回true，并且高亮搜索结果。
+- 当操作失败时Resolves将返回false。
+
+---
+
+previous()
+此功能将高亮显示并导航到PDF中的上一个搜索结果。
+
+返回一个Promise
+
+- 操作成功时Resolves将返回true。并且之前的搜索结果将被高亮。
+
+- 操作失败时Resolves将返回false。
+
+---
+
+clear ()
+该函数将取消正在进行的搜索操作并清除搜索结果。
+
+---
+
+zoomTo (scale)
+缩放当前的Viewer。该函数不能用于inline嵌入模式。
+
+Parameters: {number\|string} scale - 一定要大于0。如果是个字符串，则只有'fitWidth'和'fitHeight'有效。
+
+Returns: {Promise\<void>}
+
+---
+
+getPageZoom(pageNumber)
+将PDF页码作为输入，并返回该页面的缩放级别。
+
+参数：\<pageNumber>
+
+返回一个Promise
+
+- 调用成功时Resolves将返回缩放比例。
+
+---
+
+initAnnotationIcons
+初始化annotation的图标，目前仅支持stamp类型。该函数仅在文档打开后设置有效，并且在设置后，默认的标准图章将被替换。
+
+参数: 以下icon数据的列表。 [ Icon_1, Icon_2, ...]
+
+- annotType: string — 注释的类型，目前只有“stamp”可用。
+- category: string — 自定义的图标的类别。
+- name: string — 图标的名称，这是一个唯一的标识符。
+- width:number — 可选。图标在PDF坐标系中的宽度，默认值：150
+- height:number — 可选。图标在PDF坐标系中的高度，默认值：45。
+- url:string — 图标文件的url。它支持HTTP、blob url和base64 url。不支持相对路径和绝对路径。
+- fileType:string — 图标的类型。它支持bmp、jpg、jpeg、png、tif、tiff、pdf。对于“tif”、“tiff”和“pdf”，还应提供具有相同前缀的svg文件url，以便在印章列表中显示。
+
+示例：
+
+```javascript
+let icons = [{
+ annotType:'stamp',
+ category:'Category',
+ name:"test",
+ width:150,
+ height:45,
+ url:'xxx://xxx.png',
+ fileType:'png',
+}];
+await embedView.initAnnotationIcons(icons)
+```
+
+---
+
+addAnnotationIcon
+添加annotation的图标，目前仅支持stamp类型。
+
+参数: 以下icon数据的列表。
+
+- annotType: string — 注释的类型，目前只有“stamp”可用。
+- category: string — 自定义的图标的类别。
+- name: string — 图标的名称，这是一个唯一的标识符。
+- width: number — 可选。图标在PDF坐标系中的宽度，默认值：150
+- height: number — 可选。图标在PDF坐标系中的高度，默认值：45。
+- url: string — 图标文件的url。它支持HTTP、blob url和base64 url。不支持相对路径和绝对路径。
+- fileType: string — 图标的类型。它支持png, jpeg, jpg, pdf, bmp。对于“pdf”，还应提供具有相同前缀的svg文件url，以便在印章列表中显示。
+
+示例：
+
+```javascript
+let icon = {
+ annotType:'stamp',
+ category:'Category',
+ name:"test",
+ width:150,
+ height:45,
+ url:'xxx://xxx.png',
+ fileType:'png',
+};
+await embedView.addAnnotationIcon(icon)
+```
+
+---
+
+removeAnnotationIcon
+移除自定义的annotation的图标，目前仅支持stamp类型。
+
+参数:
+
+- annotType: string — 注释的类型，目前只有“stamp”可用。
+- category: string — 图标的类别。
+- name: string — 图标的名称，这是一个唯一的标识符。
+
+示例：
+
+```javascript
+await embedView.removeAnnotationIcon('stamp','Category','test')
+```
+
+---
+
+getCurrentPage
+获取当前页面的页面号。
+
+返回一个Promise
+
+- 调用成功，Resolves将返回当前的页面号。
+
+---
+
+gotoLocation (\<pageNumber>, \<xCoordinate>, \<yCoordinate>)
+API允许导航到任何PDF页面。它接受页码作为输入。您还可以将页面上的x和y坐标作为可选输入参数，以导航到页面上的特定位置。如果不输入任何坐标，则默认坐标为（0，0）。
+
+参数: (\<pageNumber>, \<xCoordinate>, \<yCoordinate>)
+
+---
+
+setUserName
+设置全局用户名
+
+参数:
+
+- name: string — 设置将用于注释标题的全局用户名。
+
+示例：
+
+```javascript
+await embedView.setUserName('foxit')
+```
+
+---
+
+getUserName
+获取全局用户名
+
+返回一个Promise
+
+- 调用成功时Resolves将返回全局用户名。
+
+示例：
+
+```javascript
+await embedView.getUserName()
+```
+
+---
+
+addWatermark
+添加视图层面的水印。没有修改源文档。
+
+参数:
+
+- options: object|object[] - 选项对象，包含以下属性：<br>
+ - type: 'text'|'image' - 指定水印的类型。可选值如下：
+ 1. "text" 表示文本类型水印。
+ 2. "image" 表示图像类型水印。
+ - content: string - 指定水印的内容。可选值如下：
+ 1. 文本类型：<string> 文本类型水印字符串。
+ 2. 图像类型：<DataURL> 图像的 DataURL。
+ - pageStart: number - 起始页码索引。有效范围：从 0 到 (pageCount - 1)。
+ - pageEnd: number - 结束页码索引。有效范围：从 0 到 (pageCount - 1)。
+ - isMultiline: boolean - 是否支持多行水印平铺。如果 'type' 为图像，较大的图像需要压缩，可能会导致失真。（可选，默认值为 false）
+ - rowSpace: number - 多行水印的行间距。单位为点。默认值为 0。仅在 "isMultiline" 为 true 时生效。（可选，默认值为 0）
+ - columnSpace: number - 多行水印的列间距。单位为点。默认值为 0。仅在 "isMultiline" 为 true 时生效。（可选，默认值为 0）
+ - watermarkSettings: object - 水印相关配置对象（可选），包含以下属性：<br>
+ - position: string - 水印位置。默认值为 "Center"。可选值如下：
+ 1. "TopLeft": 位置：左上角。
+ 2. "TopCenter": 位置：顶部中心。
+ 3. "TopRight": 位置：右上角。
+ 4. "CenterLeft": 位置：中间左侧。
+ 5. "Center": 位置：中心。
+ 6. "CenterRight": 位置：中间右侧。
+ 7. "BottomLeft": 位置：左下角。
+ 8. "BottomCenter": 位置：底部中心。
+ 9. "BottomRight": 位置：右下角。
+ **注意：** 当 "isMultiline" 为 false 时，此属性生效。
+ - offsetX: number - 水平偏移量。默认值为 0。仅在 "isMultiline" 为 false 时生效。（可选，默认值为 0）
+ - offsetY: number - 垂直偏移量。默认值为 0。仅在 "isMultiline" 为 false 时生效。（可选，默认值为 0）
+ - scaleX: number - 水印图像的水平缩放系数。此参数影响水印的水平缩放，不影响行间距。默认值为 1。（可选，默认值为 1）
+ - scaleY: number - 水印图像的垂直缩放系数。此参数影响水印的垂直缩放，不影响列间距。默认值为 1。（可选，默认值为 1）
+ - rotation: number - 旋转角度，单位为度。默认值为 45。（可选，默认值为 45）
+ - opacity: number - 透明度，单位为百分比。有效范围：从 0 到 100。0 表示完全透明，100 表示完全不透明。默认值为 100。（可选，默认值为 100）
+ - watermarkTextProperties: object - 文本水印的独特配置对象（可选），包含以下属性：<br>
+ - font: string - 字体名称。应为 CSS 字体。默认值为 "Microsoft Yahei"。（可选）
+ - fontSize: number - 字体大小。默认值为 20。（可选，默认值为 20）
+ - color: string - 字体颜色。默认值为 "#000000"。（可选，默认值为 "#000000"）
+ - fontStyle: 'normal'|'underline' - 字体样式。默认值为 "normal"。可选值如下：
+ 1. "normal": 正常字体样式。
+ 2. "underline": 带下划线的字体样式。（可选，默认值为 "normal"）
+ - lineSpace: number - 行间距。默认值为 10。（可选，默认值为 10）
+ - alignment: 'left'|'center'|'right' - 对齐方式。默认值为 "center"。可选值如下：
+ 1. "left": 左对齐。
+ 2. "center": 居中对齐。
+ 3. "right": 右对齐。（可选，默认值为 "center"）
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.addWatermark([{
+ type: 'text',
+ content: 'Confidential',
+ pageStart: 0,
+ pageEnd: 2,
+ isMultiline: true,
+ rowSpace: 100,
+ columnSpace: 100,
+ watermarkSettings: {
+ position: 'Center',
+ offsetX: 50,
+ offsetY: 50,
+ scaleX: 1,
+ scaleY: 1,
+ rotation: 45,
+ opacity: 70,
+ },
+ watermarkTextProperties: {
+ font: 'Arial',
+ fontSize: 24,
+ color: '#FF0000',
+ fontStyle: 'normal',
+ lineSpace: 5,
+ alignment: 'center',
+ },
+}]);
+```
+
+返回：`void`
+
+---
+
+addFontMaps
+设置自定义字体，用于编辑表单字段。在打开文档之前，这些设置是有效的。
+
+- fontMaps: object[] - 选项对象，包含以下属性：<br>
+ - nameMatches: string[] - 与文字名称匹配的字符串或正则表达式。可以是空数组或未设置。
+ - name: string - 字体名称。
+ - glyphs: object[] - 字体配置。
+ - bold: number - 字体权重，可选值如下：
+ 1. -1: 匹配任意字宽。
+ 2. 100: 轻薄。
+ 3. 200: 超亮。
+ 4. 300: 亮。
+ 5. 400: 常规（正常）。
+ 6. 500: 中等。
+ 7. 600: 半粗体。
+ 8. 700: 粗体。
+ 9. 800: 加粗。
+ 10. 900: 重或黑。
+ - flags: number - 字体样式。请参考 ***Font_Styles***。
+ - url: string - 字体资源的。
+ - isBrotli: boolean - 字体资源需要由brotli解密。
+ - charsets: number[] - 字体的字符集。请参考 ***Font_Charset*** 或 ***Font_CIDCharset**。
+
+示例：
+
+```javascript
+let embedView; // FoxitEmbed.View实例
+embedView.addFontMaps([{
+ nameMatches: [
+ /(helvetica)|(helveticabold)|(helveticaoblique)/,
+ ],
+ name: "helvetica",
+ glyphs: [
+ {
+ bold: 400, 
+ flags: FoxitEmbed.Constants.Font_Styles.FixedPitch, 
+ url: 'NotoSans-Bold.ttf.brotli',
+ isBrotli: true,
+ },
+ {
+ bold: -1,
+ flags: FoxitEmbed.Constants.Font_Styles.FixedPitch,
+ url: 'NotoSans-Regular.ttf'
+ },
+ ],
+ charsets:[FoxitEmbed.Constants.Font_Charset.ANSI],
+ }])
+```
+
+返回：`Promise<void>`
+
+---
+
+表单操作
+福昕PDF Embed API默认支持表单填充。最终用户可以与其他表单对象交互，包括文本字段单选按钮、复选框、列表和下拉列表（选择列表）。当用户填写任何表单的字段时，顶部工具栏中的“保存”按钮将自动启用，这样他们就可以将信息保存到PDF中。
+我们不支持以下功能：
+
+- 添加/编辑/删除表单域对象
+
+- XFA表单
+
+- 数字签名域
+
+- 条形码签名域
+
+- 文件选择文本域
+
+- 富文本域
+
+- 包含JavaScript和计算、验证等相关操作。
+
+- 具有一些特殊和自定义格式的文本字段和下拉列表。
+
+- 带按钮的PDF操作提交场景（仅支持按钮查看）。
+
+---
+
+Comments and Markup
+福昕PDF Embed API 支持向 PDF 文档添加一些评论。
+您可以通过添加文本注释工具、注释、高亮、绘图工具等方式添加评论。
+除了这些工具之外，还有一个橡皮擦工具用于擦除铅笔工具的绘图。
+此外，顶部工具栏还提供了撤销和重做工具。
+
+---
+
+注释功能概要
+福昕PDF Embed API支持以下基本注释功能：
+
+- 添加文本注释、便签、突出显示、下划线、删除线，绘图标记等。
+
+- 编辑注释
+
+- 删除注释
+
+- 回复注释
+
+福昕PDF Embed API支持的所有注释功能，如下所示：
+
+- 支持将回复添加到注释中，以便文档收件人可以响应作者的原始标记。所有评论都显示在左侧的评论面板中。
+
+- 添加或更新任何注释可启用**保存** 按钮
+
+- 保存后，注释将添加到PDF中。
+
+---
+
+文本标记注释
+文本标记注释包括高亮、删除线、下划线、波浪线、替换和插入符。
+
+**添加文本标记注释**
+
+有两种方式添加文本标记注释：
+
+- 点击顶部工具栏中的“高亮”工具，然后选择一些文本。文本将被突出显示。
+
+ ![](/docs/embed/images/highlighted_1.jpg)
+
+- 使用选择工具选择一些文本，然后在弹出菜单中选择高亮、删除线或下划线选项。
+
+ ![](/docs/embed/images/highlighted_2.jpg)
+
+**更新文本标记注释**
+
+当焦点在注释上时，您可以：
+
+- 点击现有的注释以打开弹出菜单，更改颜色。
+
+- 移动"文本边界光标"选择更多文本进行标记。
+
+- 双击注释将打开注释面板，以编辑内容。
+
+**删除文本标记注释**
+
+- 右键点击现有的文本标记以打开下拉菜单，并选择**删除**.
+
+- 右键点击评论面板中评论的弹出菜单，并选择**删除**。
+
+ ![](/docs/embed/images/remove_text_markup.jpg)
+
+---
+
+备注
+使用“备注”添加文本回复。并且用户可以将其放置在 PDF 文档的任何位置。支持的功能如下：
+
+- 添加备注
+
+ - 在顶部工具栏中选择注释工具，然后点击您希望添加注释的位置。您可以将回复消息输入到左侧面板的评论框中。
+
+- 编辑备注
+
+ - 右键点击现有的注释以打开弹出菜单，以更改注释的属性。
+
+- 删除备注
+
+ - 右键点击现有的注释以打开菜单，然后点击删除选项以移除注释。
+
+- 移动
+
+ - 选择“选择”工具，将光标悬停在现有的注释上，并拖动以将其移动到其他位置。
+
+![](/docs/embed/images/demo_guide_1.jpg)
+
+---
+
+打字机
+使用打字机工具在 PDF 文档的任何位置添加文本。
+
+- 添加文本
+
+ - 在顶部工具栏中选择打字机工具，点击页面上的位置以放置光标，并输入文本。点击文本框外部以添加注释。
+
+- 编辑文本
+
+ - 点击现有的打字机注释以编辑文本或在属性框中更改文本的任何属性。您可以更改文本的属性，如颜色和字体大小。
+
+- 删除文本
+
+ - 点击现有的打字机注释以打开工具栏，然后选择 **删除**.
+
+- 移动
+
+ - 选择选择工具，将光标悬停在现有的打字机注释上，并拖动以将其移动到其他位置。
+
+---
+
+铅笔 & 橡皮擦
+使用铅笔工具创建任意的手绘或形状，并使用橡皮擦工具擦除手绘注释的部分。
+
+- 添加绘图注释
+
+ - 在顶部工具栏中选择铅笔工具，点击您想要开始绘制的位置并拖动以创建形状。您可以释放鼠标按钮，将指针移动到新位置，并继续绘制。
+
+- 更新绘图注释
+
+ - 点击现有的绘图。您可以更改属性，如颜色和笔画宽度。
+
+ - 您可以通过点击下拉菜单中的“编辑”选项来编辑评论。
+
+- 删除绘图注释
+
+ - 点击现有的绘图以显示菜单，然后点击删除选项。
+
+ - 使用橡皮擦工具擦除手绘图的部分。
+
+- 移动或调整绘图注释的大小
+
+ - 选择“选择”工具，将光标悬停在一个绘图上，然后拖动以将其移动到不同的位置。
+
+ - 选择“选择”工具，将光标悬停在一个绘图上，然后拖动其中一个角落的圆圈以调整注释的大小。
+
+---
+
+撤销或重做
+使用“撤销”工具来撤销之前的操作，您可以在顶部工具栏中找到它。每次点击“撤销”命令都将撤销一项操作，反复点击“撤销”命令将返回到之前的操作。
+使用“重做”工具来反转操作，您可以在顶部工具栏中找到它。
+
+---
+
+注释接口
+注释接口支持以程序化的方式添加、删除、更新、导入和导出注释，包括评论和其他类型的文本标记注释，如高亮和下划线。
+
+---
+
+注释数据规范
+采用JSON格式作为API接收的注释数据格式。
+
+福昕PDF Embed API注释的JSON格式规范如下：
+
+```txt
+{
+ "source": <FILE_ID> | <ANNOTATION_ID>,
+
+ "type": "Annotation",
+
+ "subtype": "note" \| "strikeout" \| "highlight" \|
+ "underline"｜"squiggly"｜"replace"｜"caret" \| "typewrite" \| "pencil",
+
+ "id": \< ANNOTATION_ID > ,
+
+ "contentValue": String,
+
+ "motivation": String,
+
+ "index": \< PAGE_INDEX >
+
+ "boundingBox": [Xmin, Ymin, Xmax, Ymax],
+
+ "quadPoints": [....],
+
+ "inkList": [[...],[...], ...],
+
+ "strokeColor": \< COLOR_HEX_CODE > ,
+
+ "strokeWidth": Float,
+
+ "opacity": Float(from 0.0 to 1.0),
+
+ "creator": {
+
+ "type": "Person",
+
+ "name": String,
+ },
+ "created": DateTime,
+ "modified": DateTime,
+}
+```
+
+_注释数据参数_
+
+| **参数** | **描述** | **是否必须项** |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| type | 注释类型，值一定是_Annotation_。 | 必须 |
+| id | 注释唯一的识别ID。 | 必须 |
+| contentValue | 注释内容文本。 | 必须 |
+| motivation | 创建注释的原因。值可以是**commenting**或者**replying**。 | 必须 |
+| creator.type | 类型可以是Person或者Collaboration。 | 必须 |
+| creator.name | 注释创建者的名字。 | 必须 |
+| created | 用于表示注释创建后修改时间的日期时间，采用 UTC 时区格式。 | 必须 |
+| modified | 用于表示注释修改时间的日期时间，采用 UTC 时区格式。 | 必须 |
+| source | 当"motivation"为"commenting"时，PDF 的唯一标识符是相同的，即previewFile API的元数据中的 id 值。当"motivation"为"replying"时，注释的唯一标识符是相同的，即注释的 id 值。 | 必须 |
+| subtype | 可选的值为："note" "strikeout" "highlight" "underline" "squiggly" "replace" "caret" "typewrite" "pencil" . | 必须 |
+| index | 页面索引，从0开始。 | 必须 |
+| boundingBox | 这个参数仅用于”高亮“，”删除线“，”下划线“，”波浪下划线“和”插入文本“注释。PDF 页面上与每个矩形边界框的左上角、右上角、左下角和右下角相对应的坐标。该值将是包含多个坐标的数组 [X1, Y1, X2, Y2, …]，表示所有矩形框的坐标。所有坐标值都设置为浮点数类型。 | 只有当注释类型为_highlight_，_strikeout_，_underline_,_squiggly_,_replace_和_caret_必须。 |
+| inkList | 浮点值。这个参数仅用于”铅笔“注释。PDF 页面上与形状注释相关的坐标。该值将是一个包含 N 个数组的数组，每个数组为 [[X1, Y1, X2, Y2, …], [X1, Y1, X2, Y2, …], …]，其中每个数组表示在绘制铅笔时指定的一系列 X 轴和 Y 轴坐标点。 | 只有当注释类型为_pencil_时必须。 |
+| strokeColor | 注释的十六进制颜色值。 | 非必须 |
+| strokeWidth | 绘图类型注释的线宽，浮点值。 | 非必须 |
+| opacity | 注释的透明度，0.1到1.0范围内的浮点值。 | 非必须 |
+| fontStyle.font | 只读参数。这个参数仅用于“打字机”注释，用于表示它的字体名字。 | 非必须 |
+| fontStyle.size | 这个参数仅用于“打字机”注释，用于表示它的字体大小。 | 非必须 |
+| fontStyle.color | 这个参数仅用于“打字机”注释，用于表示它的文本颜色。 | 非必须 |
+
+- **注释数据示例**
+
+- **添加备注注释数据规范**
+
+```json
+{
+ "source": "77c6fa5d-6d74-4104-8349-657c8411a834",
+ "type": "Annotation",
+ "subtype": "typewrite",
+ "id": "02dcf931-d1cb-49c1-a8bc-d047892a06bc",
+ "contentValue": "I added a text annotation",
+ "motivation": "commenting",
+ "index": 0,
+ "fontStyle": {
+ "size": "24px",
+ "color": "#0000FF"
+ },
+ "boundingBox": [306.41829735235586, 339.01199687491595, 475.729044456285, 357.0653042030006],
+ "creator": {
+ "type": "Person",
+ "name": "Will"
+ },
+ "created": "2022-01-15T14:45:37Z",
+ "modified": "2022-01-15T14:45:37Z"
+}
+```
+
+- **回复注释数据规范**
+
+```json
+{
+ "type": "Annotation",
+ "id": "eb46d1a9-e9c3-4e81-a6f4-ce5ba7a905e9",
+ "contentValue": "Reply to typewrite",
+ "motivation": "replying",
+ "source": "02dcf931-d1cb-49c1-a8bc-d047892a06bc",
+ "creator": {
+ "type": "Person",
+ "name": "Samuel"
+ },
+ "created": "2022-02-02T14:45:37Z",
+ "modified": "2022-02-02T07:57:03Z"
+}
+```
+
+福昕PDF Embed API允许用户使用接口添加、导入、删除、更新注释。
+用户可以使用AnnotationManager调用所有注释 API。示例如下：
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口替代。
+
+```xml
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+ <meta charset="UTF-8">
+ <meta name="viewport"
+ content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"/>
+ <meta http-equiv= X-UA-Compatible content="IE=edge,chrome=1">
+ <meta name="renderer" content="webkit">
+ <title>Foxit Embed Viewer - Full Window</title>
+ <style>
+ html, body{
+ width: 100%;
+ height: 100%;
+ }
+
+ #foxit-embed-view {
+ height: 100%;
+ }
+ </style>
+ </head>
+ <body>
+ <div id="foxit-embed-view"></div>
+ <script src="https://serviceapi-stg.foxitcloud.com/api/embview-sdk/js?clientId=REPLACE_YOUR_CLIENT_ID"></script>
+ <script>
+ var embedView = new FoxitEmbed.View({
+ clientId: "<REPLACE_YOUR_CLIENT_ID>",
+ divId: "foxit-embed-view"
+ });
+ var pdfUrl = "https://embedviewer-stg.foxitcloud.com/view-sdk-demo/Embed API Demo.pdf";
+ embedView.previewFile({
+ content: pdfUrl,
+ metaData: {
+ fileName: 'Embed API Demo.pdf',
+ id: '77c6fa5d-6d74-4104-8349-657c8411a834'
+ }
+ }, {
+ showToolControls: true,
+ showLeftHandPanel: true,
+ showDownloadPDF: true,
+ showPrintPDF: true,
+ defalutViewColorStyle: {
+ "primaryColor":"#f36b16",
+ "secondaryColor":"#333333",
+ "textActiveColor":"#FFFFFF"
+ },
+ });
+ embedView.getAnnotationManager().then(annotationManager => {
+ // All annotation APIs can be invoked here
+ });
+ </script>
+ </body>
+</html>
+```
+
+---
+
+添加注释
+addAnnotations API允许用户添加支持的注释，可以添加单个或多个注释。注释数据必须按照“注释数据规范”中指定的格式提供。
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口`PDFPage.addAnnot`替代。
+
+- **输入参数**
+
+注释规范中指定的JSON数据，包含注释列表：[Annotation_1, Annotation_2, ... ]
+
+**API输出**
+
+返回一个Promise：
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+ const list_of_annotations = [Annotation_1, Annotation_2, ...];
+
+ embedView.getAnnotationManager().then(annotationManager => {
+
+ annotationManager.addAnnotations(list_of_annotations)
+
+ .then(() => console.log("Success"))
+
+ .catch(error => console.log(error));
+
+ });
+
+---
+
+获取注释
+getAnnotations API允许用户获取PDF文件中存在的注释。数据将以JSON数组返回，并且具体的数据格式将按照”注释数据规范“中描述的返回。
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口`PDFPage.getAnnots`/`PDFPage.getAnnotsByIds`替代。
+
+**输入参数**
+
+过滤器由用户提供：
+
+- 如果在过滤器中设置了一组注释ID，那么与这些ID匹配的注释将被返回。
+
+- 如果设置了PDF文件的页面范围，那么这些页面上的注释将被返回。第一页的页码索引为0。
+
+- 如果没有设置过滤器，则PDF文件中的所有注释将被返回。
+
+ filter = {
+
+ annotationIds:
+
+ [Annotation_ID_1, Annotation_ID_2, ...],
+
+ pageRange:{
+
+ startPage: \<Page_Number>,
+
+ endPage: \<Page_Number>
+
+ },
+
+ }
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+ const filter = {
+
+ // annotationIds: [Annotation_ID_1, Annotation_ID_2, ...];
+
+ // OR,
+
+ // pageRange: {startPage: \<Page_Number>, endPage: \<Page_Number>};
+
+ }
+
+ embedView.getAnnotationManager().then(annotationManager => {
+
+ annotationManager.getAnnotations(filter)
+
+ .then(() => console.log("Success"))
+
+ .catch(error => console.log(error));
+
+ });
+
+---
+
+删除注释
+deleteAnnotations API允许用户删除PDF文件中的注释。
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口`PDFPage.removeAnnotById`替代。
+
+**输入参数**
+
+过滤器由用户提供：
+
+- 如果在过滤器中设置了一组注释ID，那么与这些ID匹配的注释将被删除。
+
+- 如果设置了PDF文件的页面范围，那么这些页面上的注释将被删除。第一页的页码索引为0。
+
+- 如果没有设置过滤器，则PDF文件中的所有注释将被删除。
+
+ filter = {
+
+ annotationIds:
+
+ [Annotation_ID_1, Annotation_ID_2, ...],
+
+ pageRange:{
+
+ startPage: \<Page_Number>,
+
+ endPage: \<Page_Number>
+
+ },
+
+ }
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+ const filter = {
+
+ // annotationIds: [Annotation_ID_1, Annotation_ID_2, ...];
+
+ // OR,
+
+ // pageRange: {startPage: \<Page_Number>, endPage: \<Page_Number>};
+
+ }
+
+ embedView.getAnnotationManager().then(annotationManager => {
+
+ annotationManager.deleteAnnotations(filter)
+
+ .then(() => console.log("Success"))
+
+ .catch(error => console.log(error));
+
+ });
+
+---
+
+更新注释
+updateAnnotation API更新PDF中已存在的注释。API接收更新后的注释数据，查找输入数据中带有相应ID的注释，并将更新应用于该注释。
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口`Annot.setRect`、`Annot.setContent`等方法替代。
+
+**输入参数**
+
+JSON 对象包含注释数据，必须与”注释数据规范“中描述的格式相同。
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+ const annotation_data = \<Annotation_Data>;
+
+ embedView.getAnnotationManager().then(annotationManager => {
+
+ annotationManager.updateAnnotation(annotation_data)
+
+ .then(() => console.log("Success"))
+
+ .catch(error => console.log(error));
+
+ });
+
+---
+
+选中注释
+selectAnnotation API允许用于选中任意的注释并聚焦。
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口`PDFDoc.activateAnnotation`替代。
+
+**输入参数**
+
+\<Annotation_ID>
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+ embedView.getAnnotationManager().then(annotationManager => {
+
+ annotationManager.selectAnnotation(annotation_id)
+
+ .then(() => console.log("Success"))
+
+ .catch(error => console.log(error));
+
+ });
+
+---
+
+取消选中注释
+unselectAnnotation API允许用户取消最近被选中的注释。
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口`PDFDoc.deactivateAnnotation`替代。
+
+ embedView.getAnnotationManager().then(annotationManager => {
+
+ annotationManager.unselectAnnotation();
+
+ });
+
+---
+
+通过fdf/xfdf导入导出注释
+exportAnnotationstoFdf API允许用户导出所有支持的注释到fdf/xfdf格式的文件中。
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口`PDFDoc.exportAnnotsToFDF`替代。
+
+**输入参数**
+
+`fileType: 'xfdf' | 'fdf'` - 指定数据文件格式，默认是'fdf'格式。 
+`annots: arrays` - 指定被导出注释的id。如果为null，则所有注释将被导出。
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+```javascript
+embedView.getAnnotationManager().then(
+ annotationManager => {
+ annotationManager.exportAnnotationstoFdf()
+ .then(annotData => {
+ //Save Date to the file storage;
+ })
+ .catch(error => console.log(error));
+```
+
+importAnnotationsfromFdf API允许用户从fdf/xfdf格式文件中导入所有被支持的注释。
+
+注意：AnnotationManager将在未来版本中被弃用，建议使用新的接口`PDFDoc.importAnnotsFromFDF`替代。
+
+**输入参数**
+
+数据： {File\|Blob\|ArrayBuffer\|TypeArray\|ViewData} - 指定fdf文件流。
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+```javascript
+const fdfData //Get fdf file's stream;
+embedView.getAnnotationManager().then(annotationManager => {
+ annotationManager.importAnnotationsfromFdf(fdfData)
+ .then(() => console.log("Success"))
+ .catch(error => console.log(error));
+});
+```
+
+---
+
+注释相关事件
+开发者可以在用户操作与注释进行交互时收到事件通知。这些事件是由UI和注释相关的API执行的注释操作触发的。
+可以使用addListener方法向嵌入式查看器注册回调函数。
+
+| **事件类型** | **描述** | **回调函数参数** |
+|------------------------|-----------------------|--------------------|
+| Annotation_Clicked | 当注释被点击触发。 | 输入参数：Annotation id |
+| Annotation_Updated | 当注释被更新触发。 | 输入参数：Annotation id |
+| Annotation_Added | 当新注释被添加时触发。 | 输入参数：Annotation id |
+| Annotation_Deleted | 当注释被删除时触发。 | 输入参数：Annotation id |
+| Annotation_Activated | 当注释被选中时触发。 | 输入参数：Annotation id |
+| Annotation_Unactivated | 当注释被取消选中时触发。 | 输入参数：Annotation id |
+
+**添加事件**
+
+FoxitEmbedViewer.addListener(
+\<Callback Type>,
+\<Function>,
+options
+);
+
+---
+
+朗读
+福昕PDF Embed API提供朗读PDF文本内容的途径。
+
+**Activate the "read aloud" module**
+
+activate API允许用户激活”朗读“模块。一旦激活，它将自动朗读被选中的文本。
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+```javascript
+embedView.GetReadAloud().then((readAloud) => {
+ readAloud
+ .activate()
+ .then(() => console.log('Success'))
+ .catch((error) => console.log(error));
+});
+```
+
+**停用”朗读“模块**
+
+deactivate API允许用户停用”朗读“模块。
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+```javascript
+embedView.GetReadAloud().then((readAloud) => {
+ readAloud
+ .deactivate()
+ .then(() => console.log('Success'))
+ .catch((error) => console.log(error));
+});
+```
+
+**开始朗读**
+
+readAloudPages API允许用户在激活了 "朗读" 模块下按照页面范围将页面内容读出。
+
+**输入参数**
+
+```javascript
+{
+ "startPageNumber": startPageNumber,
+ "endPageNumber": endPageNumber,
+}
+```
+
+**输入参数描述**
+
+| **参数** | **描述** | **是否必须项** |
+|-----------------|----------|--------------|
+| startPageNumber | 起始页索引 | 必须 |
+| endPageNumber | 结束页索引 | 必须 |
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+data = {};
+
+embedView.GetReadAloud().then(readAloud=>{
+
+readAloud.readAloudPages(data).then(() => console.log("Success"))
+
+.catch(error => console.log(error));
+
+})
+
+**停止朗读页面**
+
+stop API允许用户停止朗读。
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+embedView.GetReadAloud().then(readAloud=>{
+
+readAloud.stop().then(() => console.log("Success"))
+
+.catch(error => console.log(error));
+
+})
+
+**暂停**
+
+pause API允许用户暂停朗读。
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+embedView.GetReadAloud().then(readAloud=>{
+
+readAloud.pause().then(() => console.log("Success"))
+
+.catch(error => console.log(error));
+
+})
+
+**继续朗读**
+
+resume API允许用户继续朗读。
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+embedView.GetReadAloud().then(readAloud=>{
+
+readAloud.resume().then(() => console.log("Success"))
+
+.catch(error => console.log(error));
+
+})
+
+**更新朗读选项**
+
+updateOption API允许用户更新朗读选项，包括朗读速率和音量。
+
+**输入参数**
+
+option
+
+{
+
+"rate": Float,
+
+"volume": Float,
+
+}
+
+**输入参数**
+
+| **参数** | **描述** | **是否必须项** |
+|----------|----------------------------------------------------------------------------------|--------------|
+| rate | 朗读速率。这是一个浮点数，其值可以在 0.1（最低）到 10（最高）之间，其中 1 表示正常的语速。 | 必须 |
+| volume | 一个用于表示音量值的浮点数，取值范围在 0（最低）到 1（最高）之间。 | 必须 |
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+option = {};
+
+embedView.GetReadAloud().then(readAloud=>{
+
+readAloud.updateOption(option).then(() => console.log("Success"))
+
+.catch(error => console.log(error));
+
+})
+
+---
+
+用户偏好
+用户可以选择您自己的用户偏好。UpdatePreferences API允许用户更新embed viewer的首选项。
+
+**输入参数**
+
+preferences
+
+```js
+{
+ "be_markup_with_selected_text": true,
+}
+```
+
+**输入参数描述**
+
+| **参数** | **描述** | **是否必须项** |
+|------------------------------|--------------------------------------------------|--------------|
+| be_markup_with_selected_text | 在添加文本标记注释后，是否使用所选文本作为标记内容。 | 必须 |
+
+**API输出**
+
+返回一个Promise:
+
+- 在API操作成功时Resolve。
+
+- 在API操作失败时Reject，并包含错误代码和消息的错误对象。
+
+```javascript
+preferences = {};
+embedView
+ .UpdatePreference(preferences)
+ .then(() => console.log('Success'))
+ .catch((error) => console.log(error));
+```
+
+---
+
+Field_Type
+| **属性** | **描述** |
+|----------|----------------------------------------|
+| Unknown | 不受支持或无效 |
+| PushButton | 没有任何值的pushbutton |
+| CheckBox | 带有开/关状态的复选框 |
+| RadioButton | 一组单选按钮，最多只能选择一个项目 |
+| Text | 单行或多行文本 |
+| ListBox | 列表框，单选或多选 |
+| ComboBox | 带或不带编辑框的组合框 |
+| Sign | 签名字段 |
+| Barcode | 条形码字段 |
+
+---
+
+Field_Flag
+| **属性** | **描述** |
+|----------|----------------------------------------|
+| ReadOnly | 如果设置，则用户不能更改字段的值。任何相关的小部件注释都不会与用户交互；也就是说，它们不会对鼠标点击做出反应，也不会因鼠标运动而改变外观。此标志对于其值是从数据库计算或导入的字段很有用。 |
+| Required | 如果设置，则该字段在通过提交表单操作导出时必须具有值。 |
+| NoExport | 如果设置，则提交表单操作不得导出该字段。 |
+| ButtonNoToggleToOff | （仅适用于单选按钮）如果设置，则必须始终选择一个单选按钮；单击当前选定的按钮无效。如果清除，单击所选按钮将取消选择它，不选择任何按钮。 |
+| ButtonRadiosInUnison | （仅适用于单选按钮）如果设置，则单选按钮字段中使用相同值作为打开状态的一组单选按钮将同时打开和关闭；也就是说，如果检查了一个，它们都会被检查。如果清除，则按钮是互斥的。 |
+| TextMultiline | （仅适用于文本字段）如果设置，文本字段可以包含多行文本；如果清除，则字段的文本将限制为单行。 |
+| TextPassword | （仅适用于文本字段）如果设置，该字段用于输入不应在屏幕上可见的安全密码。从键盘键入的字符应该以一些不可读的形式回显，例如星号或项目符号。为了保护密码机密性，如果设置了此标志，查看器应用程序不应将文本字段的值存储在PDF文件中。 |
+| TextDoNotSpellCheck | （仅适用于文本字段）如果设置，则不会对字段中输入的文本进行拼写检查。 |
+| TextDoNotScroll | （仅适用于文本字段）如果设置，则字段不会滚动（单行字段为水平滚动，多行字段为垂直滚动）以容纳超出其注释矩形的文本。字段满后，将不再接受其他文本。 |
+| TextComb | （仅适用于文本字段）如果已设置，请使用梳子。如果设置，字段将自动划分为与字段文本最大长度值相同的等距位置或梳状区域，并将文本排列到这些梳状区域中。 |
+| ComboEdit | （仅适用于组合框）如果设置，组合框将包含一个带有下拉列表的可编辑文本控件，如果清除，则仅包含一个下拉列表。 |
+| ChoiceMultiSelect | （仅适用于列表框）如果设置，可以同时选择多个项目；如果清除，则一次只能选择一个项目。 |
+| CommitOnSelChange | 如果已设置，则应在做出选择后立即提交新值（通常使用定点设备）。在这种情况下，为字段提供值涉及三个操作：选择填写字段，为填写值选择一个选项，并留下该字段，这将最终确定或“提交”数据选择，并触发与此数据的输入或更改相关的任何操作。如果此标志处于打开状态，则处理不会等待离开字段操作发生，而是立即进行到第三步。此选项使应用程序能够在做出选择后执行操作，而不需要用户退出该字段。如果清除，则在用户退出该字段之前不会提交新值。 |
+
+---
+
+Field_Border_Style
+| **属性** | **描述** |
+|----------|----------------------------------------|
+| solid | 纯色 |
+| dashed | 虚线 |
+| inset | 镶嵌 |
+| beveled | 斜面 |
+| underline | 下划线 |
+
+---
+
+Alignment
+| **属性** | **描述** |
+|----------|----------------------------------------|
+| left | 左对齐 |
+| center | 居中对齐 |
+| right | 右对齐 |
+
+---
+
+Features
+| **属性** | **描述** |
+|-----------------|--------|
+| UndoRedo | 撤销重做 |
+| TextSelection | 选择文本 |
+| Highlight | 高亮 |
+| Strikeout | 删除线 |
+| Underline | 下划线 |
+| Squiggly | 波浪下划线 |
+| Replace | 替换 |
+| InsertText | 插入文本 |
+| Typewriter | 打字机 |
+| Note | 备注 |
+| Stamp | 图章 |
+| Drawing | 绘制 |
+| PencilEraser | 铅笔橡皮 |
+| Read | 朗读文档 |
+| FormToolSetting | 表单工具设置 |
+| FieldText | 创建文本域 |
+| OpenFile | 打开文档 |
+| Save | 保存 |
+| Download | 下载 |
+| Print | 打印 |
+| ImportForm | 导入表单 |
+| ExportForm | 导出表单 |
+| FileProperties | 文件属性 |
+| Bookmark | 书签 |
+| Search | 搜索 |
+| Comment | 注释 |
+| Pagination | 页码 |
+| Zoom | 缩放 |
+| PageAdaptation | 页面适配 |
+| ViewMode | 页面视图 |
+
+---
+
+FeatureGroup
+| **属性** | **描述** |
+|----------|----------------------------------------|
+| Toolbar | 工具栏 |
+| More | 更多 |
+| LeftPanel | 左侧面板 |
+| NavBar | 导航栏 |
+| FloatBar | 浮动条 |
+| BottomBar | 底部导航栏 |
+
+---
+
+Font_Styles
+| **属性** | **描述** |
+|---------------|--------------------|
+| FixedPitch | 固定间距字体 |
+| Serif | 衬线字体 |
+| Symbolic | 符号字体 |
+| Script | 手写字体 |
+| NonSymbolic | 非符号字体 |
+| Italic | 斜体字体 |
+| AllCap | 全大写字体 |
+| SmallCap | 小型大写字体 |
+| Bold | 加粗字体 |
+
+---
+
+Font_Charset
+| **属性** | **描述** |
+|----------------|---------------------------------------|
+| ANSI | ANSI (美国，西欧)。 |
+| Default | 系统默认，用于未知或映射目的。 |
+| Symbol | 标准符号。 |
+| Shift_JIS | 日语 (Shift-JIS)。 |
+| Hangeul | 韩语 (Wansung)。 |
+| GB2312 | 简体中文。 |
+| ChineseBig5 | 繁体中文。 |
+| Thai | 泰语。 |
+| EastEurope | 东欧。 |
+| Russian | 俄语。 |
+| Greek | 希腊语。 |
+| Turkish | 土耳其语。 |
+| Hebrew | 希伯来语。 |
+| Arabic | 阿拉伯语。 |
+| Baltic | 波罗的海语。 |
+
+---
+
+Font_CIDCharset
+| **属性** | **描述** |
+|----------------|---------------------------------------|
+| Unknown | 未知字符集。 |
+| GB1 | Adobe-GB1 字符集。 |
+| CNS1 | Adobe-CNS1 字符集。 |
+| JAPAN1 | Adobe-Japan1 字符集。 |
+| KOREA1 | Adobe-Korea1 字符集。 |
+| UNICODE | Unicode 字符集。 |
+
+---
+
+概述
+欢迎使用福昕PDF Embed API！我们的API是一个基于云的平台，专注于简化在Web应用程序中嵌入PDF显示功能的工具。利用我们的API，您可以在短短几分钟内轻松部署高性能的PDF查看器，无需进行复杂的开发或服务器配置。
+
+福昕Embed API不仅提供了高性能阅读，文本处理，注释，填表（暂不支持JavaScript），PDF文件朗读等基础功能，还允许用户自定义PDF查看器的外观，包括主题、工具栏设置和导航功能等。作为基于云的解决方案，我们的API具备跨平台兼容性，可适用于各种Web环境。
+
+---
+
+应用原理
+福昕PDF Embed API是一个集成了阅读、文本处理、注释、填表等PDF重要功能的Web可视化组件，您可以将PDF Embed API提供的Web
+可视化组件嵌入到自己的Web应用中，并通过PDF Embed API提供的API接口来对PDF进行操作以及获取一些PDF相关的操作信息。
+内嵌PDF Viewer示意图：
+
+![](/docs/embed/images/embed_fdp_viewer.jpg '内嵌一个PDF Viewer')
+
+---
+
+注意事项
+**1：**客户端ID是使用福昕PDF Embed API的重要参数，在通过/api/embview-sdk/js接口下载PDF Embed API js包
+ 和创建FoxitEmbed.View实例时，**请别忘记将客户端ID拷贝到参数'clientId'中**。
+
+**2：**跨源资源共享(**CORS**)问题可能会在将PDF文档作为URL设置时发生。因为福昕PDF Embed API将通过URL下载文件。
+ 
+ 为了解决这个问题，您可以有两种解决方式：
+ 1. 将网页和PDF资源定位在相同的域内。
+ 2. 在PDF文档资源上启用CORS头，以允许用户在网页域内访问。
+
+---
+
+获取凭证
+您需要一个客户端ID来使用福昕PDF Embed API，具体步骤如下：
+
+**步骤1：** 注册福昕账号并登录 **[福昕开发者控制台](https://cloudapi.fuxinsoft.cn/dev-console) **。
+
+![福昕开发者控制台](/docs/embed/images/login.jpg 福昕开发者控制台)
+
+**步骤2：** 根据指引获取10000份Services API试用额度以及Embed API试用权限，有效期30天。
+![获取10000份Services API试用额度以及Embed API试用权限](/docs/embed/images/trial.jpg 获取10000份试用额度)
+
+**步骤3：** 创建您的工程以及客户端。
+点击创建新项目，输入项目的标题，点击"创建客户端"
+![创建您的工程](/docs/embed/images/create_own_project.jpg 创建您的工程)
+输入客户端名称，并选择客户端类型为"PDF Embed API"
+![创建客户端](/docs/embed/images/create_client.jpg 创建客户端)
+
+**步骤4：** 拷贝客户端ID作为凭证。
+点击项目中的"编辑"按钮，在弹出框中复制客户端ID
+![拷贝客户端ID作为凭证](/docs/embed/images/credentials.jpg '拷贝客户端ID作为凭证')
+
+---
+
+拷贝和运行
+为了在本地Web服务器（例如：localhost）上启动并运行它，您需要一个有效的客户端ID。
+您可以从**[福昕开发者控制台](https://cloudapi.fuxinsoft.cn/dev-console) **生成一个有效的客户端ID。
+在下面展示的实例代码中有出现**REPLACE_YOUR_CLIENT_ID**的位置将其替换成客户端ID，然后从您的服务器运行网页。同时，更改**pdfUrl**变量设置来自您服务器的文档。
+
+**提示：**
+确保您设置了本地Web服务器，例如Node.js。有关Node.js的详细信息可在https://nodejs.org/en/download/ 找到。
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+ <meta
+ name="viewport"
+ content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no"
+ />
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+ <meta name="renderer" content="webkit" />
+ <title>Foxit Embed - Full Window</title>
+ <style>
+ html,
+ body {
+ width: 100%;
+ height: 100%;
+ }
+ #foxit-embed-view {
+ height: 100%;
+ }
+ </style>
+</head>
+<body>
+<div id="foxit-embed-view"></div>
+<script src="https://servicesapi.foxitsoftware.cn/api/embview-sdk/js? clientId=REPLACE_YOUR_CLIENT_ID"></script>
+<script type="text/javascript">
+ var embedView = new FoxitEmbed.View({
+ clientId: '<REPLACE_YOUR_CLIENT_ID>',
+ divId: 'foxit-embed-view',
+ });
+ var pdfUrl = 'https://cloudapi.fuxinsoft.cn/view-sdk-demo/Embed API Demo.pdf';
+ embedView.previewFile(
+ {
+ content: pdfUrl,
+ metaData: {
+ fileName: 'Embed API Demo.pdf',
+ },
+ },
+ {
+ showToolControls: true,
+
+ showLeftHandPanel: true,
+
+ showDownloadPDF: true,
+
+ showPrintPDF: true,
+
+ defalutViewColorStyle: { primaryColor: '#f36b16', secondaryColor: '#333333', textActiveColor: '#FFFFFF' },
+ },
+ );
+</script>
+</body>
+</html>
+```
+
+---
+
+代码示例
+**[福昕 PDF Embed API 代码示例](https://cloudapi.fuxinsoft.cn/view-sdk-demo/index.html) ** 展示了如何简单地配置Embed Viewer，并且您可以实时看到代码修改后的UI效果。
+![](/docs/embed/images/api_demo.jpg '福昕PDF Embed API 代码示例')
+
+点击”自定义“按钮，然后您可以在不需要任何代码的情况下自行设置查看器选项，更改文件、标志和颜色样式。
+![](/docs/embed/images/Customize_api_demo.jpg '自定义查看器选项')
+
+有三种方式将代码复制到您的项目中，如下所示:
+![](/docs/embed/images/3ways_set_codes.jpg '三种拷贝代码的方式')
+
+1.点击**生成代码**，源代码将被生成并显示。您只需复制这些代码并粘贴到您的项目中。
+![](/docs/embed/images/generate_codes.jpg '生成代码')
+
+2.点击**嵌入为iframe**，带有'iframe'标签的代码将被生成并复制到剪贴板。然后，您只需将这些代码粘贴到您的项目中。
+
+_代码示例:_
+
+```html
+<iframe
+ src="https://cloudapi.fuxinsoft.cn/view-sdk-demo/embed-iframe.html?options%5BshowToolControls%5D=true&options%5BshowLeftHandPanel%5D=true&options%5BshowDownloadPDF%5D=true&options%5BshowPrintPDF%5D=true&options%5BdefalutViewColorStyle%5D=%7B%22primaryColor%22%3A%22%23f36b16%22%2C%22secondaryColor%22%3A%22%23333333%22%2C%22textActiveColor%22%3A%22%23FFFFFF%22%7D&pdfUrl=.%2FEmbed%20API%20Demo.pdf&metaData%5BfileName%5D=Embed%20API%20Demo.pdf"
+ frameborder="0"
+ width="100%"
+ height="100%"
+ allowfullscreen="true"
+>
+</iframe>
+```
+
+3.点击 **复制URL**，URL 将被生成并复制到剪贴板。然后，您只需将这个 URL 粘贴到浏览器中。
+
+---
+
+简介
+为了确保接口调用的安全性，需为请求参数生成数字签名（sn）。数字签名（sn）的生成过程涉及参数过滤、排序、编码、拼接私钥和计算 MD5 值。
+通过这些步骤，生成的签名传入到接口中，接口内部会对签名进行校验，从而确保了请求的唯一性和安全性，防止请求参数被篡改。
+（为了方便用户生成签名和校验，我们提供了**[签名计算工具](https://cloudapi.fuxinsoft.cn/dev-console/sn) **）
+
+---
+
+步骤1：参数过滤
+获取所有请求参数，包括 query 和 formdata 类型的参数。从请求参数中排除名为sn参数和类型为file的参数。
+
+---
+
+步骤2：参数排序
+将剩余的请求参数按参数名的字典顺序进行升序排序。如果参数名的第一个字母相同，继续比较第二个字母，以此类推，直至得到排序结果。
+排序后的参数为：a=value1, b=value2, c=value5, d=value3, f=value4。
+
+---
+
+步骤3：参数编码
+对参数值进行 URL 编码，并将所有参数按以下格式进行拼接：a=URLENCODE(value1)&b=URLENCODE(value2)&c=URLENCODE(value5)&d=URLENCODE(value3)&f=URLENCODE(value4)。拼接时，按步骤2中的排序顺序依次进行拼接。
+URL 编码字母为大写。URL编码规范请参照**[URL编码规范](http://www.faqs.org/rfcs/rfc1738.html) **。
+
+---
+
+步骤4：添加密钥
+在拼接好的参数字符串末尾添加私钥，格式为 sk=密钥ID。
+最终拼接结果为：a=URLENCODE(value1)&b=URLENCODE(value2)&c=URLENCODE(value5)&d=URLENCODE(value3)&f=URLENCODE(value4)&sk=密钥ID。
+
+---
+
+步骤5：计算MD5值
+将拼接好的字符串计算其 MD5 值，得到最终的签名。MD5 值需要 32 位，其中的字母为小写。
+_sn=MD5(a=URLENCODE(value1)&b=URLENCODE(value2)&c=URLENCODE(value5)&d=URLENCODE(value3)&f=URLENCODE(value4)&sk=mysec)_
+
+---
+
+注意事项
+* 参与签名的参数值必须为 UTF-8 编码格式。
+* 所有参数值需进行 URL 编码处理。
+* 参数的值为空的字段，不参与 sn 的生成。
+* 参数 sn 和类型为 file 的参数，不参与 sn 的生成。
+* 通过遵循以上步骤和注意事项，可以确保生成的签名是唯一且安全的，用于验证接口请求的完整性和合法性。
+
+---
+
+Node.js代码实例
+以Create为例：
+
+	function createPDFTask(inputFilePath, format = 'word'){
+ const querystring = require('querystring');
+ const crypto = require('crypto'); 
+ let queryParams = {
+ 'clientId': clientId,
+ 'format': format,
+ };
+
+ const sortedParams = Object.fromEntries(Object.entries(queryParams).sort());
+ // Stringify the parameters
+ const querystringified = querystring.stringify(sortedParams);
+
+ const queryStringWithSecret = querystringified + '&sk=' + secretId;
+ // Generate signature using md5
+ request.defaults.params.sn = crypto.createHash('md5').update(queryStringWithSecret).digest('hex');
+
+ const readStream = fs.createReadStream(inputFilePath)
+ readStream.on('error',function (err) {
+ console.log('read input file error');
+ console.log(err.message)
+ process.exit(1)
+ })
+
+ const formData = new FormData()
+ formData.append('inputDocument', readStream)
+ formData.append('format', format)
+ //Upload a file and create a new workflow task.
+ return request({
+ method: 'post',
+ url: '/document/create',
+ headers: formData.getHeaders(),
+ data: formData
+ }).then(function (res) {
+
+ const resultData = res.data
+
+ // Read the api doc about all result codes
+ if(resultData.code === 0){
+ return resultData.data.taskInfo.taskId
+ }
+ }).catch(function (err) {
+ console.log("Create pdf from others task error:", err.response.data);
+ throw err
+ })
+	}
+
+---
+
+快速上手
+福昕PDF Services API支持通过HTTP客户端调用基于云的REST API来处理PDF。
+以下是获取开发者凭据并使用API的步骤（更多示例详见**[GitHub](https://github.com/foxitsoftware/ServicesAPIDemo) **）：
+
+---
+
+获取凭证
+您需要一个客户端ID和密钥ID来使用福昕PDF Services API，具体步骤如下：
+
+**步骤1：** 注册福昕账号并登录 **[福昕开发者控制台](https://cloudapi.fuxinsoft.cn/dev-console/dashboard) **。
+
+![福昕开发者控制台](/docs/services/images/login.jpg 福昕开发者控制台)
+
+**步骤2：** 根据指引获取10000份试用额度，有效期30天
+![获取10000份试用额度](/docs/services/images/trial.jpg 获取10000份试用额度)
+
+**步骤3：** 创建您的工程以及客户端。
+点击创建新项目，输入项目的标题，点击"创建客户端"
+![创建您的工程](/docs/services/images/create_own_project.jpg 创建您的工程)
+
+输入客户端名称，并选择客户端类型为"PDF Services API"
+![创建客户端](/docs/services/images/create_client.jpg 创建客户端)
+
+**步骤4：** 拷贝客户端ID和密钥ID作为凭证.
+![拷贝客户端ID和密钥ID作为凭证](/docs/services/images/credentials.jpg 拷贝客户端ID和密钥ID作为凭证)
+
+---
+
+调用APIs
+福昕PDF Services API是通过使用福昕提供的凭据进行身份验证的REST API。在获得凭据后，您可以按照以下说明调用REST API。
+**每个成功的文档处理需要进行以下三个REST API调用**：
+
+1. 调用文档处理API，例如： _/document/create_
+2. 调用 _/task_ API 并使用步骤1返回的任务ID(taskId)获取任务执行状态
+3. 调用 _/download_ API 并使用步骤2返回的文档ID(docId)下载生成的文件（PDF文档，图片，文本文件，压缩包等）。
+
+**备注：每个接口参数sn的生成参考[签名(sn)生成算法](https://cloudapi.fuxinsoft.cn/zh-CN/docs/services/generateSN)。**
+
+---
+
+1. 创建新任务
+调用 _/document/create_ (创建PDF文件) 上传输入文件并创建一个新的任务.
+
+例如:
+POST <https://servicesapi.foxitsoftware.cn/api/document/create>
+
+**/document/create** 允许用户通过微软Office文档(Word, Excel and PowerPoint)和其他格式的文件来创建PDF文件。
+
+- 请求参数
+
+查询参数显示在以下表格中，并附加到URL并传递到服务器。
+
+| 参数 | 类型 | 是否必须项 | 描述 |
+| --------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| clientId | 字符串 | 必须 | 客户端ID，开发者可以通过福昕开发者控制台生成。 |
+| sn | 字符串 | 必须 | 参数的签名。 |
+
+表单数据参数如下表所示，附加到HTTP主体并传递给服务器。
+
+| 参数 | 类型 | 是否必须项 | 描述 |
+| ------------- | ------ | ---------- | ------------------------------------------------------------------------ |
+| inputDocument | 文件 | 必须 | 需要被转换为PDF的文档 |
+| format | 字符串 | 必须 | 被转换的文档格式。可选值为：word, excel, ppt, image, text. |
+
+---
+
+返回值
+_/task_ 允许用户通过返回的 taskId 获取任务状态。如果任务已完成，我们可以获取 docId。
+
+| 返回值 | 类型 | 描述 |
+| ----------- | ------- | ------------------------------------------------------------ |
+| code | 整型 | 错误值 |
+| msg | 字符串 | 错误信息 |
+| data | 对象 | 详细数据对象 |
+| taskInfo | 对象 | 任务信息 |
+| taskId | 字符串 | 任务ID |
+| details | 对象 | 详细错误信息 |
+| checkParams | 数组 | 参数错误信息 |
+
+---
+
+例子
+```xml
+<table>
+ <tr>
+ <th>Example Request</th>
+ <td>
+ <pre>
+ <code>
+ $curl -X POST --header 'Content-Type: multipart/form-data' --header 'Accept: application/json' -F inputDocument=@"demo.png" -F format=image 'https://servicesapi.foxitsoftware.cn/api/document/create?sn=a7ae500e3ca1796ce33aa4e99d21c5a8&clientId={YOUR_CLIENT_ID}'
+ </code>
+ </pre>
+ </td>
+ </tr>
+ <tr>
+ <th>Example Response</th>
+ <td>
+ <pre>
+ <code>Success:
+ {
+ "code": 0,
+ "msg": "Success",
+ "data" {
+ "taskInfo":
+ {
+ "taskId": "613881e8ba5e2a000152d520"
+ }
+ }
+ }
+ Failed:
+ {
+ "code": 600000,
+ "msg": "Error: Missing parameter",
+ "data": []
+ }</code>
+ </pre>
+ </td>
+ </tr>
+</table>
+```
+
+---
+
+2. 等待任务完成
+```bash
+ GET https://servicesapi.foxitsoftware.cn/api/task
+```
+
+_/task_ 允许用户通过返回的 taskId 获取任务状态。如果任务已完成，我们可以获取 docId。
+
+- 请求参数
+
+| 参数 | 类型 | 是否必须项 | 描述 |
+| --------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| clientId | 字符串 | 必须 | 客户端ID，开发者可以通过福昕开发者控制台生成。 |
+| sn | 字符串 | 必须 | 参数的签名。 |
+| taskId | 字符串 | 必须 | 新任务的任务ID。 |
+
+---
+
+返回值
+| 返回值 | 类型 | 描述 |
+| ---------- | ------- | ----------------------------- |
+| code | 整型 | 返回值 |
+| msg | 字符串 | 返回信息 |
+| data | 对象 | Json类型数据 |
+| taskInfo | 对象 | 任务信息 |
+| docid | 字符串 | 输出文档ID |
+| percentage | 整型 | 任务执行的百分比 |
+| detail | 字符串 | 详细错误信息 |
+
+---
+
+例子
+```xml
+<table>
+ <tr>
+ <th>Example Request</th>
+ <td>
+ <pre>
+ <code>
+ $curl -X GET --header 'Accept: application/json' 'https://servicesapi.foxitsoftware.cn/api/task?sn=a7ae500e3ca1796ce33aa4e99d21c5a8&clientId=56c5caff550aaa853212f3579516c2cc&taskId=613881e8ba5e2a000152d520'
+ </code>
+ </pre>
+ </td>
+ </tr>
+ <tr>
+ <th>Example Response</th>
+ <td>
+ <pre>
+ <code>Success:
+ {
+ "code": 0,
+ "msg": "Success",
+ "data": {
+ "taskInfo": {
+ "percentage": 100,
+ "docid": "6138a1f00afc7f000128cb01"
+ }
+ }
+ }
+ Failed:
+ {
+ "code": 600060,
+ "msg": "Error: Server internal error",
+ "data": {
+ "detail": "10000|GENERIC_SERVER_FAILURE, more info: task is not exist"
+ }
+ }</code>
+ </pre>
+ </td>
+ </tr>
+</table>
+```
+
+---
+
+3. 下载输出文件
+下载输出文件。_/download_ API 通过_/task_ API 返回的文档ID作为输入参数来下载输出文件。
+GET <https://servicesapi.foxitsoftware.cn/api/download>
+
+- 请求参数
+
+| 参数 | 类型 | 是否必须项 | 描述 |
+| --------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| clientId | string | 必须 | 客户端ID，开发者可以通过福昕开发者控制台生成。 |
+| sn | string | 必须 | 参数的签名。 |
+| docId | string | 必须 | task接口返回的文档ID |
+
+---
+
+返回值
+输出文件的数据
+
+---
+
+Node.js代码实例
+确保您已安装版本大于或等于12.0的Node.js 。
+您可以使用任何您喜欢的HTTP客户端库，这里我们使用流行的 "axios" 作为示例。
+
+**步骤1：** 安装依赖
+
+ npm install axios form-data
+
+**步骤2：** 新建一个文件: test-api.js
+
+ const FormData = require('form-data');
+ const axios = require('axios');
+ const fs = require('fs');
+ const path = require('path');
+
+ // Get clientId and secretId form the json file.
+ const credentials_params = require('../foxit_cloud_api_credentials.json');
+ const clientId = credentials_params.client_credentials.client_id;
+ const secretId = credentials_params.client_credentials.secret_id;
+
+ // The signature of parameters will be calculated in the actual interface call in combination with the secret Id.
+ const sn = 'testsn'
+
+ // TODO: replace with your own input doc path and output file path
+ const inputFilePath = '../input_files/AboutFoxit.doc'
+ const outputFilePath = '../output_files/create_pdf_from_others/AboutFoxit.pdf'
+
+ // create axios instance and setup common request config 
+ const request = axios.create({
+ baseURL: 'https://servicesapi.foxitsoftware.cn/api/',
+ timeout: 60 * 1000,
+
+ // common params for every api call
+ params: {
+ sn,
+ clientId
+ },
+ });
+
+ //format can be "word", "excel", "ppt", "image", "text".
+ function createPDFTask(inputFilePath, format = 'word'){
+ const querystring = require('querystring');
+ const crypto = require('crypto'); 
+ let queryParams = {
+ 'clientId': clientId,
+ 'format': format,
+ };
+
+ const sortedParams = Object.fromEntries(Object.entries(queryParams).sort());
+ // Stringify the parameters
+ const querystringified = querystring.stringify(sortedParams);
+
+ const queryStringWithSecret = querystringified + '&sk=' + secretId;
+ // Generate signature using md5
+ request.defaults.params.sn = crypto.createHash('md5').update(queryStringWithSecret).digest('hex');
+ const readStream = fs.createReadStream(inputFilePath)
+ readStream.on('error',function (err) {
+ console.log('read input file error');
+ console.log(err.message)
+ process.exit(1)
+ })
+
+ const formData = new FormData()
+ formData.append('inputDocument', readStream)
+ formData.append('format', format)
+ //Upload a file and create a new workflow task.
+ return request({
+ method: 'post',
+ url: '/document/create',
+ headers: formData.getHeaders(),
+ data: formData
+ }).then(function (res) {
+
+ const resultData = res.data
+
+ // Read the api doc about all result codes
+ if(resultData.code === 0){
+ return resultData.data.taskInfo.taskId
+ }
+ }).catch(function (err) {
+ console.log("Create pdf from others task error:", err.response.data);
+ throw err
+ })
+ }
+
+ function getTaskInfo(taskId){
+ const querystring = require('querystring');
+ const crypto = require('crypto'); 
+ let queryParams = {
+ 'clientId': clientId,
+ 'taskId': taskId,
+ };
+
+ const sortedParams = Object.fromEntries(Object.entries(queryParams).sort());
+ // Stringify the parameters
+ const querystringified = querystring.stringify(sortedParams);
+
+ const queryStringWithSecret = querystringified + '&sk=' + secretId;
+ // Generate signature using md5
+ const sn = crypto.createHash('md5').update(queryStringWithSecret).digest('hex');
+
+ return request({
+ method: 'get',
+ url: '/task',
+ params: {sn, taskId}
+ }).then(function (res) {
+ const resultData = res.data
+ if(resultData.code === 0){
+ const taskInfo = resultData.data.taskInfo
+ console.log("Task process is:", taskInfo.percentage)
+ return taskInfo
+ }else{
+ throw new Error(resultData.code + resultData.message)
+ }
+ }).catch(function (err) {
+ throw err
+ })
+ }
+
+ function pollForDocId(taskId, intervalInMilliSeconds = 2000){
+ return new Promise(function(resolve, reject){
+ // poll for task status and once task is completed resolve the promise with docId
+ let timeout
+ function poll(){
+ if(timeout){clearTimeout(timeout)}
+ getTaskInfo(taskId).then(function(taskInfo){
+ if(taskInfo.percentage === 100){
+ console.log("Task completed.")
+ resolve(taskInfo.docId)
+ }else{
+ setTimeout(poll, intervalInMilliSeconds)
+ }
+ }).catch(function(err){ 
+ // when task is running, the task api will return error
+ // if task is running, try to get taskInfo later 
+ if(err.response.data.data.detail.indexOf('The task is running') > -1){
+ console.log("Task is running, retry in ", intervalInMilliSeconds, " miliseconds");
+ setTimeout(poll, intervalInMilliSeconds)
+ }
+ })
+ }
+ poll()
+ })
+ }
+
+ function downloadFileByDocId(docId, outputFilePath){
+
+ const writeStream = fs.createWriteStream(outputFilePath)
+
+ const querystring = require('querystring');
+ const crypto = require('crypto'); 
+ let queryParams = {
+ 'clientId': clientId,
+ 'docId': docId,
+ };
+
+ const sortedParams = Object.fromEntries(Object.entries(queryParams).sort());
+ // Stringify the parameters
+ const querystringified = querystring.stringify(sortedParams);
+
+ const queryStringWithSecret = querystringified + '&sk=' + secretId;
+ // Generate signature using md5
+ const sn = crypto.createHash('md5').update(queryStringWithSecret).digest('hex');
+
+ writeStream.on('error',function (err) {
+ console.log(err.message)
+ process.exit(1)
+ })
+ // Download the convert streams.
+ request({
+ method: 'get',
+ url: '/download',
+ responseType: 'stream',
+ params: {sn, docId}
+ }).then(function (res) {
+ res.data.pipe(writeStream)
+ }).catch(function (err) {
+ console.log(err);
+ })
+ // Save the convert file.
+ return new Promise(function(resolve, reject){
+ writeStream.on('finish', function(){
+ console.log('Download stream finished');
+ resolve()
+ })
+ writeStream.on('error',function (err) {
+ console.log(err.message)
+ reject(err)
+ })
+ })
+ }
+
+ async function start(){
+ outPath = path.dirname(outputFilePath);
+ if(!fs.existsSync(outPath)){
+ fs.mkdirSync(outPath);
+ }
+ const taskId = await createPDFTask(inputFilePath)
+ const docId = await pollForDocId(taskId)
+ await downloadFileByDocId(docId, outputFilePath)
+ }
+
+ start().then(function(){
+ console.log("Create PDF successfully!");
+ process.exit(0)
+ }).catch(function(err){
+ console.log("Create PDF failed: " + err);
+ process.exit(1)
+ })
+
+**步骤3：** 执行 test-api.js
+
+ node test-api.js
+
+---
+
+主要功能
+- PDF创建和转换：支持从其他文件格式创建PDF文件，并将PDF转换为其他格式，如HTML、Word等。
+- PDF合并和拆分：支持将多个PDF文件合并为一个，或将一个PDF文件拆分为多个。
+- PDF压缩和优化：通过图像压缩和优化来减小PDF文件大小，扁平化，线性化文档等功能
+- PDF安全：提供密码保护和高级加密功能，确保PDF文件的安全性。
+
+---
+
+文档合并：combine_pdf
+将压缩或归档文件中的多个PDF文档，合并为一个PDF文档。使用示例1：把<absolute_path/file_name.zip>中的PDF文档合并为一个PDF。使用示例2：把<url/file_name.pdf>, <url/file_name1.pdf>合并为一个PDF。
+
+参数：
+ - path: string - 压缩或归档文件的绝对路径或多个URL地址
+ - config: object - 配置项
+ - isAddBookmark: boolean - 是否添加书签
+ - isAddTOC: boolean - 是否添加目录
+ - isContinueMerge: boolean - 如果发生错误是否继续合并
+ - isRetainPageNum: boolean - 是否保留页面逻辑号
+ - bookmarkLevels: enum('0', '1', '2', '3', '4', '5') - 是否显示目录的等级
+
+---
+
+文档比较：compare_pdf
+逐页比较一个PDF文档（作为“基准文档”）与另一个PDF文档（作为“比较文档”）。使用示例1：把<absolute_path/file_name.pdf>与<absolute_path/file_name.pdf>进行比较。使用示例2：把<absolute_path/file_name.pdf>与<absolute_path/file_name.pdf>进行比较，比较结果为：pdf。使用示例3：把<url/file_name.pdf>与<url/file_name.pdf>进行比较。
+
+参数：
+ - basePath: string - 基准PDF文档的绝对路径或URL地址
+ - comparePath: string - 比较PDF文档的绝对路径或URL地址
+ - resultType: enum('json', 'pdf') - 结果类型
+ - compareType: enum('all', 'text') - 比较类型
+
+---
+
+PDF压缩: compress_pdf
+使用指定的压缩级别压缩PDF文档。使用示例1：压缩<absolute_path/file_name.pdf>。使用示例2：压缩<absolute_path/file_name.pdf>，压缩级别为：high。使用示例3：压缩<url/file_name.pdf>。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+ - compressionLevel: enum('low', 'medium', 'high') - 压缩级别
+
+---
+
+PDF转换：convert_pdf
+转换PDF文档到其他格式，支持格式：word, excel, ppt, image, text, html。使用示例1：把<absolute_path/file_name.pdf>转换为word。使用示例2：把<absolute_path/file_name.pdf>转换为text。使用示例3：把<url/file_name.pdf>转换为excel。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+ - format: enum('word', 'excel', 'ppt', 'image', 'text', 'html') - 转换后的文件类型
+
+---
+
+PDF生成：create_pdf
+从其他格式，创建或转换为PDF文档，支持格式：word，excel，ppt，image，text。使用示例1：把<absolute_path/file_name.docx>转换为PDF。使用示例2：把<absolute_path/file_name.txt>转换为PDF。使用示例3：把<url/file_name.png>转换为PDF。
+
+参数：
+ - path: string - 转换文件的绝对路径或URL地址
+ - format: enum('word', 'excel', 'ppt', 'image', 'text') - 输入的文件类型
+
+---
+
+从html创建PDF :create_pdf_from_html
+从HTML文件或指定站点URL创建PDF。使用示例1：把<absolute_path/file_name.html>转换为PDF。使用示例2：把\<url>转换为PDF。使用示例3：把\<url>转换为PDF，页面模式为：单页。使用示例4：把<url/flie_name.html>转换为PDF，输入格式为：html。
+
+参数：
+ - format: enum('url', 'html', 'htm', 'shtml') - 输入格式，如果是url，则url参数不能为空，否则path参数不能为空
+ - path: string - HTML文件的绝对路径或URL地址
+ - url: string - URL
+ - config: object - 配置项
+ - width: number - 页面宽度，该值必须大于16，默认值为900(单位为1/72英寸)
+ - height: number - 页面高度，该值必须大于16，默认值为600(单位为1/72英寸)
+ - rotate: number - 页面旋转，0：0度，1：90度，2：180度，3：270度
+ - pageMode: number - 页面模式，0：单页，1：多页
+ - pageScaling: number - 页面缩放，1：适应页面，2：适应内容
+
+---
+
+文档内容提取：extract_pdf
+提取PDF文档中的文本或图像。使用示例1：提取<absolute_path/file_name.pdf>中的文本。使用示例2：提取<absolute_path/file_name.pdf>中的图片。使用示例3：提取<url/file_name.pdf>中的文本。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+ - mode: enum('extractImages', 'extractText') - 提取模式，extractText表示提取文本，extractImages表示提取图片
+ - pageRange: string - 提取页面范围，A、B和C以逗号分隔。A、B或C可以取数字，如99，也可以取范围，如1-30。如果为空，则提取整个文档
+
+---
+
+页面扁平化：flatten_pdf
+使PDF文档页面扁平化，使注释和表单字段成为页面内容的一部分。使用示例1：把<absolute_path/file_name.pdf>扁平化。使用示例2：把<url/file_name.pdf>扁平化。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+ - pageRange: string - PDF文档的页面范围。文档中的页面可以按任何顺序引用，从开始或结束都可以。例如：1、2、3、7-9，全部。如果未指定，则执行所有页面
+
+---
+
+线性化PDF文档：linearize_pdf
+线性化PDF文档。使用示例1：把<absolute_path/file_name.pdf>线性化。使用示例2：把<url/file_name.pdf>线性化。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+
+---
+
+文档级操作：manipulation_pdf
+操作PDF文档，例如删除页面，旋转页面，移动页面。使用示例1：删除<absolute_path/file_name.pdf>的第1页。使用示例2：把<absolute_path/file_name.pdf>的第2页移到第1页。使用示例3：删除<url/file_name.pdf>的第1页。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+ - config: object - PDF文档操作配置
+ - pageAction: enum('delete', 'rotate', 'move') - 页面操作类型
+ - pages: array(number) - 操作的页码，如[0,1,2,3]，页面索引从0开始
+ - angle: number - 页面旋转，0：0度，1：90度，2：180度，-1：270度
+ - destination: number - 目标页码，如果"页面操作类型"是"移动"，它是必需的
+
+---
+
+文档保护:protect_pdf
+使用用户或/和所有者密码保护PDF文档，并对某些功能设置限制。使用示例1：给<absolute_path/file_name.pdf>设置用户密码，密码为：123456。使用示例2：给<absolute_path/file_name.pdf>设置所有者密码，密码为：123456，权限设置为：不允许修改PDF内容。使用示例3：给<url/file_name.pdf>设置用户密码，密码为：123456。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+ - passwordProtection: object - 密码保护设置，必须至少设置一个密码
+ - userPassword: string - 用户密码
+ - ownerPassword: string - 所有者密码
+ - permission: object - 权限设置
+ - PRINT_LOW_QUALITY: boolean - 以正常模式打印PDF文档
+ - PRINT_HIGH_QUALITY: boolean - 以高质量打印PDF文档
+ - EDIT_CONTENT: boolean - 修改PDF内容。设置该值后，用户可以通过操作修改PDF文档的内容
+ - EDIT_FILL_AND_SIGN_FORM_FIELDS: boolean - 填写PDF表格。如果设置了该值，用户可以填写交互式表单字段（包括签名字段）
+ - EDIT_ANNOTATION: boolean - 操作文本注释和填写交互式表单字段。如果还设置了"修改PDF内容"值，则用户可以创建或修改交互式表单字段
+ - EDIT_DOCUMENT_ASSEMBLY: boolean - 组装PDF文档。如果设置了这个值，就可以组装文档（插入、旋转或删除页面以及创建书签或缩略图），而不管是否设置了"修改PDF内容"值
+ - COPY_CONTENT: boolean - 残疾的支持。如果设置了此值，用户可以提取文本和图形，以支持残疾用户的可访问性或用于其他目的
+ - encryptionAlgorithm: enum('AES_128', 'AES_256', 'RC4') - 加密算法
+
+---
+
+密码移除：remove_password
+从PDF文档中删除密码安全性。使用示例1：移除<absolute_path/file_name.pdf>的用户密码，密码为：123456。使用示例2：移除<absolute_path/file_name.pdf>的所有者密码，密码为：123456。使用示例3：移除<url/file_name.pdf>的用户密码，密码为：123456。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+ - password: string - PDF文档密码。如果PDF受所有者密码保护，则用户需要在该字段中使用所有者密码来取消文档安全性，否则用户需要传入用户密码来打开文档
+
+---
+
+文档拆分：split_pdf
+将PDF文档拆分为多个较小的文档。使用示例1：把<absolute_path/file_name.pdf>拆分为多个文档，拆分后的页数为：3。使用示例2：把<url/file_name.pdf>拆分为多个文档，拆分后的页数为：2。
+
+参数：
+ - path: string - PDF文档的绝对路径或URL地址
+ - config: object - 配置项
+ - pageCount: number - 拆分后的页数
+
+---
+
+在 VS Code 的 GitHub Copilot 中使用（Node.js）
+- 本地需要安装[Node.js](https://nodejs.org/)且版本大于等于18.0.0
+
+打开 VS Code 配置文件 `settings.json`，添加以下配置，并替换其中的 `your_client_id`：
+
+- Windows, MacOS, Linux
+
+```json
+{
+ "mcp": {
+ "servers": {
+ // 其他配置 ...
+ "mcp-server-foxit-cloudapi": {
+ "command": "npx",
+ "args": [
+ "-y",
+ "@foxitsoftware/mcp-server-foxit-cloudapi"
+ ],
+ "env": {
+ "CLIENT_ID": "your_client_id"
+ }
+ }
+ // 其他配置 ...
+ }
+ }
+}
+```
+
+---
+
+在 VS Code 的 Cline 中使用（Node.js）
+- 本地需要安装[Node.js](https://nodejs.org/)且版本大于等于18.0.0
+
+打开 Cline MCP 配置文件 `cline_mcp_settings.json`, 添加以下配置，并替换其中的 `your_client_id`：
+
+- Windows
+
+```json
+{
+ "mcpServers": {
+ // 其他配置 ...
+ "mcp-server-foxit-cloudapi": {
+ "autoApprove": [],
+ "disabled": false,
+ "timeout": 60,
+ "command": "cmd",
+ "args": [
+ "/c",
+ "npx",
+ "-y",
+ "@foxitsoftware/mcp-server-foxit-cloudapi"
+ ],
+ "env": {
+ "CLIENT_ID": "your_client_id"
+ },
+ "transportType": "stdio"
+ }
+ // 其他配置 ...
+ }
+}
+```
+
+- MacOS, Linux
+
+```json
+{
+ "mcpServers": {
+ // 其他配置 ...
+ "mcp-server-foxit-cloudapi": {
+ "autoApprove": [],
+ "disabled": false,
+ "timeout": 60,
+ "command": "npx",
+ "args": [
+ "-y",
+ "@foxitsoftware/mcp-server-foxit-cloudapi"
+ ],
+ "env": {
+ "CLIENT_ID": "your_client_id"
+ },
+ "transportType": "stdio"
+ }
+ // 其他配置 ...
+ }
+}
+```
+
+---
+
+在 VS Code 的 GitHub Copilot 中使用（Python）
+- 本地需要安装python包管理器 [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+打开 VS Code 配置文件 `settings.json`，添加以下配置，并替换其中的 `your_client_id`：
+
+```json
+{
+ "mcp": {
+ "servers": {
+ // 其他配置 ...
+ "mcp-server-foxit-cloudapi": {
+ "command": "uvx",
+ "args": [
+ "mcp-server-foxit-cloudapi"
+ ],
+ "env": {
+ "CLIENT_ID": "your_client_id"
+ }
+ }
+ // 其他配置 ...
+ }
+ }
+}
+```
+
+---
+
+在 VS Code 的 Cline 中使用（Python）
+- 本地需要安装python包管理器 [uv](https://docs.astral.sh/uv/getting-started/installation/)
+
+打开 Cline MCP 配置文件 `cline_mcp_settings.json`, 添加以下配置，并替换其中的 `your_client_id`：
+
+```json
+{
+ "mcpServers": {
+ // 其他配置 ...
+ "mcp-server-foxit-cloudapi": {
+ "autoApprove": [],
+ "disabled": false,
+ "timeout": 60,
+ "command": "uvx",
+ "args": [
+ "mcp-server-foxit-cloudapi"
+ ],
+ "env": {
+ "CLIENT_ID": "your_client_id"
+ },
+ "transportType": "stdio"
+ }
+ // 其他配置 ...
+ }
+}
+```
+
+---
+
+概述
+福昕低代码平台工作流AI助手是一款智能化工具，旨在通过人工智能技术提升工作流的自动化和智能化水平。该助手集成了先进的AI算法，能够帮助用户在设计、优化和管理工作流时提供智能建议和自动化操作，从而显著提高低代码平台的工作效率。
+
+---
+
+打开工作流AI助手
+通过点击工作流的AI助图标可打开工作流AI助手对话框
+![打开AI助手](/docs/cloudapisstudio/image/打开AI助手.png)
+
+---
+
+通过对话框和AI助手获取帮助
+可以通过AI助手询问问题获取帮助
+![问题回答](/docs/cloudapisstudio/image/问题回答.png)
+
+---
+
+通过AI助手创建工作流
+![AI创建工作流创建工作流](/docs/cloudapisstudio/image/创建工作流.png)
+![AI生成的工作流](/docs/cloudapisstudio/image/AI生成的工作流.png)
+
+---
+
+福昕PDF低代码平台简介
+福昕PDF 低代码平台是一款创新的工具，旨在简化PDF处理和管理的流程。通过这个平台，用户可以通过简单的拖拽界面上的按钮，轻松完成对Cloud API的调用工作流，而无需编写复杂的代码。这使得即使没有编程经验的人也能高效地使用和集成这些API功能。
+**主要功能包括：**
+ - **PDF创建和转换**：支持从其他文件格式创建PDF文件，并将PDF转换为其他格式，如HTML、Word等。
+ - **PDF合并和拆分**：支持将多个PDF文件合并为一个，或将一个PDF文件拆分为多个。
+ - **PDF压缩和优化**：通过图像压缩和优化来减小PDF文件大小。
+ - **PDF安全**：提供密码保护和高级加密功能，确保PDF文件的安全性。
+
+福昕PDF 低代码平台不仅提高了工作效率，还为用户提供了一个直观、易用的界面，使得PDF处理变得更加简单和便捷。
+
+---
+
+变量
+在无代码平台中，变量是用于存储和传递数据的容器。变量包括系统变量和自定义变量。用户可以在工作流中自定义和使用变量，以便在不同的步骤之间传递数据。
+
+---
+
+系统变量
+系统变量包括
+ - **userId** *[string]* ：用户ID 
+ - **workflowId** *[string]* ：工作流ID
+ - **executionId** *[string]*：执行ID
+
+---
+
+自定义变量
+在福昕低代码平台中，变量是用于存储和传递数据的容器。当前平台支持三种类型的自定义变量：字符串（String）、文件（File）和数字（Number）。以下是对这三种变量类型的详细介绍：
+
+ - **字符串** [*String*]：字符串变量用于存储文本数据。它可以包含字母、数字、符号等字符，适用于存储名称、描述、路径等文本信息。例如，可以使用字符串变量来存储用户输入的文本或从API返回的文本数据。
+ - **文件** [*File*]：文件变量用于存储文件数据。它可以包含各种类型的文件，如PDF、图片、文档等，适用于在工作流中传递和处理文件。例如，可以使用文件变量来存储上传的PDF文件，并在工作流中进行处理和转换。
+ - **数字**[*Number*]：数字变量用于存储数值数据。它可以是整数或小数，适用于存储计数、金额、百分比等数值信息。例如，可以使用数字变量来存储计算结果或从API返回的数值数据。
+ 
+通过使用这些变量，用户可以在工作流的不同节点之间传递和处理数据，从而实现复杂的业务逻辑和自动化流程。
+
+---
+
+表达式
+在福昕低代码平台中，表达式是一种强大的工具，用于在工作流中动态处理和传递数据。表达式以 $ 开头，允许用户在工作流的参数中使用变量和进行计算。通过表达式，用户可以实现更灵活和动态的业务逻辑。
+
+---
+
+表达式的基本语法
+表达式以 $ 开头，后跟变量名或计算公式。例如，变量的表达式使用语法 $vars.sampleword，其中 sampleword 是变量的名称。
+
+---
+
+固定值与表达式
+工作流的参数可以是固定值，也可以是表达式。固定值是直接输入的具体数据，而表达式则是通过变量或计算公式动态生成的数据。例如：
+**固定值**："Hello, World!"
+**表达式**：$vars.samplestr
+
+---
+
+使用表达式的场景
+表达式可以在工作流的多个场景中使用，符合JavaScript语法的场景都可以使用。例如：
+
+ - **字符串拼接**：可以拼接URL地址。例如，$vars.baseURL + "/api/v1/documents/" + $vars.documentID 用于生成完整的API请求URL。
+ - **数学计算**：可以计算两个文档的页数和。例如，$vars.document1PageCount +
+ $vars.document2PageCount 用于计算两个PDF文档的总页数。
+ - **条件判断**：可以判断文档的页面数量。例如，$vars.pageCount > 100 ? "Large Document" : "Small Document" 用于判断文档是否为大文档。
+
+**当前支持情况**
+
+由于这是福昕低代码平台的第一个版本，目前工作流中只有小部分参数支持表达式方式输入。后续版本将会增加更多参数支持表达式输入，以提供更强大的功能和更高的灵活性。
+
+通过使用表达式，用户可以在工作流中实现复杂的逻辑和动态数据处理，提升工作流的灵活性和功能性。
+
+---
+
+凭据
+凭据是用于验证和授权访问API或其他服务的安全信息。在福昕无代码平台中，用户需要创建和管理凭据，以确保安全地调用平台提供的API。
+
+---
+
+工作流
+工作流是指通过图形化界面和拖拽操作来设计和管理业务流程的工具，用户可以通过简单拖拽界面上的按钮，完成对Cloud API的调用工作流，使得即使没有编程经验的人也能轻松创建和管理复杂的业务流程。
+具体来说，工作流可以包括以下几个方面：
+ - **节点设计**：用户可以通过拖拽不同的节点（如API调用、条件判断、数据处理等）来构建工作流。
+ - **流程连接**：将不同的节点连接起来，形成一个完整的业务流程。
+ - **参数配置**:在每个节点中配置所需的参数，如API的输入输出、条件判断的标准等。
+ - **执行和监控**:工作流设计完成后，可以执行并实时监控其运行状态，查看每个节点的执行结果和日志。
+
+---
+
+组件
+组件是无代码平台中的基本构建块，用于实现特定功能。组件可以是预定义的API调用、用户界面元素、数据处理模块等。用户可以通过拖拽和配置组件来构建工作流和应用程序。
+目前组件类型包括**动作**，**流程（if判断）**，**触发器**
+
+ - **动作**动作组件用于执行具体的操作，如下载、预览、创建、转换、比较、保护、移除密码、压缩、拆分、提取、扁平化、线性化、操作和合并PDF文件。
+
+ - **Download**：下载文档，一般输入为前置动作的输出结果。
+ - **Preview PDF**：使用Foxit Embedded Viewer预览PDF文档。
+ - **Create PDF From HTML**：从HTML创建PDF。
+ - **Convert PDF**：转换PDF到其他格式，如Word，Excel，PPT，Html，文本，图像。
+ - **Compare PDF**：逐页比较一个PDF文件（作为“基准文档”）与另一个PDF文件（作为“比较文档”）。
+ - **Protect PDF**：使用用户或/和所有者密码保护PDF文档，并对某些功能设置限制。
+ - **Create PDF**：创建PDF从其他格式，如Word，Excel，PPT，文本，图像。
+ - **Remove Password**：从PDF文档中删除密码安全性。
+ - **Compress PDF**：使用压缩级别压缩PDF文件。
+ - **Split PDF**：将PDF文档拆分为多个较小的文档。
+ - **Extract PDF**：提取PDF文本或图像。
+ - **Flatten PDF**：使PDF页面扁平化，使注释和表单字段成为页面内容的一部分。
+ - **Linearize PDF**：线性化PDF文档。
+ - **Manipulation PDF**：操作PDF，例如删除页面，旋转页面，移动页面。
+ - **Combine PDF**：合并多个PDF文件。
+
+ - **流程**（if判断）：流程组件用于控制工作流的执行路径。通过if判断，用户可以根据特定条件来决定工作流的走向。
+ - **IF**：将工作流路由到不同的分支（true/false）。
+
+ - **触发器**：触发器组件用于启动工作流(一个工作流有且仅有一个触发器）。目前，福昕无代码平台支持两种类型的触发器：
+
+ - **手动触发**：该组件在单个输入端口上接收数据，并将相同的数据发送到所有连接的输出端口，点击运行即触发。
+
+ - **HTTP触发**：该组件在单个输入端口上接收数据，并将相同的数据发送到所有连接的输出端口，可以在您的APP页面调用触发器来触发工作流的执行。
+
+---
+
+HTTP触发器简介
+HTTP触发器是一种通过HTTP请求触发工作流的机制。用户可以通过发送HTTP POST请求，将所需的数据传递给指定的URL，从而启动工作流。HTTP触发器的主要优势在于其简单易用，适用于各种编程语言和环境。
+
+---
+
+快速使用指南
+以下以实现文档转换为例说明如何调通过低代码平台，快速实现word到PDF的转换，并下载。
+
+---
+
+工作流创建
+首先需要创建一个由HTTP触发的工作流，我们需要CreatePDF组件，Download组件以及一个Http触发器。如下图，先向工作流添加上述组件，并按Http触发，CreatePDF，Download顺序连接组件
+![工作流创建_组件添加](/docs/cloudapisstudio/image/工作流创建_组件添加.png)
+设置“Create PDF组件”信息，格式选择"word",文件选择**表达式**并输入“$TriggerHttp_1.result.output.doc”代表从http触发器获取doc信息作为输入参数：
+![CreatePDF组件信息设置](/docs/cloudapisstudio/image/CreatePDF组件信息设置.png)
+
+**注意**：表达式输入“ $ ”符号，就会出现提示，根据提示进行输入即可。
+设置“Download组件”,文件设置为CreatePDF组件的输出结果：“$CreatePDF_3.result.doc”
+![Download组件信息设置](/docs/cloudapisstudio/image/Download组件信息设置.png)
+
+---
+
+运行工作流获取触发脚本
+完成设置后运行触发器运行成功将会返回如下图所示的触发脚本：
+![触发脚本运行语法](/docs/cloudapisstudio/image/触发脚本运行语法.png)
+
+---
+
+Web页面创建
+首先创建一个简单的HTML文件，作为示例，创建一个包括一个上传，以及一个下载按钮的html页面，并且调用js来实现按钮功能，代码如下：
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>File Upload</title>
+</head>
+<body>
+<h1>Cloud APIs Studio 示例-Word2PDF</h1>
+<form id="uploadForm">
+ <input type="file" id="fileInput" accept=".doc,.docx" required>
+ <button type="submit">下载转换结果</button>
+</form>
+<div id="message"></div>
+
+<script src="upload.js"></script>
+</body>
+</html>
+```
+
+---
+
+后端js脚本编写
+**创建FormData对象**： 首先，创建一个FormData对象，用于存储需要发送的数据。
+
+```javascript
+let formData = new FormData();
+```
+**设置TriggerHttp节点的输出**： 使用formData.append方法将输出数据添加到FormData对象中。可以通过表达式$TriggerHttp_xxx.result.output.xxx引用其他节点的输出。例如：
+
+```javascript
+ formData.append('_', JSON.stringify({
+ // 设置 TriggerHttp 节点的输出，其他节点可通过表达式`$TriggerHttp_xxx.result.output.xxx`进行引用
+ string: 'example string',
+ number: 123,
+ boolean: true
+ }));
+```
+目前暂时没有用到上述参数，代码只是示例。
+**设置TriggerHttp节点的文件输出**： 如果需要上传文件，可以使用formData.append方法将文件添加到FormData对象中。例如：
+
+```javascript
+ formData.append('doc', file);
+```
+**发送HTTP请求**： 使用fetch方法发送HTTP POST请求，将FormData对象作为请求体传递。示例代码如下：
+**注意：** workflow ID需要是你工作流运行后返回的信息，请直接复制工作流运行结果返回的信息进行修改
+
+```javascript
+fetch('https://cloudapi.fuxinsoft.cn/studio/studio-server/api/fbp/trigger?workflowId=4a89f56e-06ef-4080-9242-3407c7b25ee7', {
+ method: 'POST',
+ body: formData,
+});
+```
+
+完整的*upload.js* 文件如下：
+
+```javascript
+document.getElementById('uploadForm').addEventListener('submit', function(event) {
+ event.preventDefault(); // 阻止表单的默认提交行为
+
+ const fileInput = document.getElementById('fileInput');
+ const file = fileInput.files[0];
+ const messageDiv = document.getElementById('message');
+
+ if (file) {
+ let formData = new FormData();
+ formData.append('_', JSON.stringify({
+ // 设置 TriggerHttp 节点的输出，其他节点可通过表达式`$TriggerHttp_xxx.result.output.xxx`进行引用
+ string: 'example string',
+ number: 123,
+ boolean: true
+ }));
+ formData.append('doc', file);
+
+ fetch('https://cloudapi.fuxinsoft.cn/studio/studio-server/api/fbp/trigger?workflowId=4a89f56e-06ef-4080-9242-3407c7b25ee7', {
+ method: 'POST',
+ body: formData,
+ })
+ .then(response => response.json())
+ .then(data => {
+ console.log('Success:', data);
+ const downloadUrl = data.data.payload.find(item => item.nodeId === 'Download_2').result.url;
+ if (downloadUrl) {
+ const encodedUrl = encodeURI(downloadUrl); // 对URL进行编码
+ const a = document.createElement('a');
+ a.style.display = 'none';
+ a.href = encodedUrl;
+ a.download = decodeURIComponent(encodedUrl.split('/').pop()); // 使用原始文件名
+ document.body.appendChild(a);
+ a.click();
+ window.URL.revokeObjectURL(encodedUrl);
+ messageDiv.textContent = 'File uploaded and document downloaded successfully!';
+ messageDiv.style.color = 'green';
+ } else {
+ messageDiv.textContent = 'Download URL not found!';
+ messageDiv.style.color = 'red';
+ }
+ })
+ .catch((error) => {
+ console.error('Error:', error);
+ messageDiv.textContent = 'File upload failed!';
+ messageDiv.style.color = 'red';
+ });
+ } else {
+ alert('Please select a file.');
+ }
+});
+
+```
+将上述的html文件和js文件放到同一目录即可实现从web页面选择一个文件转换成PDF文件并下载的功能。
+如果你只需要完成一个工作流，并且下载结果文件，上述步骤即可。
+
+---
+
+显示转换结果
+**工作流中增加PreviewPDF组件**
+![增加预览组件后的工作流](/docs/cloudapisstudio/image/增加预览组件后的工作流.png)
+
+如果要显示转换结果，需要在工作流中增加一个"PreviewPDF"组件,并设选择其文件参数为*表达式*，设置其值为转换结果的输出文件" $CreatePDF_3.result.doc "
+![PreviewPDF组件信息设置](/docs/cloudapisstudio/image/PreviewPDF组件信息设置.png)
+添加一个“< iframe > ”元素到HTML文件中，并在upload.js中处理文件上传和PDF预览的逻辑
+
+```html
+<iframe id="pdf-preview" style="width: 600px; height: 800px; border: 1px solid #ddd; border-radius: 4px; display: none;"></iframe>
+```
+upload.js只需要在http返回中增加pdf-preview的url即可，代码如下:
+
+```javascript
+ const previewUrl = data.data.payload.find(item => item.nodeId === 'PreviewPDF_4').result.url;
+
+ // 设置 iframe 的 src 属性为提取到的 URL
+ const iframe = document.getElementById('pdf-preview');
+ iframe.src = previewUrl;
+ iframe.style.display = 'block';
+```
+![Demo前端页面效果图](/docs/cloudapisstudio/image/Demo前端页面效果图.png)
+
+---
+
+完整的代码示例
+转换，下载，预览功能的完整的html文件
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>File Upload</title>
+</head>
+<body>
+<h1>Cloud APIs Studio 示例-Word2PDF带预览</h1>
+<form id="uploadForm">
+ <input type="file" id="fileInput" accept=".doc,.docx" required>
+ <button type="submit">下载转换结果</button>
+</form>
+<div id="message"></div>
+<iframe id="pdf-preview" style="width: 600px; height: 800px; border: 1px solid #ddd; border-radius: 4px; display: none;"></iframe>
+<!--<script src="upload.js"></script>-->
+
+<script src="upload.js?v=<?php echo time(); ?>"></script>
+</body>
+</html>
+```
+upload.js文件
+
+```javascript
+document.getElementById('uploadForm').addEventListener('submit', function(event) {
+ event.preventDefault(); // 阻止表单的默认提交行为
+
+ const fileInput = document.getElementById('fileInput');
+ const file = fileInput.files[0];
+ const messageDiv = document.getElementById('message');
+
+ if (file) {
+ let formData = new FormData();
+ formData.append('_', JSON.stringify({
+ // 设置 TriggerHttp 节点的输出，其他节点可通过表达式`$TriggerHttp_xxx.result.output.xxx`进行引用
+ string: 'example string',
+ number: 123,
+ boolean: true
+ }));
+ formData.append('doc', file);
+
+ fetch('https://cloudapi.fuxinsoft.cn/studio/studio-server/api/fbp/trigger?workflowId=4a89f56e-06ef-4080-9242-3407c7b25ee7', {
+ method: 'POST',
+ body: formData,
+ })
+ .then(response => response.json())
+ .then(data => {
+ console.log('Success:', data);
+ const downloadUrl = data.data.payload.find(item => item.nodeId === 'DownloadPDF_2').result.url;
+ const previewUrl = data.data.payload.find(item => item.nodeId === 'PreviewPDF_4').result.url;
+ // 设置 iframe 的 src 属性为提取到的 URL
+ const iframe = document.getElementById('pdf-preview');
+ iframe.src = previewUrl;
+ iframe.style.display = 'block';
+ document.getElementById('message').textContent = '文件上传成功，下载并预览PDF。';
+ if (downloadUrl) {
+ const encodedUrl = encodeURI(downloadUrl); // 对URL进行编码
+ const a = document.createElement('a');
+ a.style.display = 'none';
+ a.href = encodedUrl;
+ a.download = decodeURIComponent(encodedUrl.split('/').pop()); // 使用原始文件名
+ document.body.appendChild(a);
+ a.click();
+ window.URL.revokeObjectURL(encodedUrl);
+ messageDiv.textContent = '文件下载成功!';
+ messageDiv.style.color = 'green';
+ } else {
+ messageDiv.textContent = '没有找到下载文件的URL!';
+ messageDiv.style.color = 'red';
+ }
+
+ })
+ .catch((error) => {
+ console.error('Error:', error);
+ messageDiv.textContent = '文件上传失败!';
+ messageDiv.style.color = 'red';
+ });
+ } else {
+ alert('Please select a file.');
+ }
+});
+
+```
+
+---
+
+如何查看返回数据的情况
+您有通过浏览器的调试模式查看http触发后，每个组件的返回数据格式以及数据，如下图：
+![返回数据查看1](/docs/cloudapisstudio/image/返回数据查看1.png)
+
+或者通过控制台查看:
+![返回数据查看2](/docs/cloudapisstudio/image/返回数据查看2.png)
+
+---
+
+其他说明
+我们将在后续支持更多的参数通过表达式传递，也将有更详细的返回值说明
+
+---
+
+使用前提
+要使用福昕PDF低代码平台进行您的工作流设计，需要先完成以下准备
+1.**注册福昕Cloud API**，并拥有使用余额
+2.在Cloud API**已经创建了你要使用的API的项目**
+如下图，我已经创建了2个提供给低代码平台使用的项目：CloudStudioEmbedAPI和CloudStudioServiceAPI![API项目创建](/docs/cloudapisstudio/image/API项目创建.png)
+
+---
+
+开始使用
+您可以通过以下两个入口中的一个进入福昕PDF低代码平台
+1.CloudAPI的开发者控制台下的福昕低代码平台菜单
+![低代码平台入口1](/docs/cloudapisstudio/image/低代码平台入口1.png)
+2.CloudAPI页面中的免费试用入口进入
+![低代码平台入口2](/docs/cloudapisstudio/image/低代码平台入口2.png)
+
+---
+
+创建凭据
+在使用福昕PDF 低代码平台进行工作之前，首先需要创建凭据。这一步骤确保您能够调用Cloud API。以下是创建凭据的详细步骤：
+
+ 1. 点击左侧"**凭据**"菜单，进入创建凭据页面，点击右上角"**创建凭据**"按钮。
+ ![添加新凭据入口](/docs/cloudapisstudio/image/添加新凭据入口.png)
+ 2. 在步骤弹出的菜单中设置凭据信息
+ - **输入凭据的名称**，以便您以后能够轻松识别它们。
+ - **选择一个要连接的应用程序或服务**,目前只有“”Foxit Cloud Embed API“ 和"Foxit Cloud Services API“两个选项，分别对应福昕Cloud API的两个API产品。
+ ![添加新凭据](/docs/cloudapisstudio/image/添加新凭据.png)
+ 这里会出现你所选择API产品下的所有项目，您选择您计划在无代码平台上进行工作的项目即可
+ ![选择API项目](/docs/cloudapisstudio/image/选择API项目.png)
+ 3. 点击**完成**，完成凭据创建，如下图，可以看到创建的所有凭据信息。
+![完成凭据创建](/docs/cloudapisstudio/image/完成凭据创建.png)
+
+---
+
+工作流创建
+点击左侧"创建工作流"菜单进入创建工作流页面，如下图:
+![进入工作流创建页面](/docs/cloudapisstudio/image/进入工作流创建页面.png)
+点击页面右上角"创建工作流“按钮，进入工作流创建页面。
+下面的步骤将说明如果创建一个工作流，实现把Word文档转换成PDF文档并用embedAPI来显示转换后的PDF文档。
+
+---
+
+定义文件类型变量（非必要步骤）
+首先，定义文件类型的变量，作为输入文件，这个步骤是非必要步骤，也可以直接在转换组件中选择输入文件。
+点击变量菜单，进入变量创建页面，点击创建变量，在如下对话框输入变量名，并选择文件，点击“确认”。
+![创建变量](/docs/cloudapisstudio/image/创建变量.png)
+完成变量创建后如下图，我们可以看到，已经创建变量sampleword.
+![变量创建成功](/docs/cloudapisstudio/image/变量创建成功.png)
+
+---
+
+选择需要的组件
+点击工作流中创建页面中的"+"图标打开组件选择器
+![创建工作流](/docs/cloudapisstudio/image/创建工作流.png)
+从组件选择器中选择组件，点击需要的组件，拖拽到工作流画布即可
+![拖拽组件到工作流画布](/docs/cloudapisstudio/image/拖拽组件到工作流画布.png)
+我们需要用到以下组件：
+**手动触发器**：用于启动工作流。
+**Create PDF**：用于完成从Word文档到PDF文档的转换。
+**Preivew PDF**：用于显示转换后的PDF文件。
+
+---
+
+设置组件信息，连接组件形成工作流
+选择上述组件，按顺序链接，形成完整工作流。
+![完成组件设置形成工作流](/docs/cloudapisstudio/image/完成组件设置形成工作流.png)
+设置组件信息。（注意：也可以先设置组件信息再连接组件执行顺序）
+设置CreatePDF的组件信息：
+![组件信息设置](/docs/cloudapisstudio/image/组件信息设置.png)
+
+选择凭据，这里选择CloudStudioTest凭据，选择格式为word,
+![设置组件凭据信息](/docs/cloudapisstudio/image/设置组件凭据信息.png)
+选择刚才创建的自定义变量sampleword作为被处理文件,文件属性选择表达式并输入$前缀，进行变量输入如下图：
+![设置文件信息](/docs/cloudapisstudio/image/设置文件信息.png)
+
+输入$var.sampleword
+![输入文件变量](/docs/cloudapisstudio/image/输入文件变量.png)
+点击确定，完成CreatePDF组件的设置
+![完成CreatePDF组件信息设置](/docs/cloudapisstudio/image/完成CreatePDF组件信息设置.png)
+
+设置PreviewPDF的组件信息，文件属性选择，设置调用的API信息，选择上一节点CreatePDF_2.resule.doc作为显示组件的文件输入值，先输入“$”,后续根据提示进行选择输入回车即可看到变量下一级的提示：
+![PreviewPDF的组件文件名设置1](/docs/cloudapisstudio/image/PreviewPDF的组件文件名设置1.png)
+![PreviewPDF的组件文件名设置2](/docs/cloudapisstudio/image/PreviewPDF的组件文件名设置2.png)
+![PreviewPDF的组件文件名设置3](/docs/cloudapisstudio/image/PreviewPDF的组件文件名设置3.png)
+完成后如下图:
+
+![完成PreviewPDF设置](/docs/cloudapisstudio/image/完成PreviewPDF设置.png)
+
+---
+
+保存并运行工作流
+可以在工作流页面左上角输入工作流名称，例如我输入“Word转PDF并预览”来替换默认的工作流名称，点击保存保存工作流。
+![保存并运行工作流1](/docs/cloudapisstudio/image/保存并运行工作流1.png)
+命名工作流后如下图：
+![保存并运行工作流重命名后](/docs/cloudapisstudio/image/保存并运行工作流重命名后.png)
+点击运行，运行工作流，点击运行结果可以查看工作流执行状态。
+如下图，运行完成的组件会变成绿色。点击查看结果，可以查看工作流运行状态。
+![工作流运行中](/docs/cloudapisstudio/image/工作流运行中.png)
+工作流运行全部完成就所有的组件都会显示成绿色图标，如下图：
+![工作流运行全部完成](/docs/cloudapisstudio/image/工作流运行全部完成.png)
+点击运行结果，可以查看此工作的所有运行结果，如下图：
+![工作运行结果查看](/docs/cloudapisstudio/image/工作运行结果查看.png)
+
+由于此工作流中有Preview PDF组件，因此，完成运行后，会弹出Embed API的显示预览页面。
+
+---
+
+运行结果预览
+![预览运行结果](/docs/cloudapisstudio/image/预览运行结果.png)

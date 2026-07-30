@@ -1,0 +1,1206 @@
+How to convert a PDF file with the password "123456" to a Word file by steaming and reader callback. It use a reader callback and filestream. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = "";
+key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```python
+class CustomConvertCallback(ConvertCallback):
+ def __init__(self, *args):
+ if _PYTHON2_:
+ super(CustomConvertCallback, self).__init__(*args)
+ else:
+ super().__init__(*args)
+ def __del__(self):
+ self.__disown__()
+ def Release(self, *args):
+ pass
+ def NeedToPause(self, *args):
+ return True
+ def ProgressNotify(self, *args):
+ converted_count = args[0]
+ total_count = args[1]
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```python
+setting_data = PDF2OfficeSettingData()
+# Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = "../../../res/metrics_data";
+# Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = False;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+7. Create a File Reader Callback to load a PDF document.
+
+```python
+# FileReader is implemented by user to load a PDF document.
+file_reader = FileReader()
+file_reader.LoadFile("input.pdf);
+```
+
+8. Create a FileStream object to write the converted Word file.
+
+```python
+# FileStream is implemented by user to read the contents of the converted Word format file.
+file_stream = FileStream()
+file_stream.LoadFile("output.docx");
+```
+
+9. Start the conversion process:
+
+```python
+progressive = PDF2Office.StartConvertToWord(file_stream, "123456", file_stream, setting_data, callback);
+```
+
+10. Check the conversion progress and continue until it's completed:
+
+```python
+if (progressive.GetRateOfProgress() != 100):
+ state = Progressive.e_ToBeContinued
+ while (Progressive.e_ToBeContinued == state):
+ state = progressive.Continue()
+```
+
+11. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a password-free PDF file to a Word file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if error_code != e_ErrSuccess:
+ return 1
+```
+
+4. Define a custom callback class for conversion progress:
+
+```python
+class CustomConvertCallback(ConvertCallback):
+ def __init__(self, *args):
+ if _PYTHON2_:
+ super(CustomConvertCallback, self).__init__(*args)
+ else:
+ super().__init__(*args)
+ def __del__(self):
+ self.__disown__()
+ def Release(self, *args):
+ pass
+ def NeedToPause(self, *args):
+ return True
+ def ProgressNotify(self, *args):
+ converted_count = args[0]
+ total_count = args[1]
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```python
+setting_data = PDF2OfficeSettingData()
+# Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = "../../../res/metrics_data"
+# Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = False
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+7. Start the conversion process:
+
+```python
+progressive = PDF2Office.StartConvertToWord("input.pdf", "", "output.docx", setting_data, callback)
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```python
+if (progressive.GetRateOfProgress() != 100):
+ state = Progressive.e_ToBeContinued
+ while (Progressive.e_ToBeContinued == state):
+ state = progressive.Continue()
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a Excel file to a PDF file by steaming and reader callback. It use a reader callback and filestream. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if (error_code != e_ErrSuccess) {
+ return 1
+}
+```
+
+4. Set up the Office to PDF conversion settings:
+
+```python
+setting_data = Office2PDFSettingData()
+# Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path = "../../../res/office2pdf"
+```
+
+5. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+6. Create a File Reader Callback to load a PDF document.
+
+```python
+# FileReader is implemented by user to load a PDF document.
+file_reader = FileReader()
+file_reader.LoadFile("input.xlsx")
+```
+
+7. Create a FileStream object to write the converted Word file.
+
+```python
+# FileStream is implemented by user to read the contents of the converted Word format file.
+file_stream = FileStream()
+file_stream.LoadFile("output.pdf")
+```
+
+8. Start the conversion process:
+
+```python
+progressive = Office2PDF.ConvertFromExcel(file_stream, "", file_stream, setting_data)
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources.
+
+---
+
+How to convert a Word file to a PDF file by steaming and reader callback. It use a reader callback and filestream. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if (error_code != e_ErrSuccess) {
+ return 1
+}
+```
+
+4. Set up the Office to PDF conversion settings:
+
+```python
+setting_data = Office2PDFSettingData()
+# Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path = "../../../res/office2pdf"
+```
+
+5. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+6. Create a File Reader Callback to load a PDF document.
+
+```python
+# FileReader is implemented by user to load a PDF document.
+file_reader = FileReader()
+file_reader.LoadFile("input.docx")
+```
+
+7. Create a FileStream object to write the converted Word file.
+
+```python
+# FileStream is implemented by user to read the contents of the converted Word format file.
+file_stream = FileStream()
+file_stream.LoadFile("output.pdf")
+```
+
+8. Start the conversion process:
+
+```python
+progressive = Office2PDF.ConvertFromWord(file_stream, "", file_stream, setting_data)
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources.
+
+---
+
+How to convert a PDF file with the password "123456" to a Word file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = "";
+key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```python
+class CustomConvertCallback(ConvertCallback):
+ def __init__(self, *args):
+ if _PYTHON2_:
+ super(CustomConvertCallback, self).__init__(*args)
+ else:
+ super().__init__(*args)
+ def __del__(self):
+ self.__disown__()
+ def Release(self, *args):
+ pass
+ def NeedToPause(self, *args):
+ return True
+ def ProgressNotify(self, *args):
+ converted_count = args[0]
+ total_count = args[1]
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```python
+setting_data = PDF2OfficeSettingData()
+# Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = "../../../res/metrics_data";
+# Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = False;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+7. Start the conversion process:
+
+```python
+ // The password for PDF is 123456 as the third parameter of the function
+progressive = PDF2Office.StartConvertToWord("input.pdf", "123456", "output.docx", setting_data, callback);
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```python
+if (progressive.GetRateOfProgress() != 100):
+ state = Progressive.e_ToBeContinued
+ while (Progressive.e_ToBeContinued == state):
+ state = progressive.Continue()
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a password-free PDF file to a PowerPoint file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if error_code != e_ErrSuccess:
+ return 1
+```
+
+4. Define a custom callback class for conversion progress:
+
+```python
+class CustomConvertCallback(ConvertCallback):
+ def __init__(self, *args):
+ if _PYTHON2_:
+ super(CustomConvertCallback, self).__init__(*args)
+ else:
+ super().__init__(*args)
+ def __del__(self):
+ self.__disown__()
+ def Release(self, *args):
+ pass
+ def NeedToPause(self, *args):
+ return True
+ def ProgressNotify(self, *args):
+ converted_count = args[0]
+ total_count = args[1]
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```python
+setting_data = PDF2OfficeSettingData()
+# Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = "../../../res/metrics_data"
+# Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = False
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+7. Start the conversion process:
+
+```python
+progressive = PDF2Office.StartConvertToPowerPoint("input.pdf", "", "output.ppt", setting_data, callback)
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```python
+if (progressive.GetRateOfProgress() != 100):
+ state = Progressive.e_ToBeContinued
+ while (Progressive.e_ToBeContinued == state):
+ state = progressive.Continue()
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a password-free Excel file to a PDF file using a file path as the first parameter. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if error_code != e_ErrSuccess:
+ return 1
+```
+
+4. Set up the Office to PDF conversion settings:
+
+```python
+setting_data = Office2PDFSettingData()
+# Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path = "../../../res/office2pdf"
+```
+
+5. Start the conversion process:
+
+```python
+Office2PDF.ConvertFromExcel("input.xlsx", "", "output.pdf", setting_data)
+```
+
+6. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources.
+
+---
+
+How to convert a PDF file to a Word file by steaming and reader callback. It use a reader callback and filestream. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = "";
+key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```python
+class CustomConvertCallback(ConvertCallback):
+ def __init__(self, *args):
+ if _PYTHON2_:
+ super(CustomConvertCallback, self).__init__(*args)
+ else:
+ super().__init__(*args)
+ def __del__(self):
+ self.__disown__()
+ def Release(self, *args):
+ pass
+ def NeedToPause(self, *args):
+ return True
+ def ProgressNotify(self, *args):
+ converted_count = args[0]
+ total_count = args[1]
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```python
+setting_data = PDF2OfficeSettingData()
+# Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = "../../../res/metrics_data";
+# Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = False;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+7. Create a File Reader Callback to load a PDF document.
+
+```python
+# FileReader is implemented by user to load a PDF document.
+file_reader = FileReader()
+file_reader.LoadFile("input.pdf")
+```
+
+8. Create a FileStream object to write the converted Word file.
+
+```python
+# FileStream is implemented by user to read the contents of the converted Word format file.
+file_stream = FileStream()
+file_stream.LoadFile("output.docx")
+```
+
+9. Start the conversion process:
+
+```python
+progressive = PDF2Office.StartConvertToWord(file_stream, "", file_stream, setting_data, callback)
+```
+
+10. Check the conversion progress and continue until it's completed:
+
+```python
+if (progressive.GetRateOfProgress() != 100):
+ state = Progressive.e_ToBeContinued
+ while (Progressive.e_ToBeContinued == state):
+ state = progressive.Continue()
+```
+
+11. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a password-free Word file to a PDF file using a file path as the first parameter. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if error_code != e_ErrSuccess:
+ return 1
+```
+
+4. Set up the Office to PDF conversion settings:
+
+```python
+setting_data = Office2PDFSettingData()
+# Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path = "../../../res/office2pdf"
+```
+
+5. Start the conversion process:
+
+```python
+Office2PDF.ConvertFromWord("input.docx", "", "output.pdf", setting_data)
+```
+
+6. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources.
+
+---
+
+How to convert a password-free PDF file to an Excel file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if error_code != e_ErrSuccess:
+ return 1
+```
+
+4. Define a custom callback class for conversion progress:
+
+```python
+class CustomConvertCallback(ConvertCallback):
+ def __init__(self, *args):
+ if _PYTHON2_:
+ super(CustomConvertCallback, self).__init__(*args)
+ else:
+ super().__init__(*args)
+ def __del__(self):
+ self.__disown__()
+ def Release(self, *args):
+ pass
+ def NeedToPause(self, *args):
+ return True
+ def ProgressNotify(self, *args):
+ converted_count = args[0]
+ total_count = args[1]
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```python
+setting_data = PDF2OfficeSettingData()
+# Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = "../../../res/metrics_data"
+# Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = False
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+7. Start the conversion process:
+
+```python
+progressive = PDF2Office.StartConvertToExcel("input.pdf", "", "output.xlxs", setting_data, callback)
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```python
+if (progressive.GetRateOfProgress() != 100):
+ state = Progressive.e_ToBeContinued
+ while (Progressive.e_ToBeContinued == state):
+ state = progressive.Continue()
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to define FileReader inheriting from FileReaderCallback for convert a PDF to Word by streaming.
+
+```python
+class FileReader(FileReaderCallback):
+
+ def __init__(self, *args):
+ if _PYTHON2_:
+ super(FileReader, self).__init__()
+ else:
+ super().__init__()
+
+ self.file_ = None
+
+ def __del__(self):
+ self.__disown__()
+
+ def Release(self, *args):
+ self.file_.close()
+
+ def LoadFile(self, *args):
+ self.file_ = open(args[0], "rb")
+ if self.file_ is not None:
+ return True
+ else:
+ return False
+
+ def GetSize(self, *args):
+ self.file_.seek(0, os.SEEK_END)
+ file_size = self.file_.tell()
+ return file_size
+
+ def ReadBlock(self, *args):
+ if self.file_ is None:
+ return False, None
+
+ size = 0
+ if len(args) == 2:
+ self.file_.seek(args[0], 0)
+ size = args[1]
+ elif len(args) == 1:
+ size = args[0]
+ else:
+ return False, None
+
+ buffer = self.file_.read(size)
+
+ return True, buffer
+```
+
+---
+
+How to convert a PowerPoint file to a PDF file by steaming and reader callback. It use a reader callback and filestream. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if (error_code != e_ErrSuccess) {
+ return 1
+}
+```
+
+4. Set up the Office to PDF conversion settings:
+
+```python
+setting_data = Office2PDFSettingData()
+# Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path = "../../../res/office2pdf"
+```
+
+5. Define the callback to notify conversion progress during the conversion process
+
+```python
+callback = CustomConvertCallback()
+```
+
+6. Create a File Reader Callback to load a PDF document.
+
+```python
+# FileReader is implemented by user to load a PDF document.
+file_reader = FileReader()
+file_reader.LoadFile("input.pptx")
+```
+
+7. Create a FileStream object to write the converted Word file.
+
+```python
+# FileStream is implemented by user to read the contents of the converted Word format file.
+file_stream = FileStream()
+file_stream.LoadFile("output.pdf")
+```
+
+8. Start the conversion process:
+
+```python
+progressive = Office2PDF.ConvertFromWord(file_stream, "", file_stream, setting_data)
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources.
+
+---
+
+How to convert a password-free PowerPoint file to a PDF file using a file path as the first parameter. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if error_code != e_ErrSuccess:
+ return 1
+```
+
+4. Set up the Office to PDF conversion settings:
+
+```python
+setting_data = Office2PDFSettingData()
+# Set the path to the resource folder (ensure the path is valid)
+setting_data.resource_folder_path = "../../../res/office2pdf"
+```
+
+5. Start the conversion process:
+
+```python
+Office2PDF.ConvertFromWord("input.pptx", "", "output.pdf", setting_data)
+```
+
+6. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources.
+
+---
+
+How to convert a password-free PDF file to a word file using a file path as the first parameter. The machine learning-based recognition is disable and not using convert callback. Here are the main steps involved:
+
+1. Import the necessary module:
+
+```python
+import os
+import sys
+import site
+if sys.version_info.major == 2:
+ _PYTHON2_ = True
+else:
+ _PYTHON2_ = False
+if _PYTHON2_:
+ site.addsitedir('../../../')
+ from FoxitPDFConversionSDKPython2 import *
+else:
+ from FoxitPDFConversionSDKPython3 import *
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```python
+sn = ""
+key = ""
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```python
+error_code = Library.Initialize(sn, key)
+if error_code != e_ErrSuccess:
+ return 1
+```
+
+4. Define a custom callback class for conversion progress:
+
+```python
+class CustomConvertCallback(ConvertCallback):
+ def __init__(self, *args):
+ if _PYTHON2_:
+ super(CustomConvertCallback, self).__init__(*args)
+ else:
+ super().__init__(*args)
+ def __del__(self):
+ self.__disown__()
+ def Release(self, *args):
+ pass
+ def NeedToPause(self, *args):
+ return True
+ def ProgressNotify(self, *args):
+ converted_count = args[0]
+ total_count = args[1]
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```python
+setting_data = PDF2OfficeSettingData()
+# Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = "../../../res/metrics_data"
+# Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = False
+```
+
+6. Start the conversion process:
+
+```python
+# Not using convert callback, The fifth parameter of the function is passed as None.
+PDF2Office.StartConvertToWord("input.pdf", "", "output.docx", setting_data, None)
+```
+
+7. Release the Foxit PDF Conversion SDK:
+
+```python
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert from a PDF to an RTF file?
+
+No, the SDK does not provide the ability to convert PDF files to RTF files.
+
+---
+
+How to define FileReader inheriting from FileReaderCallback for convert a PDF to Word by streaming.
+
+```
+class FileReader extends FileReaderCallback {
+ private RandomAccessFile file_ = null;
+
+ FileReader() {
+ }
+
+ boolean LoadFile(String file_path) throws FileNotFoundException {
+ file_ = new RandomAccessFile(file_path, "r");
+ return true;
+ }
+
+ @Override
+ public long getSize() {
+ try {
+ return this.file_.length();
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ return -1;
+ }
+
+ @Override
+ public boolean readBlock(byte[] buffer, long offset, long size) {
+ try {
+ file_.seek(offset);
+ int read = file_.read(buffer, 0, (int) size);
+ return read == size ? true : false;
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ return false;
+ }
+
+ public void release() {
+ try {
+ this.file_.close();
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ }
+}
+```

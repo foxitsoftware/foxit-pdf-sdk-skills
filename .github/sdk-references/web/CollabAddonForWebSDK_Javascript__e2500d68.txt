@@ -1,0 +1,788 @@
+# How to create and start a collaboration session?
+
+``` javascript
+const collaboration = collaborationClient.createCollaboration({
+ fileUrl: 'http://path-to-your-pdf-file.pdf',
+ isDocPublic: true,
+ docName:'path-to-your-pdf-file.pdf'
+})
+
+// begin collaboration session
+collaboration.begin()
+```
+
+---
+
+## How to remove collaboration by the specified id?
+``` javascript
+// first, a collaboration client need to be initiated.
+// then, with the following code:
+await collaborationClient.removeCollaboration(collaborationId);
+```
+
+---
+
+## Messaging and Notification
+
+Internally, all collaboration-related operations are wrapped as `Message` and sent to `MessageQueue`. For more information, please refer to the API Reference of Foxit Web Collaboration Add-on.
+
+`Message` can be used for message notifications, custom log storage, and so on. The default format of `Message` is
+
+``` ts
+{
+ type: MessageType,
+ payload: any,
+ meta: MsgMetaData
+}
+```
+
+An extension interface `MessageHandler` is provided for customized message processing. For example, you can transform the original message and return a customized message format.
+
+``` ts
+{
+ code: "CUSTOM_MSG_CODE",
+ data: "CUSTOM_MSG_DATA"
+}
+```
+
+### Usage of Message Handler
+
+The following example shows how to customize the MessageHandler.
+
+``` ts
+import { WebCollabServer, MessageHandler, Message } from "@foxitsoftware/web-collab-server";
+const messageHandler: MessageHandler = (msg: Message) => {
+ console.log("received msg:", msg)
+}
+
+const server = new WebCollabServer({
+ messageHandler
+ // other options
+})
+```
+
+---
+
+## Collaboration Authentication
+
+Foxit Web Collaboration Add-on does not store user-related information and the authentication service should be provided.
+
+When integrating, on the collaboration server side, you need to implement the [UserService](https://webviewer-demo.foxit.com/docs/collab_server_api_reference/interfaces/UserService.html) interface. Collaboration server will call this method to authenticate and obtain the user information.
+
+### Token based authentication
+
+In the current market, the token based authentication is used by most applications. Using the user authentication extension interfaces provided by Foxit Web Collaboration Add-on, you can easily integrate user authentication, such as OIDC, OAUTH2, etc.
+
+In the following example, implement a custom `UserSerivce`, and then call a REST API to do token validation.
+
+```ts
+import axios from "axios";
+import type {UserService, UserInfo} from "@foxitsoftware/web-collab-server";
+
+/**
+ * A Custom UserService to do authentication.
+ */
+export const userService: UserService = {
+ async getUserByToken(token: string) {
+ const result = await axios.request({
+ url: `https://your-user-authentication-service/api/user`,
+ method: 'get',
+ params: {
+ token
+ }
+ })
+ return result.data as UserInfo
+ }
+}
+
+const server = new WebCollabServer({
+ userService,
+ // other options
+});
+```
+
+---
+
+## How to invite others to a collaboration?
+
+1. the creator of collaboration can create an invitation:
+
+``` javascript
+// create an invitation to collaborationId which will expires in 1 hour.
+const expiresInMilliSeconds = 3600 * 1000; // invitation expires in 1 hour.
+const invitation = await collaborationClient.createInvitation(collaborationId, expiresInMilliSeconds);
+```
+
+2. the participant can join the invitation with an given invitationId
+
+``` javascript
+ const collaboration = await collaborationClient.joinCollaborationWithInvitation(invitationId);
+```
+
+---
+
+## Compatibility Requirements
+Collaboration Add-on requires a compatible version of the Foxit PDF SDK for Web.
+Please refer to the following chart for compatibility:
+[compatibility chart](https://webviewer-demo.foxit.com/docs/collab-developer-guide/#compatibility-requirements)
+
+---
+
+## How to create a ScreenSync?
+
+``` javascript
+// first you need to create a collaboration, and get a collaboration instance
+
+// memberIds: The list of member ids of the collaboration which will be invited become follower of the screenSync session
+// defaults to all members of the collaboration which will be invited become follower of the screenSync session.
+
+collaboration.createScreenSync(memeberIds)
+```
+
+---
+
+## How to create a collaboration server?
+first, you need to setup database, and then you can create a simple collaboration server with the following code:
+
+``` javascript
+import {WebCollabServer, UserService} from "@foxitsoftware/web-collab-server";
+
+// UserService should be implemented by user App
+const userService: UserService = {
+ getUserByToken(token) {
+ // validate token and get uesr info from user system of client APP
+ }
+}
+
+const databaseConfig = {
+ type: 'postgres',
+ host: 'localhost',
+ port: 5432,
+ database: 'collab-db',
+ user: 'foxit',
+ password: '123456',
+}
+
+new WebCollabServer({
+ databaseConfig,
+ userService,
+}).start(8080);
+```
+
+---
+
+## Create Collaboration on Client Side
+
+Collaboration is created with the [webCollabClient.createCollaboration](https://webviewer-demo.foxit.com/docs/collab_client_api_reference/classes/WebCollabClient.html#createCollaboration) API.
+
+```js
+const collaboration = await webCollabClient.createCollaboration({
+ fileUrl: 'https://foxit.com/downloads/pl/demo.pdf',
+ isDocPublic: true,
+ docName: 'demo.pdf'
+})
+```
+- ```options.fileUrl```: The URL of PDF document.
+- ```options.docName```: The name of the document.
+- ```options.isDocPublic?```: Sets whether or not the document can be allowed to open by everyone. True means allowed; false means not allowed.
+
+Creating collaboration will not automatically open the collaborative document, you need to call `collaboration.begin()` API to open it.
+
+## Begin Collaboration
+
+Once you have an instance of the collaboration object, you can call [collaboration.begin](https://webviewer-demo.foxit.com/docs/collab_client_api_reference/classes/Collaboration.html#begin) to open it in the viewer.
+
+Calling the method below will begin your collaboration:
+
+```js
+await collaboration.begin(fileOptions?:{password:string, [key: string]: any})
+```
+
+- An optional `fileOptions` parameter can be passed in to specify options when opening a PDF file.
+- For example, in order to open an encrypted PDF file, `fileOptions.password` is needed.
+
+```js
+await collaboration.begin().catch(e => {
+ if(e.error === 3){
+ const passwordForPDF = await promptForPassword()
+ await collaboration.begin({
+ password: passwordForThePDF
+ })
+ }
+})
+```
+
+---
+
+There are two ways to get Foxit Web Collaboration Add-on.
+- Install with npm as below:
+ `npm install @foxitsoftware/web-collab-client --save`
+- Download the [Collaboration Add-on Package](https://cdn-sdk.foxitsoftware.com/pdf-sdk/download/foxit-pdf-sdk-for-web/collaboration/1.x/1.0.0/collaboration_addon_1_0_0.zip).
+
+---
+
+## how to add or remove event listeners of the collaboration?
+``` javascript
+// Add event listener to the collaboration
+await collaboration.on("onlineStatusChanged", (actionData, action) => {
+ console.log("received action", action);
+ console.log("the action data is", actionData);
+});
+```
+
+``` javascript
+// Remove all event listeners of the collaboration
+await collaboration.off();
+```
+
+---
+
+## How update the collaboration permission?
+The permissionOption: {isAllowComment?: boolean; isDocPublic?: boolean}
+
+permissionOption.isDocPublic
+- true: Anyone with the link can access.
+- false: Only invited users can access.
+
+permissionOption.isAllowComment
+- true：The current user is allowed to add comments.
+- false: The current user is not allowed to add comments. Only view the document.
+
+``` javascript
+await collaboration.updatePermission({
+ isAllowComment: true,
+ isDocPublic: true
+});
+```
+
+---
+
+## How to get collaboration by the specified id?
+``` javascript
+// first, a collaboration client need to be initiated.
+// then, with the following code:
+const collaboration = await collaborationClient.getCollaboration(collaborationId);
+```
+
+---
+
+What is Foxit Web Collaboration Add-on?
+Foxit Web Collaboration Add-on focuses on helping developers easily integrate real-time document collaboration into their web applications which are built based on Foxit PDF SDK for Web. It mainly contains two modules, the client and the server.
+
+---
+
+# How to initialize a new Web Collaboaration Client?
+
+``` javascript
+import { WebCollabClient } from "@foxitsoftware/web-collab-client"
+
+const client = new WebCollabClient({
+ baseURL: "http://localhost:8080",
+ pdfViewer: pdfViewerInstance,
+ userProvider: () => {
+ // The user information is up to the app level to provide and will be applied in the collaboration client module.
+ return {
+ id: 'some-user-id-from-user-app',
+ username: "some-user",
+ token: "user-token" // The token is used for authentication, token validation should be implemented on server side
+ }
+ }
+})
+```
+
+---
+
+## Quickly Run Demo
+
+Foxit Web Collaboration Add-on comes with a demo project for building the real-time document collaboration functionality.
+
+To run the demo, please follows the steps as below:
+
+1. Install [Nodejs](https://nodejs.org/en/), prefered version: nodejs 16 lts or higher. If you already have a Nodejs installed, please skip this step.
+
+2. Install [Postgres](https://www.postgresql.org/), prefered version: 9.x or higher. If you already have a postgres database running or installed [Docker](https://www.docker.com/), you can skip this step.
+
+3. To start a command prompt as an administrator, navigate to the project root, and run the command : `npm install`.
+
+4. If you are using Docker, you should set up a database with Docker.
+
+ In the project root, install database: (The default port of the database is 5432)
+
+ `npm run collab-cli setup-local-db`
+
+5. Run the demo.
+
+ In the project root, start `samples/collabClientSample`:
+
+ `npm run start:sample-client`
+
+ In the project root, start `samples/collabServerSample`:
+
+ `npm run start:sample-server`
+
+After starting the collabClientSample and collabServerSample successfully, open [http://localhost:3000/](http://localhost:3000/) on your browser, then you can see the demo entry.
+
+---
+
+## How to set mouse pointer sync rate
+Set the time interval at which mouse pointer position is sent to the server, in milliseconds.
+The default value is 200 milliseconds.
+It's recommend to set a value greater than 50 milliseconds.
+``` javascript
+const syncRate = 200
+collaboration.setMousePointerSyncRate(syncRate);
+```
+
+---
+
+## Collaboration Permission
+
+### Get Permission
+
+You can get the collaboration permission with the [collaboration.getPermission()](https://webviewer-demo.foxit.com/docs/collab_client_api_reference/classes/Collaboration.html#getPermission) API.
+
+#### Example
+
+```js
+await collaboration.getPermission(): Promise<Permission>
+```
+This function returns an instance of [Permission](https://webviewer-demo.foxit.com/docs/collab_client_api_reference/classes/Permission.html).
+
+### Update Permission
+
+You can update [Collaboration](https://webviewer-demo.foxit.com/docs/collab_client_api_reference/classes/Collaboration.html) permission with the [collaboration.updatePermission()](https://webviewer-demo.foxit.com/docs/collab_client_api_reference/classes/Collaboration.html#updatePermission) API.
+
+```collaboration.updatePermission(permissionOption:{ isDocPublic?: boolean,isAllowComment?:boolean }): Promise<boolean>```
+- ```isDocPublic``` (boolean): Sets whether or not the document can be allowed to open by everyone. True means allowed; false means not allowed.
+- ```isAllowComment``` (boolean): Sets whether or not the document can be allowed to add comments. True means allowed; false means not allowed.
+
+Modify the permissions for the current collaboration:
+
+```js
+await collaboration.updatePermission({ isDocPublic?: boolean,isAllowComment?:boolean })
+```
+1：This action can only be executed by the creator of the collaboration, and other members do not have permissions.
+2：This action only takes effect for the joined collaboration members after the permission changed.
+3：If you want to set different permissions for different participants, you can also set them through the `updateMemberPermission` method.
+
+### Update Member Permission
+
+You can update collaboration member permission with the [collaboration.updateMemberPermission](https://webviewer-demo.foxit.com/docs/collab_client_api_reference/classes/Collaboration.html#updateMemberPermission) API.
+Modify the `isAllowComment` permission of a collaboration member through the member id:
+
+```js
+collaboration.updateMemberPermission(members): Promise<boolean>
+```
+1：This action can only be executed by the creator of the collaboration, and other members do not have permissions.
+2：When permissions updated, collaborators will receive an update notification to get the latest permissions.
+3：The `isAllowComment` permission of `updateMemberPermission` will override the `isAllowComment` permission of `updatePermission`.
+
+---
+
+## How to get all collaborations of current user?
+``` javascript
+// first, a collaboration client need to be initiated.
+// then, with collaborationClient instance, you can get all collaborations
+const collaborations = await collaborationClient.getCollaborationList();
+```
+
+---
+
+## How to add members to a collaboration?
+``` javascript
+// add members by user id
+let members = [
+ {
+ id: user_id,
+ isAllowComment: true
+ }
+]
+await collaboration.addMembers(members)
+```
+
+``` javascript
+// add members by user email
+et members = [
+ {
+ email: user_email,
+ isAllowComment: true
+ }
+]
+await collaboration.addMembers(members)
+```
+
+---
+
+## How to get a Screen Sync
+``` javascript
+// first you need to get a collaboration instance
+
+// get all screenSync in a collaboration session
+const screenSyncList = await collaboration.getScreenSyncList()
+
+// or you can get a screenSync by screenSync Id
+const screenSync = await collaboration.getScreenSync(sreenSyncId)
+```
+
+---
+
+# Web Collaboration Server
+
+## Overview
+
+Web Collaboration Server is available as a NPM package: `@foxitsoftware/web-collab-server`. You also can get it from the [Collaboration Add-on Package](https://cdn-sdk.foxitsoftware.com/pdf-sdk/download/foxit-pdf-sdk-for-web/collaboration/1.x/1.0.0/collaboration_addon_1_0_0.zip).
+
+Web Collaboration Server supports two modes: [Simple Mode](#simple-mode) and [Cluster Mode](#cluster-mode).
+
+In simple mode, collaboration server runs on a single-instance basis, with only one collaboration server instance. The configuration is easy in this mode, you just need to configure UserService and Database.
+
+In cluster mode, multiple collaboration servers can be started to form a cluster to handle users requests together. For more information about cluster mode, please refer to [Cluster](cluster).
+
+### Simple Mode
+
+Before running collaboration server, you need to set up the database and user service.
+
+#### Set up Database
+
+Please refer to [Database](database) to set up the database.
+
+#### Set up User Service
+
+Please refer to [Authentication](authentication) to set up user service, such as user authentication and user information acquisition.
+
+#### Start a Collaboration Server
+Install collaboration server using NPM：
+```
+npm install @foxitsoftware/web-collab-server
+```
+Create a collaboration server referring to the following code:
+``` ts
+import {WebCollabServer, UserService} from "@foxitsoftware/web-collab-server";
+
+// UserService should be implemented by user App
+const userService: UserService = {
+ getUserByToken(token) {
+ // validate token and get uesr info from user system of client APP
+ }
+}
+
+const databaseConfig = {
+ type: 'postgres',
+ host: 'localhost',
+ port: 5432,
+ database: 'collab-db',
+ user: 'foxit',
+ password: '123456',
+}
+
+const server = new WebCollabServer({
+ databaseConfig,
+ userService,
+});
+
+server.start(8080)
+```
+
+### Cluster Mode
+
+To enable the clustering, provide the `cluster` option when creating `WebCollabServer`.
+Only [serverId](cluster#serverid) is required if you want to use the default implementation.
+
+[MessageQueue](cluster#MessageQueue) and [MemberStateService](cluster#MemberStateService) can be implemented if you want more customization.
+
+ **Notice**:
+The 'serverId' of the server instance in the same cluster should be unique. Refer to [serverId](cluster#serverid) for more information.
+
+```ts
+const messageQueue = new CustomMessageQueue()
+const memberStateService = new CustomMemberStateService()
+
+const server = new WebCollabServer({
+ databaseConfig,
+ userService,
+ cluster: {
+ serverId: '1',
+ messageQueue, // only required if you want to use your customized MessageQueue
+ memberStateService // only required if you want to use your customized MemberStateService
+ }
+});
+```
+
+---
+
+## How to get current user of the collaboration?
+
+``` javascript
+const currentUser = await collaboration.getCurrentUser();
+```
+
+---
+
+## Getting Started With Collaboration Client
+
+### Installation
+
+``` sh
+npm install @foxitsoftware/web-collab-client
+```
+
+### Integration
+
+This section will walk you through getting Web Collaboration Client module integrated into a web application based on Foxit PDF SDK for Web.
+
+1）Import the collaboration client module and Foxit PDF SDK for Web.
+
+```ts
+import PDFViewer from ' @foxitsoftware/PDFViewerCtrl'
+import { WebCollabClient } from ' @foxitsoftware/web-collab-client'
+```
+2）Initialize PDFViewer. For more information, please refer to the [Developer Guide of Foxit PDF SDK for Web](https://developers.foxit.com/developer-hub/document/developer-guide-pdf-sdk-web).
+
+```ts
+var PDFViewer = PDFViewCtrl.PDFViewer;
+var pdfViewer = new PDFViewer({
+ libPath: './lib', // the library path of Web SDK.
+ jr: {
+ licenseSN: licenseSN,
+ licenseKey: licenseKey,
+ }
+});
+pdfViewer.init('#pdf-viewer'); // the div (id="pdf-viewer")
+```
+
+3）Create a new instance of the collaboration client:
+
+```js
+import { WebCollabClient } from ' @foxitsoftware/web-collab-client'
+const webCollabClient = new WebCollabClient({
+ pdfViewer: pdfViewer,
+ baseURL:`http://localhost:8080`,
+ userProvider: () => {
+ return {
+ id: 'userId',
+ username: 'userName',
+ token: 'usertoken'
+ }
+ }
+});
+```
+
+- ```options.pdfViewer```: The Web SDK basic webViewer instance
+- ```options.baseURL```: The base URL of the collaboration server component
+- ```options.userProvider```: The user service
+
+For a full list of constructor options, please see the [Web Collaboration Client API reference](https://webviewer-demo.foxit.com/docs/collab_client_api_reference/index.html).
+
+---
+
+# what is ScreenSync?
+The screenSync session can be created on top of the collaboration session with one "leader" and multiple "followers". Followers will follow leader’s screen scrolling,PDFPage zooming,and PDFPage view mode.
+Basically, a screenSync is retrieved by creating a new screenSync `Collaboration.createScreenSync` and an existing screenSync can be obtained by `Collaboration.getScreenSync`
+The screenSync is used to join,leave and getMembers of the screenSync session.
+
+---
+
+## How to quit a collaboration?
+Quit the current collaboration.
+
+The current user will be removed from the member list of this collaboration and the current collaboration session will be ended.
+Returns Promise<boolean>
+true: Quit the current collaboration successfully.
+false: Failed to quit the current collaboration.
+
+``` javascript
+const result = await collaboration.quit();
+```
+
+---
+
+## Clustering
+
+A cluster mode is provided by Web Collaboration Server. This mode supports horizontal scaling, so that it can support large-scale users.
+
+In cluster mode, multiple Collaboration Servers can be started to form a cluster to handle users requests together.
+
+Users can provide the core services required for the collaborative cluster mode by implementing the interfaces defined by collaboration server.
+
+To support cluster, some additional configurations are required when creating collaboration server. For example:
+
+```ts
+const messageQueue = new CustomMessageQueue()
+const memberStateService = new CustomMemberStateService()
+
+const server = new WebCollabServer({
+ // other options
+ cluster: {
+ serverId: '1',
+ messageQueue, // only required if you want to use your customized MessageQueue
+ memberStateService // only required if you want to use your customized MemberStateService
+ }
+});
+```
+
+Further descriptions of cluster parameters are as follows:
+
+### serverId
+
+A `serverId` is required for each collaboration server instance.
+It can be any string but please make sure that it is unique in the same cluster.
+
+### MessageQueue
+
+A message queue is used to exchange Message among different servers and components.
+
+Message queue is a key component for the clustering of collaboration servers. All collaboration servers in the cluster communicate by exchanging messages via message queue.
+
+A message queue can be implemented on top of RabbitMQ, Kafka, Redis, etc.
+
+This config is optional.
+A default `MessageQueue` based on Redis is provided, and will be used if `messageQueue` is not provided in the cluster option.
+The Redis URL should be provided as an environment variable when starting the collaboration server, like `REDIS_URL="redis://127.0.0.1:6379"` .
+
+### MemberStateService
+
+`MemberStateService` is used to store and retrieve member states. The currently supported member states are online/offline. For more information, please refer to the API Reference of Foxit Web Collaboration Add-on.
+
+This config is optional. A default `MemberStateService` is provided and will be used if `memberStateService` is not provided in the cluster option.
+
+### Load Balancer
+
+In the cluster mode, a Load Balancer is needed to distribute the requests to server instances in the cluster.
+
+Typically, Load Balancer has different load balancing strategies, and the collaboration server has no restrictions on the strategies.
+
+We recommend to use consistent hashing based on `collaborationId`, which can reduce the synchronization overhead of multiple Server instances.
+
+---
+
+## How update the member permission?
+``` javascript
+const memberPermission = [{
+ id: "member_id",
+ isAllowComment: true
+}]
+await collaboration.updateMemberPermission(memberPermission);
+```
+
+---
+
+# collaboration member APIs
+## get all members in current collaboration session
+``` javascript
+const members = await collaboration.getMembers()
+```
+## Get online members of the collaboration
+``` javascript
+const members = await collaboration.getOnlineMembers()
+```
+
+---
+
+## Get the specified annotation of the current collaboration session by the annotation ID
+``` javascript
+const annot = collaboration.getAnnotJSON(annotID, pageIndex);
+```
+
+---
+
+## Collaboration Offline Support
+
+Starting from version 1.1.0, Foxit Web Collaboration Add-on provides a new feature "Offline Support" which is enabled by
+default under the hood without any configuration.
+In a collaboration session, if some members go offline or have bad internet connection, they can still add/delete/update
+annotations to the PDF file.
+When they go back online, the editing operations made in offline state can be synchronized to the server and merged with
+the operations of other users.
+Conflicting edits from multiple members during the merging process can be automatically resolved with eventual
+consistency.
+
+---
+
+### Set up a Database for Collaboration Server
+
+Before running collaboration server, you should set up and initialize database first.
+
+#### Set up a Database Management System (DBMS)
+
+If you already have an available DBMS, you can skip this section and start [creating a Database for Collaboration Server](#create-a-database-for-collaboration-server).
+You can manually install the required DBMS or use the database services provided by the cloud service provider directly.
+In addition, if you already have installed Docker or Podman , you can use our CLI tool to quickly install a Postgres with Docker/Podman.
+The following command will use Docker to install a Postgres database with port 5432.
+
+```sh
+npm collab-cli setup-local-db -- --port 5432 --user postgres --password 123456
+```
+In fact, the above command is equivalent to the following shell command:
+```sh
+docker run -d --name collab-db \
+-e POSTGRES_PASSWORD=123456 \
+-p 5432:5432 \
+-v $HOME/foxit-collabsdk/database:/var/lib/postgresql/data \
+postgres:14.3-alpine3.16
+```
+
+The following options are provided for `setup-local-db`:
+
+| Option | Required | Description | Default |
+|-----------------------------|----------|--------------------------------------------|------------------------------|
+| `-r, --runtime <runtime>` | false | container runtime to use: docker or podman | `docker` |
+| `-n, --name <name>` | false | name of container | `collab-db` |
+| `-d, --dir <dir>` | false | dir for database data | `~/foxit-collabsdk/database` |
+| `-u, --user <user>` | false | username of database | `postgres` |
+| `-p, --port <number>` | false | exposed port of database | `5432` |
+| `-P, --password <password>` | false | password of database | `123456` |
+
+For more information: `npm run collab-cli help setup-local-db`.
+
+#### Create a Database for Collaboration Server
+After setting up a DBMS, database migration is required. A command is provided by the CLI tool to help you do Database Migration.
+
+```sh
+npm run collab-cli init-db -- --type postgresql --name collab-db --host localhost --port 5432 --user postgres --password 123456
+```
+In fact, the above command is equivalent to the following shell command:
+
+```sh
+export DATABASE_URL=postgresql://<YOUR_DB_USER>:<YOUR_DB_PASSWORD>@<YOUR_DB_HOST>:<YOUR_DB_PORT>/<DB_NAME>
+npx prisma migrate dev --name init
+```
+
+The following options are provided for `init-db`:
+
+| Option | Required | Description | Default |
+|------------------------------|----------|--------------------------|--------------|
+| `-t, --type <database type>` | false | type of database | `postgresql` |
+| `-h, --host <host>` | false | host of database | `localhost` |
+| `-p, --port <number>` | false | exposed port of database | `5432` |
+| `-n, --name <db-name>` | false | name of database | `collab-db` |
+| `-u, --user <user>` | false | username of database | `postgres` |
+| `-P, --password <password>` | false | password of database | `123456` |
+
+For more information: `npm run collab-cli help init-db`.
+### Initialize Collaboration Server With the Database Configuration
+Next, you can use the above configuration data for database to start the collaboration service. For example:
+
+``` ts
+const databaseConfig = {
+ type: 'postgres',
+ host: 'localhost',
+ port: 5432,
+ database: 'collab-db',
+ user: 'foxit',
+ password: '123456',
+}
+
+const server = new WebCollabServer({
+ databaseConfig,
+ // ... other options
+});
+```
+
+---
+
+## How to get permission of the collaboration?
+``` javascript
+// returns the permission object of the current collaboration.
+// will throw if the collaboration has already ended.
+const permission = await collaboration.getPermission();
+```

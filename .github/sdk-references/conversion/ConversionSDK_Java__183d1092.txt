@@ -1,0 +1,1164 @@
+How to convert a PDF file with the password "123456" to a Word file by steaming and reader callback. It use a reader callback and filestream. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.Progressive;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2Office;
+import com.foxit.sdk.conversion.pdf2office.ConvertCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2OfficeSettingData;
+import java.io.*;
+
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoPDF2OfficeModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+String sn = "";
+String key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```java
+class CustomConvertCallback extends ConvertCallback {
+ CustomConvertCallback() {}
+
+ @Override
+ public boolean needToPause() {
+ return true;
+ }
+
+ @Override
+ public void progressNotify(int converted_count, int total_count) {
+ }
+}
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```java
+PDF2OfficeSettingData setting_data = new PDF2OfficeSettingData();
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.setMetrics_data_folder_path("../../../res/metrics_data");
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```java
+CustomConvertCallback callback = new CustomConvertCallback();
+```
+
+7. Create a File Reader Callback to load a PDF document.
+
+```java
+// FileReader is implemented by user to load a PDF document.
+FileReader file_reader = new FileReader()
+file_reader_word->LoadFile("input.pdf");
+```
+
+8. Create a FileStream object to write the converted Word file.
+
+```java
+// FileStream is implemented by user to read the contents of the converted Word format file.
+FileStream file_stream = new FileStream()
+file_stream->LoadFile("output.docx");
+```
+
+9. Start the conversion process:
+
+```java
+// the password of PDF is 123456 as the second parameter of StartConvertToWord function.
+Progressive progressive = PDF2Office.StartConvertToWord(file_reader, "123456", file_stream, setting_data, callback)
+```
+
+10. Check the conversion progress and continue until it's completed:
+
+```java
+if (progressive.getRateOfProgress() != 100)
+{
+ int state = Progressive.e_ToBeContinued;
+ while (Progressive.e_ToBeContinued == state)
+ {
+ state = progressive.resume();
+ }
+}
+```
+
+11. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a PDF file to a Word file by steaming and reader callback. It use a reader callback and filestream. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.Progressive;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2Office;
+import com.foxit.sdk.conversion.pdf2office.ConvertCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2OfficeSettingData;
+import java.io.*;
+
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoPDF2OfficeModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+String sn = "";
+String key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```java
+class CustomConvertCallback extends ConvertCallback {
+ CustomConvertCallback() {}
+
+ @Override
+ public boolean needToPause() {
+ return true;
+ }
+
+ @Override
+ public void progressNotify(int converted_count, int total_count) {
+ }
+}
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```java
+PDF2OfficeSettingData setting_data = new PDF2OfficeSettingData();
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.setMetrics_data_folder_path("../../../res/metrics_data");
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```java
+CustomConvertCallback callback = new CustomConvertCallback();
+```
+
+7. Create a File Reader Callback to load a PDF document.
+
+```java
+// FileReader is implemented by user to load a PDF document.
+FileReader file_reader = new FileReader()
+file_reader_word->LoadFile("input.pdf");
+```
+
+8. Create a FileStream object to write the converted Word file.
+
+```java
+// FileStream is implemented by user to read the contents of the converted Word format file.
+FileStream file_stream = new FileStream()
+file_stream->LoadFile("output.docx");
+```
+
+9. Start the conversion process:
+
+```java
+Progressive progressive = PDF2Office.StartConvertToWord(file_reader, null, file_stream, setting_data, callback)
+```
+
+10. Check the conversion progress and continue until it's completed:
+
+```java
+if (progressive.getRateOfProgress() != 100)
+{
+ int state = Progressive.e_ToBeContinued;
+ while (Progressive.e_ToBeContinued == state)
+ {
+ state = progressive.resume();
+ }
+}
+```
+
+11. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a Powerpoint file to a PDF file using a file path as the first parameter. THere are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.office2pdf.Office2PDF;
+import com.foxit.sdk.conversion.office2pdf.Office2PDFSettingData;
+import java.io.*;
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoOffice2PDFModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+string sn = "";
+string key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != ErrorCode.e_ErrSuccess)
+{
+ return 1;
+}
+```
+
+4. Set up the Office to PDF conversion settings, start the conversion process:
+
+```java
+Office2PDFSettingData setting_data = new Office2PDFSettingData();
+setting_data.setResource_folder_path("../../../res/office2pdf");
+Office2PDF.convertFromPowerPoint("input.pptx", "", "output.pdf", setting_data);
+```
+
+5. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+---
+
+How to convert a Excel file to a PDF file using a file path as the first parameter. THere are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.office2pdf.Office2PDF;
+import com.foxit.sdk.conversion.office2pdf.Office2PDFSettingData;
+import java.io.*;
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoOffice2PDFModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+string sn = "";
+string key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != ErrorCode.e_ErrSuccess)
+{
+ return 1;
+}
+```
+
+4. Set up the Office to PDF conversion settings, start the conversion process:
+
+```java
+Office2PDFSettingData setting_data = new Office2PDFSettingData();
+setting_data.setResource_folder_path("../../../res/office2pdf");
+Office2PDF.convertFromExcel("input.xlsx", "", "output.pdf", setting_data);
+```
+
+5. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+---
+
+How to convert a password-free Powerpoint file to a PDF file using a Reader Callback to read Powerpoint file and using a filesteam to write PDF file contents.Here are the main steps involved:
+
+1. Use the appropriate namespaces:
+
+```c#
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using foxit;
+using foxit.common;
+using foxit.common.fxcrt;
+using foxit.conversion.pdf2office;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```c#
+string sn = "";
+string key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```c#
+ErrorCode error_code = Library.Initialize(sn, key);
+if (error_code != ErrorCode.e_ErrSuccess)
+{
+ return 1;
+}
+```
+
+4. Set up the Office to PDF conversion settings, start the conversion process:
+
+```c#
+using (Office2PDFSettingData setting_data = new Office2PDFSettingData())
+{
+ // Create a File Reader Callback to load a word document.
+ using (FileReader filereadercallback = new FileReader())
+ // Create a FileStream object to read and write the converted PDF file.
+ using (FileStreamCallback fileStreamcallback = new FileStreamCallback())
+ {
+ filereadercallback.LoadFile("input.pptx");
+ fileStreamcallback.LoadFile("output.pdf");
+ Office2PDF.ConvertFromPowerPoint(filereadercallback, null, fileStreamcallback, setting_data);
+ }
+}
+```
+
+5. Release the Foxit PDF Conversion SDK:
+
+```c#
+Library.Release()
+```
+
+---
+
+How to define FileStream inheriting from StreamCallback for convert a PDF to Word by streaming.
+
+```
+class FileStream extends StreamCallback {
+ private RandomAccessFile file_ = null;
+ private long cur_pos_ = 0;
+	private int ref_ = 1;
+
+ boolean LoadFile(String file_path) throws FileNotFoundException {
+ File path_file = new File(file_path);
+ if(path_file.exists() == true) path_file.delete();
+ file_ = new RandomAccessFile(file_path, "rw");
+ return true;
+ }
+
+ @Override
+ public long getSize() {
+ try {
+ return this.file_.length();
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ return 0;
+ }
+
+ @Override
+ public boolean writeBlock(byte[] buffer, long offset, long size) {
+ try {
+ file_.seek(offset);
+ file_.write(buffer, 0, (int) size);
+ cur_pos_ = offset + size;
+ return true;
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ return false;
+ }
+
+ @Override
+ public boolean readBlock(byte[] buffer, long offset, long size) {
+ try {
+ file_.seek(offset);
+ int read = file_.read(buffer, 0, (int) size);
+ cur_pos_ = offset + size;
+ return read == size ? true : false;
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ return false;
+ }
+
+ @Override
+ public long readBlock(byte[] buffer, long size) {
+ return readBlock(buffer, 0 , size) ? size : 0;
+ }
+
+ @Override
+ public boolean flush() {
+ return true;
+ }
+
+ @Override
+ public StreamCallback retain() {
+ ref_++;
+ return this;
+ }
+
+ @Override
+	public boolean isEOF() {
+ try {
+ return cur_pos_ > this.file_.length() ? true:false;
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ return false;
+ }
+
+ @Override
+ public long getPosition() {
+ return cur_pos_;
+ }
+
+ @Override
+ public void release() {
+ try {
+ this.file_.close();
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ }
+}
+```
+
+---
+
+How to convert a word file to a PDF file using a file path as the first parameter. THere are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.office2pdf.Office2PDF;
+import com.foxit.sdk.conversion.office2pdf.Office2PDFSettingData;
+import java.io.*;
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoOffice2PDFModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+string sn = "";
+string key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != ErrorCode.e_ErrSuccess)
+{
+ return 1;
+}
+```
+
+4. Set up the Office to PDF conversion settings, start the conversion process:
+
+```java
+Office2PDFSettingData setting_data = new Office2PDFSettingData();
+setting_data.setResource_folder_path("../../../res/office2pdf");
+Office2PDF.convertFromWord("input.docx", "", "output.pdf", setting_data);
+```
+
+5. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+---
+
+How to convert a PDF file with the password "123456" to a Word file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.Progressive;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2Office;
+import com.foxit.sdk.conversion.pdf2office.ConvertCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2OfficeSettingData;
+import java.io.*;
+
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoPDF2OfficeModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+String sn = "";
+String key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```java
+class CustomConvertCallback extends ConvertCallback {
+ CustomConvertCallback() {}
+
+ @Override
+ public boolean needToPause() {
+ return true;
+ }
+
+ @Override
+ public void progressNotify(int converted_count, int total_count) {
+ }
+}
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```java
+PDF2OfficeSettingData setting_data = new PDF2OfficeSettingData();
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.setMetrics_data_folder_path("../../../res/metrics_data");
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```java
+CustomConvertCallback callback = new CustomConvertCallback();
+```
+
+7. Start the conversion process:
+
+```java
+ // The password for PDF is 123456 as the third parameter of the function
+Progressive progressive = PDF2Office.StartConvertToWord("input.pdf", "123456", "output.docx", setting_data, callback)
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```java
+if (progressive.getRateOfProgress() != 100)
+{
+ int state = Progressive.e_ToBeContinued;
+ while (Progressive.e_ToBeContinued == state)
+ {
+ state = progressive.resume();
+ }
+}
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a password-free PDF file to a PowerPoint file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.Progressive;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2Office;
+import com.foxit.sdk.conversion.pdf2office.ConvertCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2OfficeSettingData;
+import java.io.*;
+
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoPDF2OfficeModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+String sn = "";
+String key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```java
+class CustomConvertCallback extends ConvertCallback {
+ CustomConvertCallback() {}
+
+ @Override
+ public boolean needToPause() {
+ return true;
+ }
+
+ @Override
+ public void progressNotify(int converted_count, int total_count) {
+ }
+}
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```java
+PDF2OfficeSettingData setting_data = new PDF2OfficeSettingData();
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.setMetrics_data_folder_path("../../../res/metrics_data");
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```java
+CustomConvertCallback callback = new CustomConvertCallback();
+```
+
+7. Start the conversion process:
+
+```java
+Progressive progressive = PDF2Office.StartConvertToPowerPoint("input.pdf", null, "output.ppt", setting_data, callback)
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```java
+if (progressive.getRateOfProgress() != 100)
+{
+ int state = Progressive.e_ToBeContinued;
+ while (Progressive.e_ToBeContinued == state)
+ {
+ state = progressive.resume();
+ }
+}
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert from a PDF to an RTF file?
+
+No, the SDK does not provide the ability to convert PDF files to RTF files.
+
+---
+
+How to convert a password-free Word file to a PDF file using a Reader Callback to read Word file and using a filesteam to write PDF file contents.Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.office2pdf.Office2PDF;
+import com.foxit.sdk.conversion.office2pdf.Office2PDFSettingData;
+import java.io.*;
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoOffice2PDFModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+string sn = "";
+string key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != ErrorCode.e_ErrSuccess)
+{
+ return 1;
+}
+```
+
+4. Set up the Office to PDF conversion settings, start the conversion process:
+
+```java
+Office2PDFSettingData setting_data = new Office2PDFSettingData();
+setting_data.setResource_folder_path("../../../res/office2pdf");
+FileReader file_read_word = new FileReader();
+file_read_word.LoadFile("input.docx");
+FileStream file_stream_pdf = new FileStream();
+file_stream_word.LoadFile(output_path + "out.pdf");
+Office2PDF.convertFromWord(file_read_word, "", file_stream_pdf, setting_data);
+
+```
+
+5. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+---
+
+How to convert a password-free PDF file to an Excel file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.Progressive;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2Office;
+import com.foxit.sdk.conversion.pdf2office.ConvertCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2OfficeSettingData;
+import java.io.*;
+
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoPDF2OfficeModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+String sn = "";
+String key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```java
+class CustomConvertCallback extends ConvertCallback {
+ CustomConvertCallback() {}
+
+ @Override
+ public boolean needToPause() {
+ return true;
+ }
+
+ @Override
+ public void progressNotify(int converted_count, int total_count) {
+ }
+}
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```java
+PDF2OfficeSettingData setting_data = new PDF2OfficeSettingData();
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.setMetrics_data_folder_path("../../../res/metrics_data");
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```java
+CustomConvertCallback callback = new CustomConvertCallback();
+```
+
+7. Start the conversion process:
+
+```java
+Progressive progressive = PDF2Office.StartConvertToExcel("input.pdf", null, "output.xlxs", setting_data, callback)
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```java
+if (progressive.getRateOfProgress() != 100)
+{
+ int state = Progressive.e_ToBeContinued;
+ while (Progressive.e_ToBeContinued == state)
+ {
+ state = progressive.resume();
+ }
+}
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to define FileReader inheriting from FileReaderCallback for convert a PDF to Word by streaming.
+
+```
+class FileReader extends FileReaderCallback {
+ private RandomAccessFile file_ = null;
+
+ FileReader() {
+ }
+
+ boolean LoadFile(String file_path) throws FileNotFoundException {
+ file_ = new RandomAccessFile(file_path, "r");
+ return true;
+ }
+
+ @Override
+ public long getSize() {
+ try {
+ return this.file_.length();
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ return -1;
+ }
+
+ @Override
+ public boolean readBlock(byte[] buffer, long offset, long size) {
+ try {
+ file_.seek(offset);
+ int read = file_.read(buffer, 0, (int) size);
+ return read == size ? true : false;
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ return false;
+ }
+
+ public void release() {
+ try {
+ this.file_.close();
+ } catch (IOException e) {
+ e.printStackTrace();
+ }
+ }
+}
+```
+
+---
+
+How to convert a password-free Excel file to a PDF file using a Reader Callback to read Excel file and using a filesteam to write PDF file contents.Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.office2pdf.Office2PDF;
+import com.foxit.sdk.conversion.office2pdf.Office2PDFSettingData;
+import java.io.*;
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoOffice2PDFModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+string sn = "";
+string key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != ErrorCode.e_ErrSuccess)
+{
+ return 1;
+}
+```
+
+4. Set up the Office to PDF conversion settings, start the conversion process:
+
+```java
+Office2PDFSettingData setting_data = new Office2PDFSettingData();
+setting_data.setResource_folder_path("../../../res/office2pdf");
+FileReader file_read_word = new FileReader();
+file_read_word.LoadFile("input.xlsx");
+FileStream file_stream_pdf = new FileStream();
+file_stream_word.LoadFile(output_path + "out.pdf");
+Office2PDF.convertFromExcel(file_read_word, "", file_stream_pdf, setting_data);
+
+```
+
+5. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+---
+
+How to convert a password-free PDF file to a word file using a file path as the first parameter. The machine learning-based recognition is disable and not using convert callback. Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.Progressive;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2Office;
+import com.foxit.sdk.conversion.pdf2office.ConvertCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2OfficeSettingData;
+import java.io.*;
+
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoPDF2OfficeModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+String sn = "";
+String key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```java
+class CustomConvertCallback extends ConvertCallback {
+ CustomConvertCallback() {}
+
+ @Override
+ public boolean needToPause() {
+ return true;
+ }
+
+ @Override
+ public void progressNotify(int converted_count, int total_count) {
+ }
+}
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```java
+PDF2OfficeSettingData setting_data = new PDF2OfficeSettingData();
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.setMetrics_data_folder_path("../../../res/metrics_data");
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+6. Start the conversion process:
+
+```java
+// Not using convert callback, The fifth parameter of the function is passed as null.
+Progressive progressive = PDF2Office.StartConvertToWord("input.pdf", null, "output.docx", setting_data, null)
+```
+
+7. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.
+
+---
+
+How to convert a password-free PDF file to a Word file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Import the necessary class, static members of a class and package:
+
+```java
+import com.foxit.sdk.PDFException;
+import com.foxit.sdk.common.Library;
+import com.foxit.sdk.common.Progressive;
+import com.foxit.sdk.common.fxcrt.FileReaderCallback;
+import com.foxit.sdk.common.fxcrt.StreamCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2Office;
+import com.foxit.sdk.conversion.pdf2office.ConvertCallback;
+import com.foxit.sdk.conversion.pdf2office.PDF2OfficeSettingData;
+import java.io.*;
+
+import static com.foxit.sdk.common.Constants.e_ErrSuccess;
+import static com.foxit.sdk.common.Constants.e_ErrInvalidLicense;
+import static com.foxit.sdk.common.Constants.e_ErrNoPDF2OfficeModuleRight;
+```
+
+2. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```java
+String sn = "";
+String key = "";
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```java
+int error_code = Library.Initialize(sn, key);
+if (error_code != e_ErrSuccess) {
+ return 1;
+}
+```
+
+4. Define a custom callback class for conversion progress:
+
+```java
+class CustomConvertCallback extends ConvertCallback {
+ CustomConvertCallback() {}
+
+ @Override
+ public boolean needToPause() {
+ return true;
+ }
+
+ @Override
+ public void progressNotify(int converted_count, int total_count) {
+ }
+}
+```
+
+5. Set up the PDF to Office conversion settings:
+
+```java
+PDF2OfficeSettingData setting_data = new PDF2OfficeSettingData();
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.setMetrics_data_folder_path("../../../res/metrics_data");
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+6. Define the callback to notify conversion progress during the conversion process
+
+```java
+CustomConvertCallback callback = new CustomConvertCallback();
+```
+
+7. Start the conversion process:
+
+```java
+Progressive progressive = PDF2Office.StartConvertToWord("input.pdf", null, "output.docx", setting_data, callback)
+```
+
+8. Check the conversion progress and continue until it's completed:
+
+```java
+if (progressive.getRateOfProgress() != 100)
+{
+ int state = Progressive.e_ToBeContinued;
+ while (Progressive.e_ToBeContinued == state)
+ {
+ state = progressive.resume();
+ }
+}
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```java
+Library.Release()
+```
+
+Please ensure that you have the correct paths for the necessary resources, such as the metrics data folder.

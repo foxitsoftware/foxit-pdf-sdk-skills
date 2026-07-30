@@ -1,0 +1,1429 @@
+How to define FileStream inheriting from StreamCallback for convet a PDF to Word by streaming.
+
+```cpp
+class FileStream : public StreamCallback {
+ public:
+ FileStream()
+ : file_(NULL)
+ , ref_(1)
+ , cur_pos_(SEEK_SET) {}
+
+ ~FileStream() {}
+
+ bool LoadFile(const char* file_path) {
+#if defined(_WIN32) || defined(_WIN64)
+ fopen_s(&file_, file_path, "wb");
+#else
+ file_ = fopen(file_path, "wb");
+#endif
+ if (!file_)
+ return false;
+ return true;
+ }
+
+ FX_FILESIZE GetSize() {
+ if (!file_)
+ return 0;
+ fseek(file_, 0, SEEK_END);
+ return (FX_FILESIZE)ftell(file_);
+ }
+
+ FX_BOOL Flush() {
+ fflush(file_);
+ return true;
+ }
+
+ FX_FILESIZE GetPosition() {
+ return cur_pos_;
+ }
+
+ FX_BOOL ReadBlock(void* buffer, FX_FILESIZE offset, size_t size) {
+ if (!file_)
+ return false;
+ if (0 != fseek(file_, (long)offset, 0))
+ return false;
+ if (0 == fread(buffer, size, sizeof(char), file_))
+ return false;
+
+ cur_pos_ = offset + size;
+ return true;
+ }
+
+ size_t ReadBlock(void* buffer, size_t size) {
+ if (ReadBlock(buffer, GetSize(), size))
+ return size;
+ else
+ return 0;
+ }
+
+ FX_BOOL WriteBlock(const void* buffer, FX_FILESIZE offset, size_t size) {
+ if (!file_)
+ return false;
+ fseek(file_, (long)offset, SEEK_SET);
+ uint64 write_size = fwrite(buffer, sizeof(char), size, file_);
+ if (write_size == size) {
+ cur_pos_ = offset + size;
+ return true;
+ }
+ return false;
+ }
+
+ FX_BOOL WriteBlock(const void* data, size_t size) {
+ return WriteBlock(data, GetSize(), size);
+ }
+
+ FileStream* Retain() {
+ ref_++;
+ return this;
+ }
+
+ FX_BOOL IsEOF() {
+ if (!file_)
+ return 0;
+ fseek(file_, 0, SEEK_END);
+ if (cur_pos_ < (FX_FILESIZE)ftell(file_))
+ return false;
+ return true;
+ }
+
+ void Release() {
+ ref_--;
+ if (ref_ == 0) {
+ if (file_)
+ fclose(file_);
+ file_ = NULL;
+ delete this;
+ }
+ }
+
+ private:
+ FILE* file_;
+ int ref_;
+ FX_FILESIZE cur_pos_;
+};
+
+```
+
+---
+
+How to convert from a PDF to an RTF file?
+
+No, the SDK does not provide the ability to convert PDF files to RTF files.
+
+---
+
+How to convert a password-free Word file to a PDF file using a Reader Callback to read wrod file and using a filesteam to write PDF file contents.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_office2pdf.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::office2pdf;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Set up the Office to PDF conversion settings:
+
+```cpp
+WString resource_folder_path = WString::FromLocal("../../../res/office2pdf");
+Office2PDFSettingData setting_data;
+setting_data.resource_folder_path = resource_folder_path;
+```
+
+6. Create a File Reader Callback to load a Word document.
+
+```cpp
+FileReader* file_reader_word = new FileReader();
+file_reader_word->LoadFile(String::FromUnicode(L"word.docx"));
+```
+
+7. Create a FileStream object to write the converted PDF file.
+
+```cpp
+FileStream* file_writer_pdf = new FileStream();
+file_writer_pdf->LoadFile(String::FromUnicode(L"word2pdf_stream_result.pdf"));
+```
+
+8. Start the conversion process:
+
+```cpp
+Office2PDF::ConvertFromWord(file_reader_word, NULL, file_writer_pdf, setting_data);
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a PDF file with the password "123456" to a Word file by streaming. It use a reader callback and a Filestream.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_pdf2office.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::pdf2office;
+```
+
+3. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize("", "");
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+4.Define a custom callback class for conversion progress:
+
+```cpp
+class CustomConvertCallback : public ConvertCallback {
+public:
+ CustomConvertCallback() {}
+ ~CustomConvertCallback() {}
+ virtual bool NeedToPause() {
+ return true;
+ }
+ virtual void ProgressNotify(int converted_count, int total_count) {}
+};
+```
+
+7. Set up the PDF to Office conversion settings:
+
+```cpp
+PDF2OfficeSettingData setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = L"../../../res/metrics_data";
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+8. Create a File Reader Callback to load a PDF document.
+
+```cpp
+FileReader* custom_readercallback_word = new FileReader();
+custom_readercallback_word->LoadFile(String::FromUnicode(L"input.pdf"));
+```
+
+9. Create a FileStream object to write the converted Word file.
+
+```cpp
+FileStream* custom_streamcallback_word = new FileStream();
+custom_streamcallback_word->LoadFile(String::FromUnicode(L"pdf2word_withstream_result.docx"));
+```
+
+10. Define the callback to notify conversion progress during the conversion process
+
+```cpp
+CustomConvertCallback callback;
+```
+
+11. Start the conversion process, the PDF password is 123456:
+
+```cpp
+Progressive progressive = PDF2Office::StartConvertToWord(custom_readercallback_word, L"123456", custom_streamcallback_word, setting_data, &callback);
+```
+
+12. Check the conversion progress and continue until it's completed:
+
+```cpp
+if (progressive.GetRateOfProgress() != 100) {
+ Progressive::State state = Progressive::e_ToBeContinued;
+ while (Progressive::e_ToBeContinued == state) {
+ state = progressive.Continue();
+ }
+}
+```
+
+13. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a excel file to a PDF file using a file path as the first parameter. THere are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_office2pdf.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::office2pdf;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Set up the Office to PDF conversion settings:
+
+```cpp
+WString resource_folder_path = WString::FromLocal("../../../res/office2pdf");
+Office2PDFSettingData setting_data;
+setting_data.resource_folder_path = resource_folder_path;
+```
+
+6. Start the conversion process:
+
+```cpp
+Office2PDF::ConvertFromExcel(L"excel.xlsx", NULL, L"excel2pdf_result.pdf", setting_data);
+```
+
+7. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PDF file to a powerpoint file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_pdf2office.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::pdf2office;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Define a custom callback class for conversion progress:
+
+```cpp
+class CustomConvertCallback : public ConvertCallback {
+public:
+ CustomConvertCallback() {}
+ ~CustomConvertCallback() {}
+ virtual bool NeedToPause() {
+ return true;
+ }
+ virtual void ProgressNotify(int converted_count, int total_count) {}
+};
+```
+
+6. Set up the PDF to Office conversion settings:
+
+```cpp
+PDF2OfficeSettingData setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = L"../../../res/metrics_data";
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+7. Define the callback to notify conversion progress during the conversion process
+
+```cpp
+CustomConvertCallback callback;
+```
+
+8. Start the conversion process:
+
+```cpp
+Progressive progressive = PDF2Office::StartConvertToPowerPoint(L"input.pdf", NULL, L"output.ppt", setting_data, &callback);
+```
+
+9. Check the conversion progress and continue until it's completed:
+
+```cpp
+if (progressive.GetRateOfProgress() != 100) {
+ Progressive::State state = Progressive::e_ToBeContinued;
+ while (Progressive::e_ToBeContinued == state) {
+ state = progressive.Continue();
+ }
+}
+```
+
+10. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a word file to a PDF file using a file path as the first parameter. THere are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_office2pdf.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::office2pdf;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Set up the Office to PDF conversion settings:
+
+```cpp
+WString resource_folder_path = WString::FromLocal("../../../res/office2pdf");
+Office2PDFSettingData setting_data;
+setting_data.resource_folder_path = resource_folder_path;
+```
+
+6. Start the conversion process:
+
+```cpp
+Office2PDF::ConvertFromWord(L"word.docx", NULL, L"word2pdf_result.pdf", setting_data);
+```
+
+7. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+StartConvertToWord function definition in PDF2Office.
+
+/**
+ * @brief Start to convert a PDF file to a Word format file.
+ *
+ * @details Currently only support converting to DOCX format file.
+ *
+ * @param[in] src_pdf_path Path of a PDF file. This should not be an empty string.
+ * @param[in] src_pdf_password Password for the input PDF file. If no password is needed for the file, please pass an empty string.
+ * @param[in] saved_word_file_path Path of the saved Word format file as conversion result. This should not be an empty string.
+ * If the suffix name of the saved Word format file is not "docx", a new suffix named "docx" will be added to the original file name.
+ * @param[in] setting_data Setting data used for converting.
+ * @param[in] convert_callback A @link conversion::pdf2office::ConvertCallback @endlink object which is implemented by user
+ * to pause and notify the conversion progress during the converting process.
+ * This can be <b>NULL</b> which means not to pause and notify the conversion progress.
+ * If this is not <b>NULL</b>, it should be a valid @link conversion::pdf2office::ConvertCallback @endlink
+ * object implemented by user.<br>
+ * Default value: <b>NULL</b>.
+ *
+ * @return A progressive object. Please check the rate of current progress by function
+ * @link common::Progressive::GetRateOfProgress @endlink. If the rate is not 100 yet, call function
+ * @link common::Progressive::Continue @endlink to continue the progress until the progress is finished.
+ *
+ * @note If module "PDF2Office" is not defined in the license information which is used in function
+ * @link common::Library::Initialize @endlink, that means user has no right in using this function and
+ * this function will throw exception @link foxit::e_ErrNoPDF2OfficeModuleRight @endlink.
+ */
+ static Progressive StartConvertToWord(const wchar_t* src_pdf_path, const wchar_t* src_pdf_password, const wchar_t* saved_word_file_path,
+ const PDF2OfficeSettingData& setting_data, ConvertCallback* convert_callback = NULL);
+
+ /**
+ * @brief Start to convert a PDF file to a Word format file.
+ *
+ * @details Currently only support converting to DOCX format file.
+ *
+ * @param[in] src_pdf_reader A @link ReaderCallback @endlink object which is implemented by user to
+ * load a PDF document. It should not be <b>NULL</b>.
+ * @param[in] src_pdf_password Password for the input PDF file. If no password is needed for the file, please pass an empty string.
+ * @param[in] saved_word_file_stream A @link foxit::common::file::StreamCallback @endlink object which is implemented by user
+ * to read the contents of the converted Word format file. It should not be <b>NULL</b>.
+ * @param[in] setting_data Setting data used for converting.
+ * @param[in] convert_callback A @link conversion::pdf2office::ConvertCallback @endlink object which is implemented by user
+ * to pause and notify the conversion progress during the converting process.
+ * This can be <b>NULL</b> which means not to pause and notify the conversion progress.
+ * If this is not <b>NULL</b>, it should be a valid @link conversion::pdf2office::ConvertCallback @endlink
+ * object implemented by user.<br>
+ * Default value: <b>NULL</b>.
+ *
+ * @return A progressive object. Please check the rate of current progress by function
+ * @link common::Progressive::GetRateOfProgress @endlink. If the rate is not 100 yet, call function
+ * @link common::Progressive::Continue @endlink to continue the progress until the progress is finished..
+ *
+ * @note If module "PDF2Office" is not defined in the license information which is used in function
+ * @link common::Library::Initialize @endlink, that means user has no right in using this function and
+ * this function will throw exception @link foxit::e_ErrNoPDF2OfficeModuleRight @endlink.
+ */
+ static Progressive StartConvertToWord(file::ReaderCallback* src_pdf_reader, const wchar_t* src_pdf_password, file::StreamCallback* saved_word_file_stream,
+ const PDF2OfficeSettingData& setting_data, ConvertCallback* convert_callback = NULL);
+
+---
+
+How to convert a PowerPoint file to a PDF file using a file path as the first parameter. THere are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_office2pdf.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::office2pdf;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Set up the Office to PDF conversion settings:
+
+```cpp
+WString resource_folder_path = WString::FromLocal("../../../res/office2pdf");
+Office2PDFSettingData setting_data;
+setting_data.resource_folder_path = resource_folder_path;
+```
+
+6. Start the conversion process:
+
+```cpp
+Office2PDF::ConvertFromWord(L"powerpoint.pptx", NULL, L"ppt2pdf_result.pdf", setting_data);
+```
+
+7. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PDF file to a Word file by streaming. It use a reader callback and a filestream. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_pdf2office.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::pdf2office;
+```
+
+​	3. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize("", "");
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+​	4.Define a custom callback class for conversion progress:
+
+```cpp
+class CustomConvertCallback : public ConvertCallback {
+public:
+ CustomConvertCallback() {}
+ ~CustomConvertCallback() {}
+ virtual bool NeedToPause() {
+ return true;
+ }
+ virtual void ProgressNotify(int converted_count, int total_count) {}
+};
+```
+
+7. Set up the PDF to Office conversion settings:
+
+```cpp
+PDF2OfficeSettingData setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = L"../../../res/metrics_data";
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+8. Create a File Reader Callback to load a PDF document.
+
+```cpp
+FileReader* custom_readercallback_word = new FileReader();
+custom_readercallback_word->LoadFile(String::FromUnicode(L"input.pdf"));
+```
+
+9. Create a FileStream object to write the converted Word file.
+
+```cpp
+FileStream* custom_streamcallback_word = new FileStream();
+custom_streamcallback_word->LoadFile(String::FromUnicode(L"pdf2word_withstream_result.docx"));
+```
+
+10. Define the callback to notify conversion progress during the conversion process
+
+```cpp
+CustomConvertCallback callback;
+```
+
+11. Start the conversion process:
+
+```cpp
+Progressive progressive = PDF2Office::StartConvertToWord(custom_readercallback_word, NULL, custom_streamcallback_word, setting_data, &callback);
+```
+
+12. Check the conversion progress and continue until it's completed:
+
+```cpp
+if (progressive.GetRateOfProgress() != 100) {
+ Progressive::State state = Progressive::e_ToBeContinued;
+ while (Progressive::e_ToBeContinued == state) {
+ state = progressive.Continue();
+ }
+}
+```
+
+13. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PDF file to an excel file using a file path as the first parameter. The machine learning-based recognitio(AI) is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_pdf2office.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::pdf2office;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Define a custom callback class for conversion progress:
+
+```cpp
+class CustomConvertCallback : public ConvertCallback {
+public:
+ CustomConvertCallback() {}
+ ~CustomConvertCallback() {}
+ virtual bool NeedToPause() {
+ return true;
+ }
+ virtual void ProgressNotify(int converted_count, int total_count) {}
+};
+```
+
+6. Set up the PDF to Office conversion settings:
+
+```cpp
+PDF2OfficeSettingData setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = L"../../../res/metrics_data";
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+7. Define the callback to notify conversion progress during the conversion process
+
+```cpp
+CustomConvertCallback callback;
+```
+
+8. Start the conversion process:
+
+```cpp
+Progressive progressive = PDF2Office::StartConvertToExcel(L"input.pdf", NULL, L"output.xlsx", setting_data, &callback);
+```
+
+9. Check the conversion progress and continue until it's completed:
+
+```cpp
+if (progressive.GetRateOfProgress() != 100) {
+ Progressive::State state = Progressive::e_ToBeContinued;
+ while (Progressive::e_ToBeContinued == state) {
+ state = progressive.Continue();
+ }
+}
+```
+
+10. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PowerPoint file to a PDF file using a Reader Callback to read PowerPoint file and using a filesteam to write PDF file contents.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_office2pdf.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::office2pdf;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Set up the Office to PDF conversion settings:
+
+```cpp
+WString resource_folder_path = WString::FromLocal("../../../res/office2pdf");
+Office2PDFSettingData setting_data;
+setting_data.resource_folder_path = resource_folder_path;
+```
+
+6. Create a File Reader Callback to load a Word document.
+
+```cpp
+FileReader* file_reader_word = new FileReader();
+file_reader_word->LoadFile(String::FromUnicode(L"powerpoint.pptx"));
+```
+
+7. Create a FileStream object to write the converted PDF file.
+
+```cpp
+FileStream* file_writer_pdf = new FileStream();
+file_writer_pdf->LoadFile(String::FromUnicode(L"ppt2pdf_stream_result.pdf"));
+```
+
+8. Start the conversion process:
+
+```cpp
+Office2PDF::ConvertFromWord(file_reader_word, NULL, file_writer_pdf, setting_data);
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PDF file to a Word file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_pdf2office.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::pdf2office;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Define a custom callback class for conversion progress:
+
+```cpp
+class CustomConvertCallback : public ConvertCallback {
+public:
+ CustomConvertCallback() {}
+ ~CustomConvertCallback() {}
+ virtual bool NeedToPause() {
+ return true;
+ }
+ virtual void ProgressNotify(int converted_count, int total_count) {}
+};
+```
+
+6. Set up the PDF to Office conversion settings:
+
+```cpp
+PDF2OfficeSettingData setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = L"../../../res/metrics_data";
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+7. Define the callback to notify conversion progress during the conversion process
+
+```cpp
+CustomConvertCallback callback;
+```
+
+8. Start the conversion process:
+
+```cpp
+Progressive progressive = PDF2Office::StartConvertToWord(L"input.pdf", NULL, L"output.word", setting_data, &callback);
+```
+
+9. Check the conversion progress and continue until it's completed:
+
+```cpp
+if (progressive.GetRateOfProgress() != 100) {
+ Progressive::State state = Progressive::e_ToBeContinued;
+ while (Progressive::e_ToBeContinued == state) {
+ state = progressive.Continue();
+ }
+}
+```
+
+10. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free PDF file to a word file using a file path as the first parameter. The machine learning-based recognition is disable and not using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_pdf2office.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::pdf2office;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Define a custom callback class for conversion progress:
+
+```cpp
+class CustomConvertCallback : public ConvertCallback {
+public:
+ CustomConvertCallback() {}
+ ~CustomConvertCallback() {}
+ virtual bool NeedToPause() {
+ return true;
+ }
+ virtual void ProgressNotify(int converted_count, int total_count) {}
+};
+```
+
+6. Set up the PDF to Office conversion settings:
+
+```cpp
+PDF2OfficeSettingData setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = L"../../../res/metrics_data";
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+7. Define the callback to notify conversion progress during the conversion process
+
+```cpp
+CustomConvertCallback callback;
+```
+
+8. Start the conversion process:
+
+```cpp
+//The third parameter is NULL, indicating that the PDF password is empty
+//The fifth parameter is NULL, indicating that not use a convert callback
+Progressive progressive = PDF2Office::StartConvertToWord(L"input.pdf", NULL, L"output.docx", setting_data, NULL);
+```
+
+10. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to convert a password-free excel file to a PDF file using a Reader Callback to read excel file and using a filesteam to write PDF file contents.Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_office2pdf.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::office2pdf;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Set up the Office to PDF conversion settings:
+
+```cpp
+WString resource_folder_path = WString::FromLocal("../../../res/office2pdf");
+Office2PDFSettingData setting_data;
+setting_data.resource_folder_path = resource_folder_path;
+```
+
+6. Create a File Reader Callback to load a Word document.
+
+```cpp
+FileReader* file_reader_word = new FileReader();
+file_reader_word->LoadFile(String::FromUnicode(L"excel.xlsx"));
+```
+
+7. Create a FileStream object to write the converted PDF file.
+
+```cpp
+FileStream* file_writer_pdf = new FileStream();
+file_writer_pdf->LoadFile(String::FromUnicode(L"excel2pdf_stream_result.pdf"));
+```
+
+8. Start the conversion process:
+
+```cpp
+Office2PDF::ConvertFromWord(file_reader_word, NULL, file_writer_pdf, setting_data);
+```
+
+9. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.
+
+---
+
+How to define FileReader inheriting from ReaderCallback for convet a PDF to Word by streaming.
+
+1. class FileReader which implemente a ReaderCallback object to load a PDF document.
+```cpp
+class FileReader : public ReaderCallback {
+ public:
+ FileReader()
+ : file_(NULL){}
+ ~FileReader() {}
+
+ bool LoadFile(const char* file_path) {
+#if defined(_WIN32) || defined(_WIN64)
+ fopen_s(&file_, file_path, "rb");
+#else
+ file_ = fopen(file_path, "rb");
+#endif
+ if (!file_)
+ return false;
+ return true;
+ }
+
+ FX_FILESIZE GetSize() {
+ if (!file_)
+ return 0;
+ fseek(file_, 0, SEEK_END);
+ return (FX_FILESIZE)ftell(file_);
+ }
+
+ FX_BOOL ReadBlock(void* buffer, FX_FILESIZE offset, size_t size) {
+ if (!file_)
+ return 0;
+ if (0 != fseek(file_, (long)offset, 0))
+ return 0;
+ if (0 == fread(buffer, size, 1, file_))
+ return 0;
+ return 1;
+ }
+
+ size_t ReadBlock(void* buffer, size_t size) {
+ if (!file_)
+ return false;
+ if (0 != fseek(file_, 0, 0))
+ return 0;
+ return fread(buffer, size, 1, file_);
+ }
+
+ void Release() {
+ if (file_)
+ fclose(file_);
+ file_ = NULL;
+ delete this;
+ }
+
+ private:
+ FILE* file_;
+};
+```
+
+2. Class FileStream which implemente a StreamCallback object to write the converted Word format file.
+
+```cpp
+class FileStream : public StreamCallback {
+ public:
+ FileStream()
+ : file_(NULL)
+ , ref_(1)
+ , cur_pos_(SEEK_SET) {}
+
+ ~FileStream() {}
+
+ bool LoadFile(const char* file_path) {
+#if defined(_WIN32) || defined(_WIN64)
+ fopen_s(&file_, file_path, "wb");
+#else
+ file_ = fopen(file_path, "wb");
+#endif
+ if (!file_)
+ return false;
+ return true;
+ }
+
+ FX_FILESIZE GetSize() {
+ if (!file_)
+ return 0;
+ fseek(file_, 0, SEEK_END);
+ return (FX_FILESIZE)ftell(file_);
+ }
+
+ FX_BOOL Flush() {
+ fflush(file_);
+ return true;
+ }
+
+ FX_FILESIZE GetPosition() {
+ return cur_pos_;
+ }
+
+ FX_BOOL ReadBlock(void* buffer, FX_FILESIZE offset, size_t size) {
+ if (!file_)
+ return false;
+ if (0 != fseek(file_, (long)offset, 0))
+ return false;
+ if (0 == fread(buffer, size, sizeof(char), file_))
+ return false;
+
+ cur_pos_ = offset + size;
+ return true;
+ }
+
+ size_t ReadBlock(void* buffer, size_t size) {
+ if (ReadBlock(buffer, GetSize(), size))
+ return size;
+ else
+ return 0;
+ }
+
+ FX_BOOL WriteBlock(const void* buffer, FX_FILESIZE offset, size_t size) {
+ if (!file_)
+ return false;
+ fseek(file_, (long)offset, SEEK_SET);
+ uint64 write_size = fwrite(buffer, sizeof(char), size, file_);
+ if (write_size == size) {
+ cur_pos_ = offset + size;
+ return true;
+ }
+ return false;
+ }
+
+ FX_BOOL WriteBlock(const void* data, size_t size) {
+ return WriteBlock(data, GetSize(), size);
+ }
+
+ FileStream* Retain() {
+ ref_++;
+ return this;
+ }
+
+ FX_BOOL IsEOF() {
+ if (!file_)
+ return 0;
+ fseek(file_, 0, SEEK_END);
+ if (cur_pos_ < (FX_FILESIZE)ftell(file_))
+ return false;
+ return true;
+ }
+
+ void Release() {
+ ref_--;
+ if (ref_ == 0) {
+ if (file_)
+ fclose(file_);
+ file_ = NULL;
+ delete this;
+ }
+ }
+
+ private:
+ FILE* file_;
+ int ref_;
+ FX_FILESIZE cur_pos_;
+};
+```
+3. Using FileReader Callback to Load a PDF document.
+
+```cpp
+FileReader* custom_readercallback_word = new FileReader();
+custom_readercallback_word->LoadFile(String::FromUnicode(L"input.pdf"));
+```
+
+4. Using FileStream to read word content and save it.
+
+```cpp
+FileStream* custom_streamcallback_word = new FileStream();
+custom_streamcallback_word->LoadFile(String::FromUnicode(L"pdf2word_withstream_result.docx"));
+```
+5. Define the callback to notify conversion progress during the conversion process
+
+```cpp
+CustomConvertCallback callback;
+```
+
+6. Start the conversion process:
+
+```cpp
+Progressive progressive = PDF2Office::StartConvertToWord(custom_readercallback_word, NULL, custom_streamcallback_word, setting_data, &callback);
+```
+
+7. Check the conversion progress and continue until it's completed:
+```cpp
+if (progressive.GetRateOfProgress() != 100) {
+ Progressive::State state = Progressive::e_ToBeContinued;
+ while (Progressive::e_ToBeContinued == state) {
+ state = progressive.Continue();
+ }
+}
+```
+
+---
+
+How to convert a PDF file with the password "123456" to a word file using a file path as the first parameter. The machine learning-based recognition is disable and using convert callback. Here are the main steps involved:
+
+1. Include the necessary header files:
+
+```cpp
+#include "../../../include/common/fs_common.h"
+#include "../../../include/conversion/fs_pdf2office.h"
+```
+
+2. Use the appropriate namespaces:
+
+```cpp
+using namespace std;
+using namespace foxit;
+using namespace foxit::common;
+using namespace foxit::file;
+using foxit::common::Library;
+using namespace conversion::pdf2office;
+```
+
+3. Define the serial number (SN) and key for initialization of the conversion sdk library, the parameter "sn" can be found in the "**conversionsdk_sn.txt**" (the string after "SN=") and the "key" can be found in the "**conversionsdk_key.txt**" (the string after "Sign="):
+
+```cpp
+static const char* sn = "";
+static const char* key = "";
+```
+
+4. Initialize the Foxit PDF Conversion SDK:
+
+```cpp
+ErrorCode error_code = Library::Initialize(sn, key);
+if (error_code != foxit::e_ErrSuccess) {
+ return 1;
+}
+```
+
+5. Define a custom callback class for conversion progress:
+
+```cpp
+class CustomConvertCallback : public ConvertCallback {
+public:
+ CustomConvertCallback() {}
+ ~CustomConvertCallback() {}
+ virtual bool NeedToPause() {
+ return true;
+ }
+ virtual void ProgressNotify(int converted_count, int total_count) {}
+};
+```
+
+6. Set up the PDF to Office conversion settings:
+
+```cpp
+PDF2OfficeSettingData setting_data;
+// Set the path to the metrics data folder (ensure the path is valid)
+setting_data.metrics_data_folder_path = L"../../../res/metrics_data";
+// Disable machine learning-based recognition functionality
+setting_data.enable_ml_recognition = false;
+```
+
+7. Define the callback to notify conversion progress during the conversion process
+
+```cpp
+CustomConvertCallback callback;
+```
+
+8. Start the conversion process:
+
+```cpp
+Progressive progressive = PDF2Office::StartConvertToPowerPoint(L"input.pdf",L"123456", L"output.word", setting_data, &callback);
+```
+
+9. Check the conversion progress and continue until it's completed:
+
+```cpp
+if (progressive.GetRateOfProgress() != 100) {
+ Progressive::State state = Progressive::e_ToBeContinued;
+ while (Progressive::e_ToBeContinued == state) {
+ state = progressive.Continue();
+ }
+}
+```
+
+10. Release the Foxit PDF Conversion SDK:
+
+```cpp
+Library::Release();
+```
+
+Please ensure that you have the correct paths for the include files and necessary resources, such as the metrics data folder. Additionally, make sure you have the Foxit PDF Conversion SDK libraries and dependencies properly included and linked in your project.

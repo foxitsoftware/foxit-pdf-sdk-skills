@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-03-24",
+  "source": {
+    "owner": "human-agent-cowork-workflow/scripts",
+    "file": "scripts/tool_mapping_template.json",
+    "notes": [
+      "This is the canonical capability-level mapping template.",
+      "Platform built-in tool names are not guaranteed to be stable across versions."
+    ]
+  },
+  "platforms": [
+    {
+      "id": "github_copilot_vscode",
+      "display_name": "GitHub Copilot (VS Code Agent)"
+    },
+    {
+      "id": "cursor_agent",
+      "display_name": "Cursor Agent"
+    },
+    {
+      "id": "opencode_agent",
+      "display_name": "OpenCode Agent"
+    }
+  ],
+  "name_replacements": {
+    "cursor_agent": {
+      "read_file": "read",
+      "grep_search": "grep",
+      "file_search": "search",
+      "apply_patch": "edit",
+      "str_replace": "edit",
+      "create_file": "edit",
+      "run_in_terminal": "execute",
+      "create_and_run_task": "execute",
+      "fetch_webpage": "web",
+      "vscode_askQuestions": "question",
+      "runSubagent": "Task"
+    },
+    "opencode_agent": {
+      "read_file": "read",
+      "grep_search": "grep",
+      "file_search": "glob",
+      "apply_patch": "edit",
+      "str_replace": "edit",
+      "create_file": "write",
+      "run_in_terminal": "bash",
+      "create_and_run_task": "bash",
+      "fetch_webpage": "webfetch",
+      "vscode_askQuestions": "question",
+      "runSubagent": "task"
+    }
+  },
+  "capabilities": [
+    {
+      "id": "read_file",
+      "intent": "Read file content",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "read_file",
+            "read/file"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Read File"
+          ],
+          "names": [
+            "read_file"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "read"
+          ]
+        }
+      }
+    },
+    {
+      "id": "search_text",
+      "intent": "Search text in workspace",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "grep_search",
+            "search/codebase",
+            "#codebase"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Semantic Search",
+            "Search Files and Folders"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "grep"
+          ]
+        }
+      }
+    },
+    {
+      "id": "find_files",
+      "intent": "Find files by glob or path pattern",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "file_search",
+            "search/codebase"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Search Files and Folders"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "glob",
+            "list"
+          ]
+        }
+      }
+    },
+    {
+      "id": "edit_file",
+      "intent": "Edit existing files",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "apply_patch",
+            "str_replace",
+            "vscode_renameSymbol"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Edit File"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "edit",
+            "patch"
+          ]
+        }
+      }
+    },
+    {
+      "id": "write_file",
+      "intent": "Create or overwrite files",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "create_file"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Edit File"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "write"
+          ]
+        }
+      }
+    },
+    {
+      "id": "run_shell",
+      "intent": "Run terminal commands",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "run_in_terminal",
+            "create_and_run_task"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Run Shell Command"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "bash"
+          ]
+        }
+      }
+    },
+    {
+      "id": "fetch_web",
+      "intent": "Fetch and read URL content",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "fetch_webpage",
+            "#web/fetch",
+            "#fetch"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Web"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "webfetch"
+          ]
+        }
+      }
+    },
+    {
+      "id": "search_web",
+      "intent": "Search web content",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "#web"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Web"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "websearch"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ask_user",
+      "intent": "Ask clarifying questions",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "vscode_askQuestions"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "capability_categories",
+          "categories": [
+            "Question"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "exact",
+          "names": [
+            "question"
+          ]
+        }
+      }
+    },
+    {
+      "id": "run_subagent",
+      "intent": "Delegate to a subagent",
+      "adapters": {
+        "github_copilot_vscode": {
+          "strategy": "name_candidates",
+          "names": [
+            "runSubagent"
+          ]
+        },
+        "cursor_agent": {
+          "strategy": "name_candidates",
+          "names": [
+            "Task",
+            "subagent"
+          ]
+        },
+        "opencode_agent": {
+          "strategy": "name_candidates",
+          "names": [
+            "task"
+          ]
+        }
+      }
+    }
+  ],
+  "mcp_policy": {
+    "principle": "If the same MCP server is configured across platforms, use MCP tool names as the cross-platform source of truth.",
+    "recommendation": [
+      "Keep capability IDs stable and platform adapters mutable.",
+      "Prefer exact names for OpenCode built-in tools.",
+      "Treat GitHub Copilot and Cursor names as candidate sets unless verified in the current runtime."
+    ]
+  }
+}

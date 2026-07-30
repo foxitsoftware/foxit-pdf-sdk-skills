@@ -1,0 +1,4703 @@
+How do I insert an image into a PDF file?
+
+To insert an image into a PDF file, you can call `-[FSPDFPage addImageFromFilePathposition:width:height:auto_generate_content:]` interface. Following is the sample code for inserting an image into the first page of a PDF file:
+
+Note: Before calling `-[FSPDFPage addImageFromFilePathposition:width:height:auto_generate_content:]` interface, you should get and parse the page that you want to add the image.
+
+```objc
+#define DOCUMENT_PATH [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0]
+...
+// Get the path of a PDF.
+NSString* pdfPath = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"pdf"];
+
+// Initialize a PDFDoc object with the path to the PDF file.
+FSPDFDoc *document = [[FSPDFDoc alloc] initWithPath: pdfPath];
+
+// load the unencrypted document content.
+[document load:nil];
+
+// Get the first page of the PDF file.
+FSPDFPage *page = [document getPage:0];
+
+// Parse the page.
+if (![page isParsed]) {
+ FSProgressive* progressive = [page startParse: FSPDFPageParsePageNormal pause:nil is_reparse:NO];
+ while ([progressive resume] == FSProgressiveToBeContinued) {
+ continue;
+ }
+}
+
+// Get the image path.
+NSString* imagePath = @"/Users/xiaole/Desktop/1.png";
+
+// Add an image to the first page.
+FSPointF* point = [[FSPointF alloc] init];
+[point set:100 y:300];
+[page addImageFromFilePath:imagePath position:point width:100 height:120 auto_generate_content:YES];
+
+// Save the document that has added the link annotaiton.
+[document saveAs:[DOCUMENT_PATH stringByAppendingString:@"Sample_image.pdf"] save_flags:FSPDFDocSaveFlagNormal];
+```
+
+---
+
+What should I do if I want to display a specified page when opening a PDF document?
+
+To display a specified page when opening a PDF file, the interface [pdfViewCtrl gotoPage: (int) animated: (BOOL)] should be used. Foxit PDF SDK for iOS utilizes multi-thread to improve rendering speed, so please make sure the document has been loaded successfully before using the gotoPage interface. There are two ways to realize the feature as follows:
+The first one is that making a conditional statement in the openDoc interface to ensure that only when the document loading is complete, then call the gotoPage. If not, the gotoPage interface will not work, and the first page will be displayed. It is because the openDoc interface starts a new thread to perform the operation. Following is the sample code:
+
+```objc
+#import "ViewController.h"
+#import <FoxitRDK/FSPDFViewControl.h>
+
+@interface ViewController : UIViewController
+
+@end
+
+@implementation ViewController
+{
+
+ FSPDFViewCtrl* pdfViewCtrl;
+}
+
+- (void)viewDidLoad {
+ [super viewDidLoad];
+
+ // Get the path of a PDF.
+ NSString* pdfPath = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"pdf"];
+
+ // Initilize a FSPDFViewCtrl object with the size of the entire screen.
+ pdfViewCtrl = [[FSPDFViewCtrl alloc] initWithFrame: [self.view bounds]];
+
+ // Open an unencrypted PDF document from a specified PDF file path, and go to the third page when completing the document loading.
+ [pdfViewCtrl openDoc:pdfPath password:nil completion:^(enum FSErrorCode error){
+
+ if(error == FSErrSuccess)
+
+ // Display the third page.
+ [pdfViewCtrl gotoPage:2 animated:NO];
+ }];
+
+ // Add the pdfView to the root view.
+ [self.view addSubview:pdfViewCtrl];
+}
+@end
+```
+
+The second one is that implement the <IDocEventListener> protocol, and then call the gotoPage interface in the onDocOpened event. Following is the sample code:
+```objc
+#import "ViewController.h"
+#import <FoxitRDK/FSPDFViewControl.h>
+
+@interface ViewController : UIViewController <IDocEventListener>
+
+@end
+
+@implementation ViewController
+{
+ FSPDFViewCtrl* pdfViewCtrl;
+}
+
+- (void)viewDidLoad {
+ [super viewDidLoad];
+
+ // Get the path of a PDF
+ NSString* pdfPath = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"pdf"];
+
+ // Initilize a FSPDFViewCtrl object with the size of the entire screen.
+ pdfViewCtrl = [[FSPDFViewCtrl alloc] initWithFrame: [self.view bounds]];
+
+ // Register the PDF document event listener.
+ [pdfViewCtrl registerDocEventListener:self];
+
+ // Open an unencrypted PDF document from a specified PDF file path.
+ [pdfViewCtrl openDoc:pdfPath password:nil completion:nil];
+
+ // Add the pdfView to the root view.
+ [self.view addSubview:pdfViewCtrl];
+
+}
+
+#pragma IDocEventListener
+
+-(void)onDocOpened:(FSPDFDoc *)document error:(int)error
+{
+ // display the third page.
+ [pdfViewCtrl gotoPage:2 animated:NO];
+}
+@end
+```
+
+---
+
+How to clone bitmap with the bounding box according to the given background color?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+void saveBitmap(FSBitmap * bitmap, NSString *bmp_name)
+{
+ // Add the bitmap to image and save the image.
+ FSImage *image = [FSImage new];
+ [image addFrame:bitmap];
+
+ [image saveAs:bmp_name];;
+}
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ FSImage *image = [[FSImage alloc] initWithPath:@"Sample.png"];
+ FSBitmap *bitmap = [image getFrameBitmap:0];
+
+ // Calculate the bounding box according to the given background color.
+ FSRectI *rect = [bitmap calculateBBoxByColor:0xFFFDFDFD];
+ FSBitmap *clone_bitmap;
+ if ([rect height] > 0 && [rect width] > 0) {
+ clone_bitmap = [bitmap clone:rect];
+ saveBitmap(clone_bitmap, @"calculate_bbox_by_color_0xFFFDFDFD_foxit.bmp");
+ }
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+How to export attachment file?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ // Get information of attachments.
+ FSAttachments *attachments = [[FSAttachments alloc] initWithDoc:doc];
+ int count = [attachments getCount];
+ for (int i = 0; i < count; i++) {
+ NSString *key = [attachments getKey:i];
+ FSFileSpec *file_spec = [attachments getEmbeddedFile:key];
+ if (![file_spec isEmpty]) {
+ NSString *[file_spec getFileName];
+ if ([file_spec isEmbedded])
+ [file_spec exportToFile:name];
+ }
+ }
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to change Localization settings with Foxit PDF SDK for iOS?
+
+By default, Foxit PDF SDK for iOS will automatically switch the UI language according to the current language of your system, provided that the language is supported by Foxit PDF SDK for iOS.
+Currently, Foxit PDF SDK for iOS supports the following languages: English, Korean, and Chinese (Simplified, Traditional). Those language resource files are located in the `"libs\uiextensions_src\UIExtensions\Resource\FoxitLocalizable"` folder.
+If you want to use your own localization language that is not supported by Foxit PDF SDK for iOS:
+> * For version 6.4, you can refer to the article https://developers.foxitsoftware.com/kb/article/change-localization-settings-pdf-sdk-ios/ to change the localization settings, which needs to modify the localization settings in the UIExtensions Component.
+From version 7.0 or higher, you can do it directly in your project. First, add a language to your project, and translate all the entries to the language you wish. Then, call `+[FSLocalization addLanguage:table:languageAbbr:]` to add the new created language that you want to support. Last, to make it work, you can change your current system language, or call `+[FSLocalization setCurrentLanguage:]` to set current language.
+
+---
+
+I have downloaded the SDK package from your website without making any changes. Why can't the license key and serial number work?
+
+Generally, the package uploaded to the website is supposed to work. It has been tested before it is uploaded. So, if you find the license key and serial number cannot work, it may be caused by the date of your device. If the device's date is earlier than the StartDate in the rdk_key.txt file found in the "libs" folder of the download package, the "librdk.so" library will be failed to unlock. Please check the date of your device.
+
+---
+
+Hide the group "TAG_GROUP_PROTECT" in the More Menu view. (For Phone and Tablet)
+
+Objective-C:
+```objc
+[self.extensionsMgr.more setMoreViewItemHiddenWithGroup:TAG_GROUP_PROTECT hidden:YES];
+```
+Swift:
+```swift
+extensionsManager.more.setMoreViewItemHiddenWithGroup(UInt(TAG_GROUP_PROTECT), hidden: true);
+```
+
+---
+
+How to add a new attachment?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAttachments *attachment = [[FSAttachments alloc] initWithDoc:doc];
+ // Add a new attachment to PDF document.
+ [attachment addFromFilePath:@"OriginalAttachmentsInfo" file_path:@"AboutFoxit.pdf"];
+ [doc saveAs:@"attachment_add.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+ NSLog(@"Add a new attachment to PDF document.");
+}
+[FSLibrary destroy];
+```
+
+---
+
+How do I open a PDF document from a specified PDF file path?
+Foxit PDF SDK for iOS provides multiple interfaces to open a PDF document. You can open a PDF document from a specified PDF file path, or from a memory buffer. For from a specified PDF file path, there are two ways to do that.
+The first one is that just use the openDoc interface, which includes the operations of creating a PDF document object (initWithPath ), loading the document content (load), and setting the PDF document object to view control (setDoc). Following is the sample code:
+Note: The openDoc interface is only available for opening a PDF document from a file path. If you want to customize to load a PDF document, you can implement it in the callback function (FSFileReadCallback), and then create a document object with a FireRead instance using initWithHandler. Next, also load the document content using load, and set the PDF document object to view control using setDoc.
+
+```objc
+#import "ViewController.h"
+#import <FoxitRDK/FSPDFViewControl.h>
+
+@interface ViewController : UIViewController
+
+@end
+
+@implementation ViewController
+{
+
+ FSPDFViewCtrl* pdfViewCtrl;
+}
+
+- (void)viewDidLoad {
+ [super viewDidLoad];
+
+ // Get the path of a PDF.
+ NSString* pdfPath = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"pdf"];
+
+ // Initilize a FSPDFViewCtrl object with the size of the entire screen.
+ pdfViewCtrl = [[FSPDFViewCtrl alloc] initWithFrame: [self.view bounds]];
+
+ //1. Open an unencrypted PDF document from a specified PDF file path.
+ [pdfViewCtrl openDoc:pdfPath password:nil completion:nil];
+
+ //2. setDoc:
+ //Initialize a PDFDoc object with the path to the PDF file.
+ //FSPDFDoc* pdfdoc = [[FSPDFDoc alloc] initWithPath: pdfPath];
+
+ // Load the unencrypted document content.
+ //if(FSErrSuccess != [pdfdoc load:nil]) {
+ // return;
+ //}
+ // Set the document to view control.
+ //[pdfViewCtrl setDoc:pdfdoc];
+
+ // Add the pdfView to the root view.
+ [self.view addSubview:pdfViewCtrl];
+}
+@end
+```
+
+---
+
+How to generate barcode
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+void save2Image(FSBitmap * bitmap, NSString *bmp_name)
+{
+ // Add the bitmap to image and save the image.
+ FSImage *image = [FSImage new];
+ [image addFrame:bitmap];
+
+ [image saveAs:bmp_name];;
+}
+
+// Generate barcode in different type and save each of them as an image file.
+void barcodeGenerateEachType(NSString *code_string, FSBarcodeFormat code_format, int unit_width, int unit_height, FSBarcodeQRErrorCorrectionLevel qr_level , NSString * bmp_name)
+{
+ FSBarcode *barcode = [FSBarcode new];
+ FSBitmap *bitmap = [barcode generateBitmap:code_string format:code_format unit_width:unit_width height:unit_height level:qr_level];
+ save2Image(bitmap, bmp_name);
+
+}
+
+// Generate all types of barcode and save each of them as an image file.
+void barcodeGenerateAll()
+{
+ // Strings used as barcode content.
+ NSString *sz_code_string[8] = {@"TEST-SHEET", @"102030405060708090", @"80674313", @"890444000335", @"9780804816632", @"070429", @"Unknown - change me!", @"TestForBarcodeQrCode"};
+ // Barcode format types
+ FSBarcodeFormat code_format[8] = {FSBarcodeFormatCode39, FSBarcodeFormatCode128,
+ FSBarcodeFormatEAN8, FSBarcodeFormatUPCA,
+ FSBarcodeFormatEAN13, FSBarcodeFormatITF,
+ FSBarcodeFormatPDF417, FSBarcodeFormatQRCode};
+
+ // Image names for the saved image files.(except QR code)
+ NSString *sz_bmp_name[7] = {@"/code39_TEST-SHEET.bmp", @"/CODE_128_102030405060708090.bmp",
+ @"/EAN_8_80674313.bmp", @"/UPC_A_890444000335.bmp", @"/EAN_13_9780804816632.bmp",
+ @"/ITF_070429.bmp", @"/PDF_417_Unknown.bmp"};
+
+ //Format error correction level of QR code.
+ FSBarcodeQRErrorCorrectionLevel sz_qr_level[4] = {FSBarcodeQRCorrectionLevelLow,FSBarcodeQRCorrectionLevelMedium ,
+ FSBarcodeQRCorrectionLevelQuater, FSBarcodeQRCorrectionLevelHigh};
+ //Image names for the saved image files for QR code.
+ NSString *bmp_qr_name[4] = {@"/QR_CODE_TestForBarcodeQrCode_L.bmp", @"/QR_CODE_TestForBarcodeQrCode_M.bmp",
+ @"/QR_CODE_TestForBarcodeQrCode_Q.bmp", @"/QR_CODE_TestForBarcodeQrCode_H.bmp"};
+
+ // Unit width for barcode in pixels, preferred value is 1-5 pixels.
+ int unit_width = 2;
+ // Unit height for barcode in pixels, preferred value is >= 20 pixels.
+ int unit_height = 120;
+
+ // Generate barcode for different types.
+ for (int i = 0; i < 8; i++)
+ {
+ if (code_format[i] != FSBarcodeFormatQRCode) {
+ // Not QR code
+ barcodeGenerateEachType(sz_code_string[i], code_format[i] ,unit_width, unit_height , (FSBarcodeQRErrorCorrectionLevel)0, sz_bmp_name[i]);
+ } else {
+ // QR code
+ //Generate for each format error correction level.
+ for (int j = 0; j < 4; j++)
+ barcodeGenerateEachType(sz_code_string[i], code_format[i], unit_width, unit_height ,sz_qr_level[j], sz_bmp_name[i]);
+ }
+ }
+}
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ // Generate all types of barcode
+ barcodeGenerateAll();
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+How to add a polyline annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add polyline annotation
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:500 bottom1:650 right1:600 top1:700];
+ FSAnnot *annot = [page addAnnot:FSAnnotPolyLine rect:rectF];
+ FSPolyLine *polyline = [[FSPolyLine alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ polyline.flags = FSAnnotFlagPrint;
+ FSPointFArray *vertexe_array = [FSPointFArray new];
+ [vertexe_array add:[[FSPointF alloc] initWithX:515 Y:705]];
+ [vertexe_array add:[[FSPointF alloc] initWithX:535 Y:740]];
+ [vertexe_array add:[[FSPointF alloc] initWithX:565 Y:740]];
+ [vertexe_array add:[[FSPointF alloc] initWithX:585 Y:705]];
+ [vertexe_array add:[[FSPointF alloc] initWithX:565 Y:665]];
+ [vertexe_array add:[[FSPointF alloc] initWithX:535 Y:665]];
+ polyline.vertexes = vertexe_array;
+ polyline.subject = @"Circle";
+ polyline.title = @"Foxit SDK";
+ polyline.creationDateTime = [FSDateTime getLocalTime];
+ polyline.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance must be reset.
+ [polyline resetAppearanceStream];
+ NSLog(@"Add a polyline annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+FSPDFObjC.h 基类的介绍
+SDK大部分类型都继承FSBase，创建，FSBase定义如下:
+
+```objc
+@interface FSBase : NSObject
+{
+	void *swigCPtr;
+	BOOL swigCMemOwn;
+}
+-(void*)getCptr;
+-(id)initWithCptr: (void*)cptr swigOwnCObject: (BOOL)ownCObject;
+
+-(void)dealloc;
+
+@end
+```
+
+---
+
+How to enumerate and modify bookmarks in PDF document.
+
+#include "FSPDFObjC.h"
+
+NSString *input_path = @"../input_files/";
+NSString *output_path = @"../output_files/";
+
+NSString* sn = @"";
+NSString* key = @"";
+
+void ShowBookmarkInfo(FSBookmark *bookmark, NSMutableString *info, int depth) {
+	if (depth > 32)
+ return;
+	if ([bookmark isEmpty]) {
+ return;
+	}
+	for (int i = 0; i < depth; i++) {
+ NSLog(@"\t");
+	}
+	NSLog(@"%@", [bookmark getTitle] ?: @"");
+	NSLog(@"%@", [NSString stringWithFormat:@"\tcolor: 0x%x\n", [bookmark getColor]]);
+	ShowBookmarkInfo([bookmark getFirstChild], info, depth + 1);
+	ShowBookmarkInfo([bookmark getNextSibling], info, depth);
+}
+
+void ShowBookmarksInfo(FSPDFDoc *doc) {
+	NSMutableString *info = [NSMutableString new];
+	FSBookmark *root = [doc getRootBookmark];
+	if (![root isEmpty]) {
+ ShowBookmarkInfo(root, info, 0);
+	} else {
+ NSLog(@"No bookmark information!\n");
+	}
+}
+
+int main(int argc, const char * argv[]) {
+
+	@autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ NSString *input_file = @"AboutFoxit.pdf";
+
+ @try {
+
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ FSErrorCode code = [doc load:nil];
+ if (code != FSErrSuccess) {
+ NSLog(@"The Doc [%@] Error: %d", input_file, (int)code);
+ return 1;
+ }
+
+ // Show original bookmark information.
+ ShowBookmarksInfo(doc);
+
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ return -1;
+ }
+	}
+
+	return 0;
+}
+
+---
+
+Foxit PDF SDK for iOS 包含一下三个库：
+
+> * FoxitRDK.framework
+> * uiextensionsDynamic.framework
+> * FoxitPDFScanUI.framework
+
+其中 `uiextensionsDynamic`依赖`FoxitRDK`,`FoxitPDFScanUI`依赖`uiextensionsDynamic`和`FoxitRDK`
+
+`FoxitRDK`包含的主要内容是底层的接口以及一个重要的FSPDFViewCtrl控件来显示pdf文件
+`uiextensionsDynamic`是一个上层的GUI库，调用`FoxitRDK`接口实现
+`FoxitPDFScanUI`也是一个上层的GUI库，包含了扫描功能可以把图片转为pdf文件
+
+---
+
+SDK 8.4版本 FoxitRDK.framework 公开的头文件如下：
+<FoxitRDK/FSPDFObjC.h>
+<FoxitRDK/FSPDFViewControl.h>
+<FoxitRDK/FSLocalization.h>
+
+---
+
+Hide the "Form" tab from the list in the center of the top toolbar. (For iPhone and iPad)
+
+Objective-C:
+```objc
+[self.extensionsMgr setToolbarItemHiddenWithTag:FS_TOOLBAR_ITEM_TAG_FORM hidden:YES];
+```
+Swift:
+
+```swift
+extensionsManager.setToolbarItemHiddenWithTag(FS_TOOLBAR_ITEM_TAG_FORM, hidden: true)
+```
+
+---
+
+Add an item in the left top toolbar at the second position. (For Phone and Tablet)
+
+```objc
+
+FSMainTopbar *topbar = self.extensionsMgr.topToolbar;
+NSMutableArray *items = topbar.itemsForPositionLeft.mutableCopy;
+UIButton *btn = [UIButton new];
+[btn setImage:[UIImage imageNamed:@"your image"] forState:UIControlStateNormal];
+FSMainToolbarItem *item = [[FSMainToolbarItem alloc] initWithCustomView:btn];
+[items insertObject:item atIndex:1];
+topbar.itemsForPositionLeft = items;
+```
+
+---
+
+How to get all annotations in all pages?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ int page_count = [doc getPageCount];
+ for (int i = 0; i < page_count; i++) {
+ FSPDFPage *page = [doc getPage:i];
+ int annot_count = [page getAnnotCount];
+ for (int j = 0; j < annot_count; j++) {
+ FSAnnot *annot = [page getAnnot:j];
+ }
+ }
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to use Foxit PDF SDK to move annotation to new position.
+```objective-c
+#include "FSPDFObjC.h"
+
+NSString* sn = @"";
+NSString* key = @"";
+
+int main(int argc, const char * argv[]) {
+
+ @autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"Library Initialize Error: %ld", errorCode);
+ return -1;
+ }
+
+ @try {
+ NSString* input_pdf_name = @"input_file.pdf";
+ // Load a document
+ FSPDFDoc* doc = [[FSPDFDoc alloc] initWithPath:input_pdf_name];
+ FSErrorCode errorCode = [doc load:nil];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+ int fDelta = 10;
+ FSPDFPage* page = [doc getPage:0];
+ NSInteger iAnnotCount = [page getAnnotCount];
+ for (NSInteger j = 0; j < iAnnotCount; j++) {
+ FSAnnot* pAnnot = [page getAnnot:j];
+ FSAnnotType annotType = [pAnnot getType];
+ FSRectF* rect = [pAnnot getRect];
+ FSRectF* newRect = [[FSRectF alloc] init];
+ newRect.left = orgRect.left;
+ newRect.bottom = orgRect.bottom;
+ if (FSAnnotPopup != annotType) {
+ newRect.left += fDelta;
+ newRect.bottom += fDelta;
+ }
+ newRect.right = orgRect.right + fDelta;
+ newRect.top = orgRect.top + fDelta;
+ [pAnnot move:newRect];
+ }
+ [doc saveAs:@"output_file.pdf" save_flags:FSPDFDocSaveFlagNormal];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ }
+}
+
+---
+
+Why Foxit PDF SDK for iOS is your choice
+
+Foxit is a leading software provider of solutions for reading, editing, creating, organizing, and
+securing PDF documents. Foxit PDF SDK libraries have been used in many of today’s leading apps,
+and they are proven, robust, and battle-tested to provide the quality, performance, and features
+that the industry’s largest apps demand.
+
+---
+
+How to add fillsign to PDF document.
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+int main(int argc, const char * argv[]) {
+
+ @autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ @try {
+ NSString *input_file = @"blank.pdf";
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ errorCode = [doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ FSPDFPage *page = [doc getPage:0];
+ [page startParse:FSPDFPageParsePageNormal pause:nil is_reparse:NO];
+ FSFillSign *fillsign = [[FSFillSign alloc] initWithPage:page];
+
+ FSPointF* point = [FSPointF new];
+ [point set:0 y:0];
+
+ FSFillSignObject *fillsignobject = [fillsign addObject:FSFillSignFillSignObjectTypeCrossMark point:point width:100 height:100 rotation:FSRotation0 ];
+ [point set:100 y:100];
+ fillsignobject = [fillsign addObject:FSFillSignFillSignObjectTypeCheckMark point:point width:50 height:100 rotation:FSRotation0];
+ [point set:200 y:200];
+ fillsignobject = [fillsign addObject:FSFillSignFillSignObjectTypeRoundRectangle point:point width:100 height:50 rotation:FSRotation0];
+ [point set:300 y:300];
+ fillsignobject = [fillsign addObject:FSFillSignFillSignObjectTypeLine point:point width:100 height:50 rotation:FSRotation0];
+ [point set:400 y:400];
+ fillsignobject = [fillsign addObject:FSFillSignFillSignObjectTypeDot point:point width:100 height:100 rotation:FSRotation0];
+
+ FSTextState *textState = [[FSTextState alloc] init];
+ FSFont* font = [[FSFont alloc] initWithFont_id:FSFontStdIDHelvetica];
+ textState.font = font;
+ textState.font_size = 20;
+ [point set:500 y:0];
+ textState.origin_position = point;
+ textState.charspace = 1.0f;
+
+ FSTextFillSignObjectData *textdata = [[FSTextFillSignObjectData alloc] initWithText_state:textState text:@"666777888"];
+ FSTextFillSignObjectDataArray *textdataarray =[[FSTextFillSignObjectDataArray alloc] init];
+ [textdataarray add:textdata ];
+ [point set:400 y:100];
+ FSFillSignObject *text = [fillsign addTextObject:textdataarray point:point width:200 height:200 rotation:FSRotation0 is_comb_field_mode:false];
+ [text generateContent];
+
+ [point set:300 y:100];
+ fillsignobject = [fillsign addObject:FSFillSignFillSignObjectTypeSignature point:point width:100 height:100 rotation:FSRotation0 ];
+ FSBitmap *bitmap = [[FSBitmap alloc] initWithWidth:100 height:100 format:FSBitmapDIBArgb buffer:nil pitch:0];
+ [bitmap fillRect:0xFFFF0000 rect:nil];
+ FSSignatureFillSignObject *signature = [[FSSignatureFillSignObject alloc] initWithFillsign_object:fillsignobject];
+ [signature setBitmap:bitmap];
+ [fillsignobject generateContent];
+ [page generateContent];
+
+ NSString *output_file = [output_directory stringByAppendingPathComponent:@"new_fillsign.pdf"];
+ [doc saveAs:output_file save_flags:FSPDFDocSaveFlagRemoveRedundantObjects];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ return -1;
+ }
+ }
+
+ return 0;
+}
+
+---
+
+Key Features of Foxit PDF SDK for iOS
+
+Foxit PDF SDK for iOS has several main features which help app developers quickly implement the functions that they really need and reduce the development cost.
+Note: From version 7.1, Foxit PDF SDK for iOS supports the new appearance of iOS 13 Dark Mode. All the built-in controls in the tools framework can adapt their appearance to match the current system appearance for a seamless experience.
+Features	Description
+PDF Document	Open and close files, set and get metadata.
+PDF Page	Parse, render, read, and edit PDF pages.
+Render	Graphics engine created on a bitmap for platform graphics device.
+Reflow	Rearrange page content.
+Crop	Crop PDF pages for betting reading.
+Text Select	Select text in a PDF document.
+Text Search	Search text in a PDF document, and provide indexed Full-Text Search
+Outline	Directly locate and link to point of interest within a document.
+Reading Bookmark	Mark progress and interesting passages as users read.
+Annotation	Create, edit and remove annotations.
+Layers	Add, edit, and remove optional content groups.
+Attachments	Add, edit, and remove document level attachments.
+Form	Fill form with JavaScript support, export and import form data by XFDF/FDF/XML file.
+Support to create TextField, CheckBox, RadioButton, ComboBox, ListBox, and Signature Field.
+XFA	Support static and dynamic XFA.
+Signature	Sign a PDF document, verify a signature, add or delete a signature field.
+Add and verify third-party digital signature.
+Support Long term validation of signatures (LTV).
+Fill	Fill flat forms (i.e. non-interactive forms) with text and symbols.
+Security	Protect PDFs with password or certificate.
+Pan and Zoom	Adjust the magnification and position of the view area to match the area in an adjustable rectangle in the Pan & Zoom window's thumbnail view of the page.
+Print	Print PDF document.
+RMS	Support Microsoft RMS decryption with the standard IRMv1 and IRMv2.
+Comparison	Compare two PDF documents, and mark the differences between them.
+Scanning	Scan and convert paper documents to PDFs.
+Speak	Support to read out the text of PDF file.
+Split Screen	Support split screen.
+Right-to-Left	Support Right-to-Left.
+Out of Memory	Recover from an OOM condition
+
+Note Outline is the technical term used in the PDF specification for what is commonly known as bookmarks in traditional desktop PDF viewers. Reading bookmarks are commonly used on mobile and tablet PDF viewers to mark progress and interesting passages as users read but are not technically outline and are stored at app level rather than within the PDF itself.
+
+---
+
+如何使用Foxit PDF SDK for iOS
+
+```objc
+//导入头文件
+#import <FoxitRDK/FSPDFViewControl.h>
+#import <uiextensionsDynamic/UIExtensionsManager.h>
+#import <FoxitPDFScanUI/PDFScanManager.h>
+
+@interface ViewController : UIViewController <IDocEventListener, UIExtensionsManagerDelegate>
+@property (nonatomic, strong) FSPDFViewCtrl *pdfViewControl;
+@property (nonatomic, strong) UIExtensionsManager *extensionsMgr;
+@end
+
+@implementation ViewController
+
++ (void)initialize{
+ //初始化 FSLibrary
+ static FSErrorCode eRet;
+ static dispatch_once_t onceToken;
+ dispatch_once(&onceToken, ^{
+ NSString *sn = @"";
+ NSString *key = @"";
+ eRet = [FSLibrary initialize:sn key:key];
+ });
+}
+
+- (void)viewDidLoad {
+ [super viewDidLoad];
+ // Do any additional setup after loading the view, typically from a nib.
+
+ //初始化本地化语言
+ //See 'FSLocalization' for details
+// [FSLocalization setCurrentLanguageID:FSLocalizationLanguageOptionalEnglish];
+
+ self.view.backgroundColor = [UIColor whiteColor];
+ self.view.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+ UIExtensionsManager.stateBarColor = [UIColor whiteColor];
+
+ //初始化 FSPDFViewCtrl
+ self.pdfViewControl = [[FSPDFViewCtrl alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+ self.view = self.pdfViewControl;
+
+ // 配置RMS
+ [self.pdfViewControl setRMSAppClientId:@"972b6681-fa03-4b6b-817b-c8c10d38bd20" redirectURI:@"com.foxitsoftware.com.mobilepdf-for-ios://authorize"];
+
+ // 注册文档事件回调
+ [self.pdfViewControl registerDocEventListener:self];
+
+ // 初始化扫描库
+ [PDFScanManager initializeScanner:0 serial2:0];
+ [PDFScanManager initializeCompression:0 serial2:0];
+
+ //初始化 UIExtensionsManager
+ NSString *configPath = [[NSBundle mainBundle] pathForResource:@"uiextensions_config" ofType:@"json"];
+ self.extensionsMgr = [[UIExtensionsManager alloc] initWithPDFViewControl:self.pdfViewControl configuration:[NSData dataWithContentsOfFile:configPath]];
+
+ //设置 extensionsMgr点击返回按钮block
+ self.extensionsMgr.goBack = ^() {
+ // 写一些代码
+ };
+
+ //设置 extensionsMgr的代理事件 参考 @protocol UIExtensionsManagerDelegate
+ self.extensionsMgr.delegate = self;
+
+ //设置pdfViewControl的extensionsManager事件 参考@protocol FSPDFUIExtensionsManager
+ self.pdfViewControl.extensionsManager = self.extensionsMgr;
+
+ //使用 pdfViewControl 打开文档
+ [self.pdfViewControl openDoc:filePath
+ password:nil
+ completion:^(FSErrorCode error) {
+ //处理你的事件
+ if (error == FSErrSuccess) {
+
+ } else if (error == FSErrDeviceLimitation) {
+
+ } else if (error == FSErrCanNotGetUserToken) {
+
+ } else if (error == FSErrInvalidLicense) {
+ } else {
+
+ }
+ }];
+
+}
+
+#pragma mark - rotate event
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+ return !self.extensionsMgr.isScreenLocked;
+}
+
+- (BOOL)shouldAutorotate {
+ return !self.extensionsMgr.isScreenLocked;
+}
+
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+ return UIInterfaceOrientationMaskAll;
+}
+
+- (void)willRotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+ [self.extensionsMgr willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
+}
+
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+ [self.extensionsMgr willAnimateRotationToInterfaceOrientation:toInterfaceOrientation duration:duration];
+}
+
+- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation {
+ [self.extensionsMgr didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+}
+
+- (BOOL)prefersStatusBarHidden {
+ return self.extensionsMgr.prefersStatusBarHidden;
+}
+
+//文档事件的回调
+#pragma mark <IDocEventListener>
+
+- (void)onDocOpened:(FSPDFDoc *)document error:(int)error {
+ // Called when a document is opened.
+}
+
+- (void)onDocClosed:(FSPDFDoc *)document error:(int)error {
+ // Called when a document is closed.
+}
+
+- (void)onDocLoading:(FSPDFDoc *)document progress:(int)progress{
+ // Called when a document is loading.
+}
+
+```
+
+---
+
+Does Foxit PDF SDK for iOS support to print a PDF document? If yes, how can I use it?
+
+Yes. Foxit PDF SDK for iOS supports the print feature from version 5.1. You can press the Wireless Print button on the More Menu view in the Complete PDF viewer demo to print the PDF document. Furthermore, you can call the following two APIs to print the PDF documents:
+
+```objc
+// for iPhone and iTouch
++ [UIExtensionsManager printDoc:(FSPDFDoc *)doc animated:(BOOL)animated inWindow:(UIWindow *)window jobName:(nullable NSString *)jobName delegate:(nullable id<UIPrintInteractionControllerDelegate>)delegate completionHandler:(nullable UIPrintInteractionCompletionHandler)completion];
+```
+// for iPad
++ [UIExtensionsManager printDoc:(FSPDFDoc *)doc fromRect:(CGRect)rect inView:(UIView *)view animated:(BOOL)animated inWindow:(UIWindow *)window jobName:(nullable NSString *)jobName delegate:(nullable id<UIPrintInteractionControllerDelegate>)delegate completionHandler:(nullable UIPrintInteractionCompletionHandler)completion];
+Following is a sample for how to use it:
+```objc
+UIPrintInteractionCompletionHandler completion = ^(UIPrintInteractionController *_Nonnull printInteractionController, BOOL completed, NSError *_Nullable error) {
+ if (error) {
+ UIAlertAction* action = [UIAlertAction actionWithTitle:[@"Warning:" stringByAppendingString:error.localizedDescription] style:UIAlertActionStyleDefault handler:nil];
+ UIAlertController* controller = [[UIAlertController alloc] init];
+ [controller addAction:action];
+
+ [self showViewController:controller sender:nil];
+ }
+};
+NSString *fileName = @"xxx.pdf";
+FSPDFDoc* doc = [[FSPDFDoc alloc] initWithPath:fileName];
+[UIExtensionsManager printDoc: doc animated:YES inWindow:keyWindow jobName:fileName delegate:nil completionHandler:completion];
+```
+
+---
+
+## 如何屏蔽注释右键菜单中某些菜单项
+
+### 通过接口屏蔽canModify、canDelete、canReply菜单
+
+截止到8.4版本只支持canModify、canDelete、canReply三个项
+
+没有做修改前画笔注释菜单如图：
+
+![截图1](https://github.com/foxitsoftware/foxit-developer-guides/tree/main/iOS/ScreenCapture/20230613165842.jpg)
+
+想要将右键菜单中回复、删除项屏蔽，可以通过setAnnotationPermission接口来实现，对应菜单项return NO
+
+```objc
+
+@interface FSAnnotationPermission : NSObject<FSAnnotsPermissionDelegate>
+
+@end
+
+@implementation FSAnnotationPermission
+
+- (BOOL)canAddAnnot{
+ return NO;
+}
+
+- (BOOL)canDeleteAnnot{
+ return NO;
+}
+
+- (BOOL)canModifyAnnot{
+ return NO;
+}
+
+@end
+
+...
+
+FSAnnotationPermission *permission = [FSAnnotationPermission new];
+[uiExtensionsManager setAnnotationPermission:permission];
+```
+
+### 通过源码屏蔽flatten菜单
+
+> * 1、导入源码
+> * 2、屏蔽入口
+
+uiextensions_src/UIExtensions/Common/FSAnnotHandler.m
+
+![截图2](https://github.com/foxitsoftware/foxit-developer-guides/tree/main/iOS/ScreenCapture/20230613171428.jpg)
+
+注释截图上代码
+
+---
+
+Foxit PDF SDK for iOS
+
+Foxit PDF SDK for iOS focuses on helping developers easily integrate powerful Foxit PDF technology
+into their own mobile apps. With this SDK, even developers with a limited knowledge of PDF can
+quickly build a professional PDF viewer with just a few lines of code on iOS or macOS platform
+
+---
+
+Hide the "More menu" item in the top toolbar. (For iPhone and iPad)
+
+Objective-C:
+```objc
+[self.extensionsMgr setToolbarItemHiddenWithTag:FS_TOOLBAR_ITEM_TAG_MORE hidden:YES];
+```
+Swift:
+```swift
+extensionsManager.setToolbarItemHiddenWithTag(FS_TOOLBAR_ITEM_TAG_MORE, hidden: true);
+```
+
+---
+
+How to add a underline annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add underline annotation.
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:100 bottom1:450 right1:200 top1:550];
+ FSAnnot *annot = [page addAnnot:FSAnnotUnderline rect:rectF];
+ FSUnderline *underline = [[FSUnderline alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ underline.flags = FSAnnotFlagPrint;
+ FSQuadPoints *quad_points = [FSQuadPoints new];
+ quad_points.first = [[FSPointF alloc] initWithX:110 Y:500];
+ quad_points.second = [[FSPointF alloc] initWithX:190 Y:500];
+ quad_points.third = [[FSPointF alloc] initWithX:110 Y:480];
+ quad_points.fourth = [[FSPointF alloc] initWithX:190 Y:480];
+ FSQuadPointsArray *quad_points_array = [FSQuadPointsArray new];
+ [quad_points_array add:quad_points];
+ underline.quadPoints = quad_points_array;
+ underline.subject = @"Underline";
+ underline.title = @"Foxit SDK";
+ underline.creationDateTime = [FSDateTime getLocalTime];
+ underline.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance must be reset.
+ [underline resetAppearanceStream];
+ NSLog(@"Add a underline annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+Does Foxit PDF SDK support Indexed Full Text Search? If yes, how can I use it to search through PDF files stored offline on my mobile device?
+
+Yes. Foxit PDF SDK for iOS supports Indexed Full Text Search.
+To use this feature, follows the steps below:
+
+a)Get document source information. Create a document source based on a directory which will be used as the search directory.
+```objc
+-[FSDocumentsSource initWithDirectory: (NSString *)directory];
+```
+b)Create a full text search object, and set a path of database to store the indexed data.
+```objc
+-[FSFullTextSearch init];
+-[FSFullTextSearch setDataBasePath:(NSString *)path_of_data_base]
+```
+c)Start to index the PDF documents which receive from the source.
+```objc
+-[FSFullTextSearch startUpdateIndex: (FSDocumentsSource*)source pause: (id<FSPauseCallback>)pause reUpdate:(BOOL)reUpdate];
+```
+Note: You can index a specified PDF file. For example, if the contents of a PDF file have been changed, you can re-index it using the following API:
+```objc
+-[FSFullTextSearch updateIndexWithFilePath: (NSString *)file_path];
+```
+d)Search the specified keyword from the indexed data source. The search results will be returned to external by a specified callback function when a matched one is found.
+```objc
+-[FSFullTextSearch searchOf: (NSString *)match_string rank_mode:(FSFullTextSearchRankMode)rank_mode callback: (id<FSSearchCallback>)Callback];
+```
+Following is a sample for how to use it:
+```objc
+- (void)FullTextSearch {
+
+ NSString *directory = @"INPUT_DIRECTORY";
+ FSDocumentsSource* docs = [[FSDocumentsSource alloc] initWithDirectory:directory];
+ FSFullTextSearch* fulltextSearch = [FSFullTextSearch init];
+
+NSString* dbPath = @"The path of data base to store the indexed data...";
+[fulltextSearch setDataBasePath:dbPath];
+
+FSProgressive* progressive = [fulltextSearch startUpdateIndex:docs pause:nil reUpdate:NO];
+ if (progressive) {
+ while (true) {
+ if ([progressive resume] != FSProgressiveToBeContinued) {
+ break;
+ }
+ }
+ }
+
+ [fulltextSearch searchOf:@"Foxit" RankMode:FSFullTextSearchRankNone callback:[[FSSearchCallbackImp alloc] init]];
+}
+
+@end
+```
+
+A sample callback function is as follows:
+
+```objc
+@interface FSSearchCallbackImp: NSObject<FSSearchCallback>
+
+@end
+
+@implementation FSSearchCallbackImp
+
+-(int)retrieveSearchResult:(NSString*)file_path page_index:(int)page_index match_result:(NSString*)match_result match_start_text_index:(int)match_start_text_index match_end_text_index:(int)match_end_text_index
+{
+ NSLog (@"file_path: %@\n", file_path);
+ NSLog (@"page_index: %i， match_start_text_index: %i, match_end_text_index: %i\n", page_index, match_start_text_index, match_end_text_index);
+ NSLog (@"match_result: %@\n\n", match_result);
+ return 0;
+}
+
+@end
+```
+Note:
+> * The indexed full text search provided by Foxit PDF SDK for iOS will go through a directory recursively, so that both the files and the folders under the search directory will be indexed.
+> * If you want to abort the index process, you can pass in a pause callback parameter to the `startUpdateIndex` interface. The callback function `NeedPauseNow` will be invoked once a PDF document is indexed, so that the caller can abort the index process when the callback `NeedPauseNow` return "true".
+> * The location of the indexed database is set by `setDataBasePath` interface. If you want to clear the indexed database, you shoud do it manually. And now, removing a file from index function is not supported.
+> * Every search result of the searchOf interface is returned to external by a specified callback. Once the searchOf interface returns "true" or "false", it means the searching is finished.
+> * Every search result of the `searchOf` interface is returned to external by a specified callback. Once the `searchOf` interface returns "true" or "false", it means the searching is finished.
+
+---
+
+Main Frame of Foxit PDF SDK for iOS
+
+Foxit PDF SDK for iOS consists of three elements as shown in the following picture. This structure is
+shared between all mobile platform versions of Foxit PDF SDK, which makes it easier to integrate
+and support multiple mobile operating systems and frameworks in your apps.
+Note：From version 7.4, Foxit PDF SDK for iOS provides a new package which supports to build a Mac
+version app built with Mac Catalyst.
+
+---
+
+## 如何删除相机图标？(iOS, complete_pdf_viewer)
+
+RDK提供的demo complete_pdf_viewer中，初始界面的右下角有个相机图标，这实际上是Scan功能按钮。
+
+### 仅移除相机图标
+在demo代码里做调整：
+
+`/complete_pdf_viewer/Source/ViewController.m`
+
+```objc
+self.openScanBtn.hidden = YES;
+```
+或者将openScanBtn及相关代码都去掉。
+
+### 去掉Scan功能
+如果还想将Scan功能里彻底移除的话：
+
+包中/docs下的developer guide文档里，有教如何将加入Scan功能：
+
+`3.1.2 Integrate Foxit PDF SDK for iOS into your apps`和 `3.1.6 Add the scanning feature based on the full-featured PDF Reader`
+或者
+`3.2.2 Integrate Foxit PDF SDK for iOS into your apps`和`3.2.6 Add the scanning feature based on the full-featured PDF Reader`
+
+可以参考这部分说明，并将相关的库和代码都去掉，就能从`complete_pdf_viewer`里去掉Scan功能了。
+
+---
+
+How to get first child of bookmark and change its properties?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"AboutFoxit.pdf"];
+ [doc load];
+
+ //Get bookmark root node or Create new bookmark root node.
+ FSBookmark *root = [doc getRootBookmark];
+ // Get first bookmark and change properties.
+ FSBookmark *first_bookmark = [root getFirstChild];
+ first_bookmark.style = FSBookmarkStyleItalic;
+ first_bookmark.color = 0xFF0000;
+ first_bookmark.title = @"Change bookmark title, style, and color";
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+How to Customizing User Interface
+
+Foxit PDF SDK for iOS provides a simple, clean and friendly user interface for developers to quickly build a full-featured PDF app without needing to take much time on the design. Furthermore, customizing the user interface is straightforward. Foxit PDF SDK for iOS provides the source code of the UI Extensions Component that contains ready-to-use UI module implementations, which lets the developers have full control of styling the appearance as desired.
+From version 4.0, developers can flexibly customize the features they want through a configuration file.
+From version 5.0, every element in the built-in UI can be configurable. More advanced APIs and more powerful configuration file are provided for developers to further customize the UI elements, such as showing or hiding a specific panel, top/bottom toolbar, the items in the top toolbar, and the items in the View setting bar and More Menu view.
+From version 6.3, the configuration file has been enhanced which provides more optional settings to customize the UI including the rights management and the properties of UI elements.
+The following section will introduce how to customize the feature modules, rights management and UI elements through a configuration file, or APIs, or the source code.
+
+---
+
+Hide the whole top toolbar. (For iPhone and iPad)
+
+Objective-C:
+```objc
+[self.extensionsMgr enableTopToolbar:false];
+```
+Swift:
+
+```swift
+extensionsManager.enableTopToolbar(false)
+```
+
+---
+
+How to add a freetext annotation as callout
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:300 bottom1:550 right1:400 top1:600];
+ FSAnnot *annot = [page addAnnot:FSAnnotFreeText rect:rectF];
+ FSFreeText *freetext = [[FSFreeText alloc] initWithAnnot:annot];
+ freetext.flags = FSAnnotFlagPrint;
+ FSDefaultAppearance *default_ap = [FSDefaultAppearance new];
+ default_ap.flags = FSDefaultAppearanceFlagFont | FSDefaultAppearanceFlagFontSize | FSDefaultAppearanceFlagTextColor;
+ default_ap.font = [[FSFont alloc] initWithFont_id:FSFontStdIDHelveticaB];
+ default_ap.text_size = 12.0f;
+ default_ap.text_color = 0x000000;
+ freetext.defaultAppearance = default_ap;
+ freetext.intent = @"FreeTextCallout";
+ FSPointFArray *callout_points = [FSPointFArray new];
+ [callout_points add:[[FSPointF alloc] initWithX:250 Y:540]];
+ [callout_points add:[[FSPointF alloc] initWithX:280 Y:570]];
+ [callout_points add:[[FSPointF alloc] initWithX:300 Y:570]];
+ freetext.calloutLinePoints = callout_points;
+ freetext.calloutLineEndingStyle = FSMarkupEndingStyleOpenArrow;
+ freetext.content = @"A callout annotation.";
+ freetext.subject = @"FreeTextCallout";
+ freetext.title = @"Foxit SDK";
+ freetext.creationDateTime = [FSDateTime getLocalTime];
+ freetext.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance must be reset.
+ [freetext resetAppearanceStream];
+ NSLog(@"Add a callout freetext annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to use matrix to translate, scale objects
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+ NSString *input_file = @"SamplePDF.pdf";
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ @try {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ FSErrorCode error_code = [doc load:@""];
+ if (error_code != FSErrSuccess) {
+ return 1;
+ }
+ // Get and parse page.
+ FSPDFPage *page = [doc getPage:0];
+ [page startParse:FSPDFPageParsePageNormal pause:nil is_reparse:NO];
+ long pos = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeAll];
+ int flag = 0;
+ while (pos != 0) {
+ if (flag == (2 | 4))
+ break;
+ FSGraphicsObject *obj = [page getGraphicsObject:pos];
+ pos = [page getNextGraphicsObjectPosition:pos filter:FSGraphicsObjectTypeAll];
+ FSGraphicsObjectType type = [obj getType];
+ float start_x = 0;
+ // Get one TextObject or one ImageObject.
+ if (type == FSGraphicsObjectTypeText && !(flag & 2)) {
+ start_x = 400.0f;
+ flag |= 2;
+ } else if (type == FSGraphicsObjectTypeImage && !(flag & 4)) {
+ start_x = 150.0f;
+ flag |= 4;
+ } else {
+ continue;
+ }
+
+ // Now we have found the TextObject or the ImageObject, transform them.
+ FSGraphicsObject *clone_obj1 = [obj clone];
+ FSMatrix2D *matrix = clone_obj1.matrix;
+ // Translate the matrix in vertical direction.
+ [matrix translate:0 y:150 bPrepended:0];
+ clone_obj1.matrix = matrix;
+ [page insertGraphicsObject:0 graphics_object:clone_obj1];
+
+ FSGraphicsObject *clone_obj2 = [obj clone];
+ matrix = clone_obj2.matrix;
+ float d = matrix.d;
+ float e = matrix.e;
+ float f = matrix.f;
+ // Translate it to the original point(0,0) first
+ [matrix translate:-e y:-f bPrepended:0];
+ // Rotate the matrix 90 degree in anticlockwise direction.
+ [matrix rotate:1.57f bPrepended:0];
+ // Page rotation should be considered, assume that the current page rotation is 0.
+ float distance = d;
+ if (type == FSGraphicsObjectTypeText) {
+ FSRectF *obj_rect = [obj getRect];
+ distance = obj_rect.top - obj_rect.bottom;
+ }
+ // Translate it to the specific coordinate(start_x,400)
+ [matrix translate:distance + start_x y:400 bPrepended:0];
+ clone_obj2.matrix = matrix;
+ [page insertGraphicsObject:0 graphics_object:clone_obj2];
+
+ FSGraphicsObject *clone_obj3 = [obj clone];
+ matrix = clone_obj3.matrix;
+ // Translate it to the original point(0,0) first
+ [matrix translate:-e y:-f bPrepended:0];
+ // Magnify the matrix 1.5 times in both horizontal and vertical directions.
+ [matrix scale:1.5 sy:1.5 bPrepended:0];
+ // Translate it to the specific coordinate(start_x,600)
+ [matrix translate:start_x y:600.0f bPrepended:0];
+ clone_obj3.matrix = matrix;
+ [page insertGraphicsObject:0 graphics_object:clone_obj3];
+
+ FSGraphicsObject *clone_obj4 = [obj clone];
+ matrix = clone_obj4.matrix;
+ // Translate it to the original point(0,0) first
+ [matrix translate:-e y:-f bPrepended:0];
+ // Skews the x axis by an angle 0.5 and the y axis by an angle 0.5.
+ [matrix shear:0.5 fBetaRadian:0.5 bPrepended:0];
+ // Translate it to the specific coordinate(start_x,600)
+ [matrix translate:start_x y:800.0f bPrepended:0];
+ clone_obj4.matrix = matrix;
+ [page insertGraphicsObject:0 graphics_object:clone_obj4];
+ }
+ // Generate the page content
+ [page generateContent];
+
+ // Save the pdf document
+ NSString *file_name = @"MatrixTransformResult.pdf";
+ [doc saveAs:file_name save_flags:FSPDFDocSaveFlagNormal];
+ }
+ @catch (NSException *exception) {
+ NSLog(@"Unknown Exception, %@", exception);
+ return -1;
+ }
+ }
+ return 0;
+}
+
+---
+
+How to use Foxit PDF SDK to add associate files into image object.
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ // Associate files with objects in PDF documents.
+ NSString *input_file = @"AssociateTestFile.pdf";
+ @try {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ errorCode = [doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ // Create filespec with 2.jpg image.
+ FSFileSpec *filespec_jpg = [[FSFileSpec alloc] initWithDocument:doc];
+ filespec_jpg.associteFileRelationship = FSAssociatedFilesRelationshipSource;
+ filespec_jpg.fileName = @"2.jpg";
+ filespec_jpg.description = @"jpeg";
+ [filespec_jpg embed:[input_path stringByAppendingString:@"2.jpg"]];
+ filespec_jpg.creationDateTime = dateTime;
+ filespec_jpg.modifiedDateTime = dateTime;
+
+ // Associate 2.jpg with image object.
+ {
+ long position = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeImage];
+ FSImageObject *image_object = [[page getGraphicsObject:position] getImageObject];
+ if (image_object != nil) {
+ [associated_files associateFileWithImageObject:image_object file_spec:filespec_jpg];
+
+ FSFileSpec *filespec_image_object = [associated_files getAssociatedFile:[[image_object getStream] getDictionary] index:0];
+ [filespec_image_object exportToFile:@"image_x_object.jpg"];
+ }
+ }
+
+ // Save PDF file
+ [doc saveAs:@"associated_files.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ return 0;
+ }
+}
+
+---
+
+How to get associate files in annotation dictionary ?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ FSPDFPage *page = [doc getPage:0];
+ FSAnnot *annot = [page getAnnot:0];
+ FSPDFDictionary *annot_dict = [annot getDict];
+ [associated_files getAssociatedFilesCount:annot_dict];
+ FSFileSpec *filespec = [associated_files getAssociatedFile:annot_dict index:0];
+ [filespec exportToFile:@"af_4.txt"];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to import annotations from FDF files.
+
+#include "FSPDFObjC.h"
+
+NSString* sn = @"";
+NSString* key = @"";
+
+int main(int argc, const char * argv[]) {
+
+	@autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ @try {
+
+ // Import FDF file
+ NSString* input_pdf_path = @"AboutFoxit.pdf";
+ FSPDFDoc* doc = [[FSPDFDoc alloc] initWithPath:input_pdf_path];
+ FSErrorCode errorCode = [doc load:nil];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"The Doc [%@] Error: %ld", input_pdf_path, errorCode);
+ return -1;
+ }
+
+ NSString* input_fdf_path = @"AnnotationData.fdf";
+ FSFDFDoc* fdf_doc = [[FSFDFDoc alloc] initWithPath:input_fdf_path];
+ // Import annotations from fdf with file.
+ [doc importFromFDF:fdf_doc types:FSPDFDocAnnots page_range:[FSRange new]];
+
+ NSString* save_pdf_path = @"AboutFoxit_importFDF.pdf";
+ [doc saveAs:save_pdf_path save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ return 0;
+	}
+
+}
+
+---
+
+Build a full-featured PDF Reader with UI Extensions Component
+
+Foxit PDF SDK for iOS comes with built-in UI design including the basic UI for app and the feature modules UI, which are implemented using Foxit PDF SDK and are shipped in the UI Extensions Component. Hence, building a full-featured PDF Reader is getting simpler and easier. All you need to do is to instantiate a UIExtensionsManager object, and then set it to FSPDFViewCtrl.
+Instantiate a UIExtensionsManager object and set it to FSPDFViewCtrl
+In the "ViewController.m" file, you only need to add the following code:
+
+```objc
+#import <uiextensionsDynamic/uiextensionsDynamic.h>
+UIExtensionsManager* extensionsManager;
+...
+extensionsManager = [[UIExtensionsManager alloc] initWithPDFViewControl:pdfViewCtrl];
+pdfViewCtrl.extensionsManager = extensionsManager;
+```
+
+Add permissions to access camera, microphone, photo library and bluetooth
+In order to access the camera, microphone, photo library and bluetooth in iOS 9.0 or higher, you need to do the following configuration in the "Info.plist".
+
+```
+<key>NSCameraUsageDescription</key>
+<string>The App needs to access your Camera, please allow</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>The App needs to access your Microphone, please allow</string>
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>The App needs to add pictures into your Photo Library, please allow</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>The App needs to access your Photo Library, please allow</string>
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>RDK only lets you connect to apple pencil or keyboard.</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>RDK only lets you connect to apple pencil or keyboard.</string>
+```
+
+The whole update of ViewController.m is as follows:
+```objc
+#import "ViewController.h"
+#import <FoxitRDK/FSPDFViewControl.h>
+#import <uiextensionsDynamic/uiextensionsDynamic.h>
+
+@interface ViewController ()
+
+@end
+
+@implementation ViewController
+{
+ UIExtensionsManager* extensionsManager;
+}
+
+- (void)viewDidLoad {
+ [super viewDidLoad];
+
+ // Get the path of a PDF.
+ NSString* pdfPath = [[NSBundle mainBundle] pathForResource:@"Sample" ofType:@"pdf"];
+
+ // Initialize a FSPDFViewCtrl object with the size of the entire screen.
+ FSPDFViewCtrl* pdfViewCtrl;
+ pdfViewCtrl = [[FSPDFViewCtrl alloc] initWithFrame: [self.view bounds]];
+
+ // Open an unencrypted PDF document.
+ [pdfViewCtrl openDoc:pdfPath password:nil completion:nil];
+
+ // Add the pdfViewCtrl to the root view.
+ [self.view addSubview:pdfViewCtrl];
+
+ // Instantiate a UIExtensionsManager object and set it to pdfViewCtrl
+ extensionsManager = [[UIExtensionsManager alloc] initWithPDFViewControl:pdfViewCtrl];
+ pdfViewCtrl.extensionsManager = extensionsManager;
+}
+
+- (void)didReceiveMemoryWarning {
+ [super didReceiveMemoryWarning];
+ // Dispose of any resources that can be recreated.
+}
+
+@end
+```
+
+---
+
+Hide the individual menu item "TAG_ITEM_FLATTEN" in the More Menu view. (For Phone and Tablet)
+
+Objective-C:
+```objc
+[self.extensionsMgr.more setIndividualMenuItemHiddenWithItemTag:TAG_ITEM_FLATTEN hidden:YES];
+```
+Swift:
+```swift
+extensionsManager.more.setIndividualMenuItemHiddenWithItemTag(UInt(TAG_ITEM_FLATTEN), hidden: true);
+```
+
+---
+
+what is Foxit PDF SDK？
+
+Foxit PDF SDK provides high-performance libraries to help any software developer add robust PDF
+functionality to their enterprise, mobile and cloud applications across all platforms (includes
+Windows, Mac, Linux, Web, Android, iOS, and UWP), using the most popular development languages
+and environments.
+Application developers who use Foxit PDF SDK can leverage Foxit’s powerful, standard-compliant
+PDF technology to securely display, create, edit, annotate, format, organize, print, share, secure,
+search documents as well as to fill PDF forms. Additionally, Foxit PDF SDK includes a built-in,
+embeddable PDF Viewer, making the development process easier and faster. For more detailed
+information, please visit the website https://developers.foxitsoftware.com/pdf-sdk/.
+In this guide, we focus on the introduction of Foxit PDF SDK for iOS platform
+
+---
+
+Support robust PDF applications with Foxit PDF SDK for iOS
+
+Development of robust PDF applications is challenging on mobile platforms which has limited memory. When memory allocation fails, applications may crash or exit unexpectedly. To deal with this issue, Foxit PDF SDK for iOS provides an out-of-memory (OOM) mechanism to support applications.
+OOM is an evolved feature in Foxit PDF SDK for iOS because of its complexity. The key of OOM mechanism is that Foxit PDF SDK for iOS will monitor the usage of memory and take recovery operations automatically once OOM is detected. During the recovery process, Foxit PDF SDK for iOS reloads the document and page automatically and restores the status to the original before OOM. It means the current reading page and location, as well as page view mode (single or continuous page) can be recovered. However, the data generated from editing will be lost.
+Foxit PDF SDK for iOS provides a property "shouldRecover" in FSPDFViewCtrl class. By default, the value of "shouldRecover" is "YES". If you do not want to enable the auto-recovery when OOM is detected, you can set "shouldRecover" to "No" as follows:
+```objc
+self.pdfViewControl = [[FSPDFViewCtrl alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+self.pdfViewControl.shouldRecover = NO;
+```
+At that time, the application will throw an exception, and may crash or exit unexpectedly.
+
+---
+
+how to export fdf file
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ // Export XFDF file
+ NSString *input_file = @"AnnotationDataExport.pdf";
+ NSString *output_xfdf = @"AnnotationDataExport_xfdf.xfdf";
+
+ FSPDFDoc *pdf_doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ FSErrorCode error_code = [pdf_doc load];
+ if (error_code != FSErrSuccess) {
+ NSLog(@"The Doc [%@] Error: %ld\n", input_file, (long)error_code);
+ return 1;
+ }
+
+ FSFDFDoc *fdf_doc = [[FSFDFDoc alloc] initWithType:FSFDFDocFDF];
+ [pdf_doc exportToFDF:fdf_doc types:FSPDFDocAnnots];
+
+ [fdf_doc saveAs:output_fdf];
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+How to flip bitmap?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+void saveBitmap(FSBitmap * bitmap, NSString *bmp_name)
+{
+ // Add the bitmap to image and save the image.
+ FSImage *image = [FSImage new];
+ [image addFrame:bitmap];
+
+ [image saveAs:bmp_name];;
+}
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ FSImage *image = [[FSImage alloc] initWithPath:@"Sample.png"];
+ FSBitmap *bitmap = [image getFrameBitmap:0];
+
+ // Vertical and horizontal flip bitmap.
+ FSBitmap *flip_bitmap = [bitmap flip:YES is_flip_vert:YES];
+
+ saveBitmap(flip_bitmap, @"flip_horz_vert_Foxit.bmp");
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+Customize the UI through a configuration file
+
+Through a configuration file, developers can easily choose the features module, set the rights management and the properties of UI elements without needing to write any additional code or redesign the app's UI.
+
+5.1.1Introduction to JSON file
+The configuration file can be provided as a JSON file or implemented directly in code. We recommend you to use the JSON format which is more intuitive and clearer to view and configure the items.
+You can refer to the JSON file found in "samples\complete_pdf_viewer\Source\Resource\" folder of Foxit PDF SDK for iOS package. The name is `uiextensions_config.json`
+
+---
+
+How to remove all annotations
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ int annotation_count = [page getAnnotCount];
+ for (int i = annotation_count - 1; i >=0; i--)
+ [page removeAnnot:[page getAnnot:i]];
+
+ //Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+how to export XFDF file
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ // Export XFDF file
+ NSString *input_file = @"AnnotationDataExport.pdf";
+ NSString *output_xfdf = @"AnnotationDataExport_xfdf.xfdf";
+
+ FSPDFDoc *pdf_doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ FSErrorCode error_code = [pdf_doc load];
+ if (error_code != FSErrSuccess) {
+ NSLog(@"The Doc [%@] Error: %ld\n", input_file, (long)error_code);
+ return 1;
+ }
+
+ FSFDFDoc *fdf_doc = [[FSFDFDoc alloc] initWithType:FSFDFDocXFDF];
+ [pdf_doc exportToFDF:fdf_doc types:FSPDFDocAnnots];
+
+ [fdf_doc saveAs:output_xfdf];
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+How to remove all attachments?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ // Remove all attachments
+ FSAttachments *attachment = [[FSAttachments alloc] initWithDoc:doc];
+ [attachment removeAllEmbeddedFiles];
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+Why do I meet "Invalid Binary Architecture" warning and "Code signing "FoxitRDK.framework" failed" error when I uploaded my app embedded your SDK Framework to Apple App Store?
+
+Foxit SDK Framwork includes `arm64`, and `x86_64` architectures, but `x86_64` architectures are not allowed to be uploaded to Apple App Store so that you will meet the "Invalid Binary Architecture" warning and "Code signing "FoxitRDK.framework" failed" error if you use the framework directly.
+To solve this problem, Foxit SDK provides a script named `"prepare-framework-to-publish-to-appstore.sh"` found in the "libs" folder to strip the arm architectures, and then output the library to the directory `"./device/FoxitRDK.framework"`. You should use this library in your project and then you can publish your app to Apple App Store.
+
+---
+
+FSPDFObjC.h文件中包含了多种类型标注，定义为枚举类型如下:
+
+```objc
+typedef NS_ENUM(NSInteger, FSAnnotType) {
+ FSAnnotUnknownType = 0,
+ FSAnnotNote = 1,
+ FSAnnotLink = 2,
+ FSAnnotFreeText = 3,
+ FSAnnotLine = 4,
+ FSAnnotSquare = 5,
+ FSAnnotCircle = 6,
+ FSAnnotPolygon = 7,
+ FSAnnotPolyLine = 8,
+ FSAnnotHighlight = 9,
+ FSAnnotUnderline = 10,
+ FSAnnotSquiggly = 11,
+ FSAnnotStrikeOut = 12,
+ FSAnnotStamp = 13,
+ FSAnnotCaret = 14,
+ FSAnnotInk = 15,
+ FSAnnotPSInk = 16,
+ FSAnnotFileAttachment = 17,
+ FSAnnotSound = 18,
+ FSAnnotMovie = 19,
+ FSAnnotWidget = 20,
+ FSAnnotScreen = 21,
+ FSAnnotPrinterMark = 22,
+ FSAnnotTrapNet = 23,
+ FSAnnotWatermark = 24,
+ FSAnnot3D = 25,
+ FSAnnotPopup = 26,
+ FSAnnotRedact = 27,
+ FSAnnotRichMedia = 28
+};
+```
+
+FoxitRDK 提供了标注类型基类对象，对应的接口定义如下：
+
+```objc
+@interface FSAnnot : FSBase
+@property (nonatomic, copy, getter=getContent) NSString * content;
+@property (nonatomic, copy, getter=getModifiedDateTime) FSDateTime* modifiedDateTime;
+@property (nonatomic, getter=getFlags) FSAnnotFlags flags;
+@property (nonatomic, copy, getter=getUniqueID) NSString * uniqueID;
+@property (nonatomic, copy, getter=getBorderInfo) FSBorderInfo* borderInfo;
+@property (nonatomic, getter=getBorderColor) unsigned int borderColor;
+-(void*)getCptr;
+-(id)initWithCptr: (void*)cptr swigOwnCObject: (BOOL)ownCObject;
+-(id)initWithPage: (FSPDFPage*)page annot_dict: (FSPDFDictionary*)annot_dict;
+-(id)initWithAnnot: (FSAnnot*)annot;
+-(BOOL)isEmpty;
+-(FSPDFPage*)getPage;
+-(BOOL)isMarkup;
+-(FSAnnotType)getType;
+-(int)getIndex;
+-(FSRectF*)getRect;
+-(FSMatrix2D*)getDisplayMatrix: (FSMatrix2D*)page_display_matrix;
+-(BOOL)move: (FSRectF*)rect;
+-(BOOL)move: (FSRectF*)rect is_reset_appearance: (BOOL)is_reset_appearance;
+-(BOOL)resetAppearanceStream;
+-(BOOL)resetAppearanceStream: (BOOL)is_generate_new_appearance_obj;
+-(FSRectI*)getDeviceRect: (FSMatrix2D*)matrix;
+-(FSPDFDictionary*)getDict;
+-(BOOL)hasProperty: (FSAnnotProperty)property;
+-(BOOL)removeProperty: (FSAnnotProperty)property;
+-(FSPDFDictionary*)getOptionalContent;
+-(FSPDFStream*)getAppearanceStream: (FSAnnotAppearanceType)type appearance_state: (NSString *)appearance_state;
+-(FSPDFStream*)getAppearanceStream: (FSAnnotAppearanceType)type;
+
+-(void)dealloc;
+@end
+```
+
+---
+
+How to remove all pages.
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ for (int i = [doc getPageCount] - 1; i >= 0; i--) {
+ [doc removePage:i];
+ }
+
+ //Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How can I set the night mode color?
+if you want to set the night mode color, please first set the properties `FSPDFViewCtrl.mappingModeBackgroundColor` and `FSPDFViewCtrl.mappingModeForegroundColor`, and then set the `FSPDFViewCtrl.colorMode` to FSRendererColorModeMapping.
+Note: If the `FSPDFViewCtrl.colorMode` has already been set to `FSRendererColorModeMapping`, you still need to set it again after updating the `FSPDFViewCtrl.mappingModeBackgroundColor` and `FSPDFViewCtrl.mappingModeForegroundColor`. Otherwise, the settings may not work.
+The properties should be changed in the source code of the UI Extensions Component, please refer to section 5.3 "Customize UI implementation through source code" to add the "uiextensions" project found in the "libs/uiextensions_src" folder to your project. Then, find the settingBar function in "UIExtensions/UIExtensionsManager.m", and set the color as you like.
+Following is a sample to set the night mode color:
+
+```objc
+- (void)settingBar:(FSSettingBar *)settingBar isNightMode:(BOOL)isNightMode {
+
+ self.settingBar.viewSettingManager.isDayOrNightForLast = YES;
+ if ([self.pdfViewCtrl getPageLayoutMode] == PDF_LAYOUT_MODE_REFLOW) {
+ UIColor* color = isNightMode ? UIColor.blackColor : UIColor.whiteColor;
+ [self.pdfViewCtrl setReflowBackgroundColor:color];
+ [self.pdfViewCtrl setPageLayoutMode:PDF_LAYOUT_MODE_REFLOW];
+ self.pdfViewCtrl.isNightMode = isNightMode;
+ }else{
+ if (!(self.pdfViewCtrl.isNightMode == isNightMode && self.pdfViewCtrl.colorMode != FSRendererColorModeMappingGray)) {
+ self.pdfViewCtrl.isNightMode = isNightMode;
+ if (self.pdfViewCtrl.nightColorMode == FSNightColorModeMappingGray && isNightMode) {
+ self.pdfViewCtrl.colorMode = FSRendererColorModeMappingGray;
+ }
+
+ if (isNightMode && self.pdfViewCtrl.nightColorMode != FSNightColorModeMappingGray)
+ {
+ // Set background color.
+ self.pdfViewCtrl.mappingModeBackgroundColor = [UIColor redColor];
+ // Set foreground color.
+ self.pdfViewCtrl.mappingModeForegroundColor = [UIColor greenColor];
+ // Set color mode.
+ self.pdfViewCtrl.colorMode = FSRendererColorModeMapping;
+ // Set the background color for the areas that are out of the pdfviewctrl.
+ self.pdfViewCtrl.backgroundColor = [UIColor colorWithRed:20.0/255.0 green:20.0/255.0 blue:20.0/255.0 alpha:1.0];
+ }
+ else {
+ self.pdfViewCtrl.colorMode = FSRendererColorModeNormal;
+ self.pdfViewCtrl.backgroundColor = [UIColor colorWithRed:230.0/255.0 green:230.0/255.0 blue:230.0/255.0 alpha:1.0];
+ }
+ }
+ }
+}
+```
+
+---
+
+Initialize Library It is necessary for applications to initialize Foxit PDF SDK (iOS) before calling any APIs. The function `+[FSLibrary initialize:key:]` is provided to initialize Foxit PDF SDK (iOS). A license should be purchased for the application and pass unlock key and code to get proper supports. When there is no need to use Foxit PDF SDK (iOS) any more, please call function `+[FSLibrary destroy]` to release it. Note The parameter "sn" can be found in the `rdk_sn.txt` (the string after `SN=`) and the `key` can be found in the `rdk_key.txt` (the string after `Sign=`).
+
+Example: 3.1.1 How to initialize Foxit PDF SDK (iOS)
+
+```objc
+#import <FoxitRDK/FSPDFObjC.h>
+
+...
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+if (error_code != FSErrSuccess) { return NO; }
+```
+
+---
+
+How to add a stamp annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add common stamp annotation.
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:100 bottom1:150 right1:200 top1:250];
+ FSAnnot *annot = [page addAnnot:FSAnnotStamp rect:rectF];
+ FSStamp *static_stamp = [[FSStamp alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ static_stamp.flags = FSAnnotFlagPrint;
+ static_stamp.iconName = @"Approved";
+ // Appearance should be reset.
+ [static_stamp resetAppearanceStream];
+ NSLog(@"Add a stamp annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to compare two pdf documents and marked the difference of delete text type.
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+FSDateTime* getLocalDateTime() {
+ time_t t = time(NULL);
+ struct tm* rime = localtime(&t);
+ tzset();
+ int timezone_hour = (int)timezone / 3600 * -1;
+ int timezone_minute = (abs((int)timezone) % 3600) / 60;
+
+ FSDateTime* datetime = [[FSDateTime alloc] initWithYear:(rime->tm_year + 1900) month:(rime->tm_mon + 1) day:(rime->tm_mday) hour:(rime->tm_hour) minute:(rime->tm_min) second:(rime->tm_sec) milliseconds:0 utc_hour_offset:timezone_hour utc_minute_offset:timezone_minute];
+
+ return datetime;
+}
+
+NSString* randomUID() {
+ NSString* uuid = @"";
+ const char* c = "0123456789qwertyuiopasdfghjklzxcvbnm";
+
+ for (int n = 0; n < 16; n++) {
+ NSString* uuid_temp = @"";
+ int b = rand() % 255;
+ switch (n) {
+ case 6:
+ uuid_temp = [NSString stringWithFormat:@"4%x", b % 15];
+ break;
+ case 8:
+ uuid_temp = [NSString stringWithFormat:@"%c%x", c[rand() % strlen(c)], b % 15];
+ break;
+ default:
+ uuid_temp = [NSString stringWithFormat:@"%02x", b];
+ break;
+ }
+ uuid = [uuid stringByAppendingString:uuid_temp];
+
+ switch (n) {
+ case 3:
+ case 5:
+ case 7:
+ case 9:
+ uuid = [uuid stringByAppendingString:@"-"];
+ break;
+ }
+ }
+ return uuid;
+}
+
+void CreateDeleteText(FSPDFPage* page, FSRectFArray* rects, int color, NSString *csContents, NSString *csType, NSString *csObjType) {
+ if (rects == NULL) return;
+ int rectSize = [rects getSize];
+ if (rectSize == 0) return;
+ FSRectF* annot_rect = [[FSRectF alloc] init];
+ FSStrikeOut* strikeout = [[FSStrikeOut alloc] initWithAnnot:[page addAnnot:FSAnnotStrikeOut rect:annot_rect]];
+ [strikeout setContent:csContents];
+
+ FSQuadPointsArray* quad_points_array = [FSQuadPointsArray new];
+
+ for (int i=0; i<rectSize; i++) {
+ FSRectF* item = [rects getAt:i];
+ FSQuadPoints* quad_points = [FSQuadPoints new];
+ FSPointF* point = [FSPointF new];
+ [point set:item.left y:item.top];
+ quad_points.first = point;
+ [point set:item.right y:item.top];
+ quad_points.second = point;
+ [point set:item.left y:item.bottom];
+ quad_points.third = point;
+ [point set:item.right y:item.bottom];
+ quad_points.fourth = point;
+
+ [quad_points_array add:quad_points];
+ }
+ [strikeout setQuadPoints:quad_points_array];
+ [strikeout setBorderColor:color];
+ [strikeout setSubject:csObjType];
+ [strikeout setTitle:csType];
+ FSDateTime* local_time = getLocalDateTime();
+ [strikeout setCreationDateTime:local_time];
+ [strikeout setModifiedDateTime:local_time];
+ [strikeout setUniqueID:randomUID()];
+
+ [strikeout resetAppearanceStream];
+}
+
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ @try {
+ FSPDFDoc *base_doc = [[FSPDFDoc alloc] initWithPath:input_base_file];
+ errorCode = [base_doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ FSPDFDoc *compared_doc = [[FSPDFDoc alloc] initWithPath:input_compared_file];
+ errorCode = [compared_doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ FSComparison* comparison = [[FSComparison alloc] initWithBase_doc:base_doc compared_doc:compared_doc];
+ FSCompareResults* result = [comparison doCompare:0 compared_page_index:0 compare_flags:FSComparisonCompareTypeText];
+ int oldInfoSize = [result.base_doc_results getSize];
+ FSPDFPage* page = [compared_doc getPage:0];
+ for (int i=0; i<oldInfoSize; i++)
+ {
+ FSCompareResultInfo* item = [result.compared_doc_results getAt:i];
+ FSCompareResultInfoCompareResultType type = item.type;
+ if (type == FSCompareResultInfoCompareResultTypeDeleteText)
+ {
+ NSString* res_string = [NSString stringWithFormat:@"\"%@\"", item.diff_contents];
+ CreateDeleteText(page1, item.rect_array, 0xff0000, res_string, @"Compare : Delete", @"Text");
+ }
+ }
+ FSPDFDoc* new_doc = [comparison generateComparedDoc:FSComparisonCompareTypeAll];
+ [new_doc saveAs:@"generate_result.pdf" save_flags:FSPDFDocSaveFlagNormal];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ return 0;
+ }
+}
+
+---
+
+How to add table to PDF document.
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+FSRichTextStyle *GetTableTextStyle(int index){
+ FSRichTextStyle* style = [[FSRichTextStyle alloc] init];
+ FSFont* d_font = [[FSFont alloc] initWithFont_id:FSFontStdIDHelvetica];
+ [style setFont:d_font];
+ [style setText_size:10];
+ [style setText_alignment:FSAlignmentLeft];
+ [style setText_color:0x000000];
+ [style setIs_bold:NO];
+ [style setIs_italic:NO];
+ [style setIs_underline:NO];
+ [style setIs_strikethrough:NO];
+ [style setMark_style:FSRichTextStyleCornerMarkNone];
+
+ switch (index) {
+ case 1:
+ [style setText_alignment:FSAlignmentCenter];
+ break;
+ case 2: {
+ [style setText_alignment:FSAlignmentRight];
+ [style setText_color:0x00FF00];
+ break;
+ }
+ default:
+ break;
+ }
+ return style;
+}
+
+NSString *GetTableCellText(int index) {
+ switch (index) {
+ case 0:
+ return @"Reference style";
+ case 1 :
+ return @"Alignment center";
+ case 2:
+ return @"Green text color and alignment right";
+ default:
+ return @" ";
+ }
+}
+
+void AddElectronicTable(FSPDFPage *page){
+ {
+ // Add a spreadsheet with 4 rows and 3 columns
+ int index = 0;
+ FSTableCellDataArray *cell_array = [[FSTableCellDataArray alloc] init];
+ for (int row = 0; row < 4; row++) {
+ FSTableCellDataColArray *col_array = [[FSTableCellDataColArray alloc] init];
+ for (int col = 0; col < 3; col++) {
+ FSRichTextStyle *style = GetTableTextStyle(index);
+ NSString *cell_text = GetTableCellText(index);
+ FSImage *cell_image = [[FSImage alloc] init];
+ FSRectF* rect = [[FSRectF alloc] init];
+ FSTableCellData *cell_data = [[FSTableCellData alloc] initWithCell_text_style:style cell_text:cell_text cell_image:cell_image cell_margin:rect];
+ [col_array add:cell_data];
+ index = index + 1;
+ }
+ [cell_array add:col_array];
+ }
+
+ float width = [page getWidth];
+ float height = [page getHeight];
+ float right = width - 100;
+ float top = height - 100;
+ FSRectF* rect = [[FSRectF alloc] initWithLeft1:100 bottom1:550 right1:right top1:top];
+ FSTableBorderInfo *outside_border_left = [[FSTableBorderInfo alloc] init];
+ outside_border_left.line_width = 1;
+ FSTableBorderInfo *outside_border_right = [[FSTableBorderInfo alloc] init];
+ outside_border_right.line_width = 1;
+ FSTableBorderInfo *outside_border_top = [[FSTableBorderInfo alloc] init];
+ outside_border_top.line_width = 1;
+ FSTableBorderInfo *outside_border_bottom = [[FSTableBorderInfo alloc] init];
+ outside_border_bottom.line_width = 1;
+ FSTableBorderInfo *inside_border_col_info = [[FSTableBorderInfo alloc] init];
+ inside_border_col_info.line_width = 1;
+ FSTableBorderInfo *inside_border_row_info = [[FSTableBorderInfo alloc] init];
+ inside_border_row_info.line_width = 1;
+ FSTableCellIndexArray* merge_cells = [[FSTableCellIndexArray alloc] init];
+ FSFloatArray* row_height_array = [[FSFloatArray alloc] init];
+ FSFloatArray* col_width_array = [[FSFloatArray alloc] init];
+ FSTableData* data = [[FSTableData alloc] initWithRect:rect row_count:4 col_count:3 outside_border_left:outside_border_left outside_border_right:outside_border_right outside_border_top:outside_border_top outside_border_bottom:outside_border_bottom inside_border_row:inside_border_col_info inside_border_col:inside_border_row_info merge_cells:merge_cells row_height_array:row_height_array col_width_array:col_width_array];
+
+ [FSTableGenerator addTableToPage:page data:data cell_array:cell_array];
+ }
+}
+
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"Library Initialize Error: %ld", errorCode);
+ return -1;
+ }
+
+ @try {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] init];
+ FSPDFPage *page = [doc insertPageWithType:0 size:FSPDFPageSizeLetter];
+ AddElectronicTable(page);
+
+ NSString *output_file = @"electronictable_result.pdf";
+ [doc saveAs:output_file save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+ @catch (NSException *exception) {
+ NSLog(@"Unknown Exception, %@", exception);
+ return -1;
+ }
+ }
+ return 0;
+}
+
+---
+
+How to add a circle annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add circle annotation
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:100 bottom1:650 right1:200 top1:750];
+ FSAnnot *annot = [page addAnnot:FSAnnotCircle rect:rectF];
+ FSCircle *circle = [[FSCircle alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ circle.flags = FSAnnotFlagPrint;
+ circle.innerRect = [[FSRectF alloc] initWithLeft1:120 bottom1:660 right1:160 top1:740];
+ circle.subject = @"Circle";
+ circle.title = @"Foxit SDK";
+ circle.creationDateTime = [FSDateTime getLocalTime];
+ circle.modifiedDateTime = [FSDateTime getLocalTime];
+ // Appearance should be reset.
+ [circle resetAppearanceStream];
+ NSLog(@"Add a circle annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to remove bookmark?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"AboutFoxit.pdf"];
+ [doc load];
+
+ //Get bookmark root node or Create new bookmark root node.
+ FSBookmark *root = [doc getRootBookmark];
+ // Get first bookmark and change properties.
+ FSBookmark *first_bookmark = [root getFirstChild];
+ // Remove next sibling bookmark
+ if (![[first_bookmark getNextSibling] isEmpty]) {
+ [doc removeBookmark:[first_bookmark getNextSibling]];
+ }
+}
+[FSLibrary destroy];
+```
+
+---
+
+Getting Started
+
+It is very easy to setup Foxit PDF SDK for iOS and see it in action! It takes just a few minutes and we will show you how to use it on the iOS or macOS platforms. The following sections introduce the structure of the installation package and how to run a demo.
+
+Note: From version 7.5.1, Foxit PDF SDK for iOS only supports 64-bit devices. It is because that in iOS 11 and later, all apps use the 64-bit architecture, please see the Apple developer guide.
+The package without Mac Catalyst:
+> * iOS 11.0 or higher
+> * Xcode 9.0 or newer
+
+Note: iOS 13 or higher requires Xcode version 11 or higher.
+The package with Mac Catalyst:
+
+> * macOS 10.15 or higher
+> * Xcode 11 or higher
+
+---
+
+Foxit PDF SDK for iOS provides quick PDF viewing and manipulation support for iOS or macOS
+Devices. Customers choose it for the following reasons:
+• Easy to integrate
+Developers can seamlessly integrate the SDK into their own apps with just a few lines of code.
+• Perfectly designed
+Foxit PDF SDK for iOS is designed with a simple, clean, and friendly style, which provides the best
+user experience.
+• Flexible customization
+Foxit PDF SDK for iOS provides the source code for the user interface which lets the developers have
+full control of the functionality and appearance of their apps.
+• Robust performance on mobile platforms
+Foxit PDF SDK for iOS provides an OOM (out-of-memory) recovery mechanism to ensure the app has
+high robust performance when running the app on a mobile device which offers limited memory.
+• Powered by Foxit’s high fidelity rendering PDF engine
+The core technology of the SDK is based on Foxit’s PDF engine, which is trusted by a large number of
+the world’s largest and well-known companies. Foxit’s powerful engine makes the app fast on
+parsing, rendering, and makes document viewing consistent on a variety of devices.
+• Premium World-side Support
+Foxit offers premium support for its developer products because when you are developing mission
+critical products you need the best support. Foxit has one of the PDF industry’s largest team of
+support engineers. Updates are released on a regular basis to improve user experience by adding
+new features and enhancements
+
+---
+
+How to export annotations to XFDF files.
+
+#include "FSPDFObjC.h"
+
+NSString* sn = @"";
+NSString* key = @"";
+
+int main(int argc, const char * argv[]) {
+
+	@autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ @try {
+ // Export XFDF file
+ NSString* input_pdf_path = @"AnnotationDataExport.pdf";
+ FSPDFDoc* doc = [[FSPDFDoc alloc] initWithPath:input_pdf_path];
+ FSErrorCode errorCode = [doc load:nil];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"The Doc [%@] Error: %ld", input_pdf_path, errorCode);
+ return -1;
+ }
+
+ // Export annotations to xfdf with file.
+ FSFDFDoc* fdf_doc = [[FSFDFDoc alloc] initWithType:FSFDFDocXFDF];
+ [doc exportToFDF:fdf_doc types:FSPDFDocAnnots page_range:[FSRange new]];
+
+ NSString* save_xfdf_path = [output_directory stringByAppendingPathComponent:@"AnnotationDataExport_xfdf.xfdf"];
+ [fdf_doc saveAs:save_xfdf_path];
+
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ return 0;
+	}
+
+}
+
+---
+
+How can I output exception/crash log information when my app throws exceptions or crashes?
+
+If you want to output exception/crash log information, all you need is to implement the `<FSExceptionLoggerDelegate>` protocol, and then call the interface `+[FSPDFViewControl setExceptionLogger]`.
+
+---
+
+The package with Mac Catalyst
+
+Download the "foxitpdfsdk_xx_ios_catalyst.zip" package, and extract it to a new directory. The contents in this package are similar to the "foxitpdfsdk_xx_ios.zip" package. You can refer to the previous section "The package without Mac Catalyst" for more information.
+In the "libs" folder, the difference is that the FoxitRDK.xcframework and uiextensionsDynamic.xcframework can support to build a Mac version of your iPad app using Mac Catalyst.
+Note: Currently, the RMS and Scanning features are not supported by the Mac version app.
+
+Foxit PDF SDK for iOS (Mac Catalyst) provides a Complete PDF viewer demo in Objective-C for developers to learn how to call the SDK. The demo is located in the "samples" folder. To run this demo, please make sure that your macOS version is 10.15 or higher and Xcode version is 11 or higher.
+
+---
+
+How to add a highlight annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add highlight annotation.
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:10 bottom1:450 right1:100 top1:550];
+ FSAnnot *annot = [page addAnnot:FSAnnotHighlight rect:rectF];
+ FSHighlight *highlight = [[FSHighlight alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ highlight.flags = FSAnnotFlagPrint;
+ highlight.content = @"Highlight";
+ FSQuadPoints *quad_points = [FSQuadPoints new];
+ quad_points.first = [[FSPointF alloc] initWithX:10 Y:500];
+ quad_points.second = [[FSPointF alloc] initWithX:90 Y:500];
+ quad_points.third = [[FSPointF alloc] initWithX:10 Y:480];
+ quad_points.fourth = [[FSPointF alloc] initWithX:90 Y:480];
+ FSQuadPointsArray *quad_points_array = [FSQuadPointsArray new];
+ [quad_points_array add:quad_points];
+ highlight.quadPoints = quad_points_array;
+ highlight.subject = @"Highlight";
+ highlight.title = @"Foxit SDK";
+ highlight.creationDateTime = [FSDateTime getLocalTime];
+ highlight.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance should be reset.
+ [highlight resetAppearanceStream];
+ NSLog(@"Add a highlight annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+## 如何修改主题色
+
+使用`+[UIExtensionsManager setPrimaryColor:]`接口来设置你的主题色，
+
+示例代码：
+```objc
+// 导入
+#import <FoxitRDK/FSPDFViewControl.h>
+#import <uiextensionsDynamic/UIExtensionsManager.h>
+
++ (void)initialize{
+ [super initialize];
+ [UIExtensionsManager setPrimaryColor:[UIColor yellowColor]];
+}
+
+```
+
+另外可以在`FSFoundation/FSPreferences.h`配置一些其它的颜色(源码位置`uiextensions_src/FSFoundation/Utilities/FSPreferences.h`)
+
+注意：
+
+ FSPreferences并未导出到API reference，也就是没有注释说明
+
+ 该方法执行后，主题色才会发生变化。建议在app初始化或初始创建时就调用。
+
+---
+
+How to get attributes of viewer preference and values of metadata in a PDF file.
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+NSString *kMetadataItems[8] = {@"Title", @"Author", @"Subject", @"Keywords", @"Creator", @"Producer", @"CreationDate", @"ModDate"};
+
+void ShowMetaDataInfo(FSPDFDoc *doc) {
+ FSMetadata *metadata = [[FSMetadata alloc] initWithDocument:doc];
+ for (unsigned int i = 0; i < sizeof(kMetadataItems) / sizeof(kMetadataItems[0]); i++) {
+ NSString *item = kMetadataItems[i];
+ NSArray<NSString *> *value = [metadata getValues:item];
+ }
+}
+
+const FSPDFDocDisplayMode kDisplayModes[6] = {FSPDFDocDisplayUseNone, FSPDFDocDisplayUseOutlines, FSPDFDocDisplayUseThumbs, FSPDFDocDisplayFullScreen, FSPDFDocDisplayUseOC, FSPDFDocDisplayUseAttachment};
+
+NSString *kDisplayModeStrings[6] = {@"UseNone", @"UseOutlines", @"UseThumbs", @"FullScreen", @"UseOC", @"UseAttachment"};
+
+NSString *GetViewerPrefPrintScaleName(FSDocViewerPrefsPrintScale ui_item) {
+ switch (ui_item) {
+ case FSDocViewerPrefsPrintScaleNone:
+ return @"PrintScaleNone";
+ case FSDocViewerPrefsPrintScaleAppDefault:
+ return @"PrintScaleAppDefault";
+ default:
+ return @"";
+ }
+}
+
+void ShowDocViewerPrefsInfo(FSPDFDoc *doc) {
+ content = @"";
+ FSDocViewerPrefs *prefs = [[FSDocViewerPrefs alloc] initWithDocument:doc pdf_dict:NULL];
+
+ // Get display mode for non full-screen mode.
+ FSPDFDocDisplayMode mode = prefs.nonFullScreenPageMode;
+ NSString *display_mode = @"";
+ for (unsigned int i = 0; i < sizeof(kDisplayModes) / sizeof(kDisplayModes[i]); i++) {
+ if (mode == kDisplayModes[i]) {
+ display_mode = kDisplayModeStrings[i];
+ break;
+ }
+ }
+
+ // Get reading direction.
+ bool is_rtl = prefs.readingDirection;
+
+ // Get the type of area item.
+ FSPDFPageBoxType type = prefs.printClip;
+
+ // Get page scaling option.
+ GetViewerPrefPrintScaleName(prefs.printScale)
+
+ // Get the number of copies to be printed.
+ int copy = prefs.printCopies
+}
+
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+ NSString *input_file = [[NSString alloc] initWithFormat:@"%@%@", input_path, @"AboutFoxit.pdf"];
+ NSFileManager *fileManager = [NSFileManager defaultManager];
+ BOOL isDir = NO;
+ if ([fileManager fileExistsAtPath:output_directory isDirectory:&isDir]) {
+ if (!isDir) {
+ NSError *error = nil;
+ if (![fileManager removeItemAtPath:output_directory error:&error] || error) {
+ return -1;
+ }
+ if (![fileManager createDirectoryAtPath:output_directory withIntermediateDirectories:YES attributes:nil error:&error] || error) {
+ return -1;
+ }
+ }
+ } else {
+ NSError *error = nil;
+ if (![fileManager createDirectoryAtPath:output_directory withIntermediateDirectories:YES attributes:nil error:&error] || error) {
+ return -1;
+ }
+ }
+
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"Library Initialize Error: %ld", errorCode);
+ return -1;
+ }
+
+ @try {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ FSErrorCode errorCode = [doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"The Doc [%@] Error: %ld\n", input_file, errorCode);
+ return 1;
+ }
+ // Show original information.
+ ShowDocViewerPrefsInfo(doc, @"original.txt");
+ ShowMetaDataInfo(doc, @"original.txt");
+ NSString *output_file = [[NSString alloc] initWithFormat:@"%@%@", output_directory, @"AboutFoxit_docinfo.pdf"];
+ [doc saveAs:output_file save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+ @catch (NSException *exception) {
+ NSLog(@"Unknown Exception, %@", exception);
+ return -1;
+ }
+ }
+ return 0;
+}
+
+---
+
+Customize to hide top/bottom toolbar
+
+In the top/bottom toolbar (See Figure 52), you can do the following operations:
+1.Show or hide the top/bottom toolbar.
+2.Show or hide a specific item in the top/bottom toolbar.
+3.Remove a specific tab in the center of the top toolbar.
+4.Add a custom item at any position.
+
+Note:
+1.For iPad device, it has removed the bottom toolbar.
+2.For iPhone device, the bottom toolbar is only one part, and the top toolbar is divided into two parts, so that there are three parts for the toolbar, and each part has a separate index. For iPad device, it has no bottom toolbar.
+Table 51 lists the related APIs which are used to customize the top/bottom toolbar.
+
+Tists the related APIs which are used to customize the top/bottom toolbar.
+
+```objc
+- [UIExtensionsManager enableTopToolbar:(BOOL)isEnabled];	//Enable or disable top toolbar.
+- [UIExtensionsManager enableBottomToolbar:(BOOL)isEnabled];	//Enable or disable bottom toolbar.
+- [UIExtensionsManager setToolbarItemHiddenWithTag:(FS_TOOLBAR_ITEM_TAG)itemTag hidden:(BOOL)isHidden];	//Show or hide the item in the top/bottom toolbar
+```
+
+The value of the parameter "itemTag" in setToolbarItemHiddenWithTag interface can be set as follows, which maps the features in the top/bottom toolbar.
+
+```
+FS_TOOLBAR_ITEM_TAG_BACK
+FS_TOOLBAR_ITEM_TAG_SEARCH
+FS_TOOLBAR_ITEM_TAG_MORE
+FS_TOOLBAR_ITEM_TAG_HOME
+FS_TOOLBAR_ITEM_TAG_EDIT
+FS_TOOLBAR_ITEM_TAG_COMMENT
+FS_TOOLBAR_ITEM_TAG_DRAWING
+FS_TOOLBAR_ITEM_TAG_FORM
+FS_TOOLBAR_ITEM_TAG_SIGN
+FS_TOOLBAR_ITEM_TAG_PANEL
+FS_TOOLBAR_ITEM_TAG_VIEW / FS_TOOLBAR_ITEM_TAG_VIEW_SETTINGS
+FS_TOOLBAR_ITEM_TAG_THUMBNAIL
+FS_TOOLBAR_ITEM_TAG_READING_BOOKMARK
+```
+
+---
+
+How can I set whether to highlight the form fields in PDF form files? And how to set the highlight color if I want to highlight form fields?
+
+By default, highlighting form fields in PDF documents is enabled. If you want to set the highlight color, please make sure you have not disabled the highlighting form fields feature.
+From version 6.3, you can disable/enable highlighting form fields or set the highlight color easily in the configuration JSON file, just set the following two items:
+"highlightForm": true,
+"highlightFormColor": "#200033cc",
+For the version before 6.3, if you want to disable/enable highlighting form fields or set the highlight color, you should modify the source code of the UI Extensions Component using `-[FSFormFiller highlightFormFields:]` and `-[FSFormFiller setHighlightColor:]` interfaces.
+`-[FSFormFiller highlightFormFields:]` interface is provided to set whether to enable highlighting the form fields in PDF form files. Please refer to section 4.3 "Customize UI implementation through source code" to add the "uiextensions" project found in the "libs/uiextensions_src" folder to your project. Then, find the onDocOpened function in "UIExtensions/Form/FormAnnotHandler.m", and set the parameter of `-[FSFormFiller highlightFormFields:]` to "false" as follows:
+
+```objc
+- (void)onDocOpened:(FSPDFDoc* )document error:(int)error
+{
+	...
+	...
+
+	[_formFiller highlightFormFields:false];
+}
+
+```
+`-[FSFormFiller setHighlightColor:]`interface is used to set the highlight color. Following is a sample for calling this API:
+
+```objc
+- (void)onDocOpened:(FSPDFDoc* )document error:(int)error
+{
+	...
+	...
+
+	[_formFiller highlightFormFields:ture];
+	[_formFiller setHighlightColor:0x4b00ff00];
+}
+```
+
+---
+
+How to use Foxit PDF SDK to add associate files into marked content.
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ // Associate files with objects in PDF documents.
+ NSString* input_file = @"AssociateTestFile.pdf";
+ @try {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ errorCode = [doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"The Doc [%@] Error: %ld\n", input_file, errorCode);
+ return -1;
+ }
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ // Create filespec with 2.jpg image.
+ FSFileSpec *filespec_jpg = [[FSFileSpec alloc] initWithDocument:doc];
+ filespec_jpg.associteFileRelationship = FSAssociatedFilesRelationshipSource;
+ filespec_jpg.fileName = @"2.jpg";
+ filespec_jpg.description = @"jpeg";
+ [filespec_jpg embed:[input_path stringByAppendingString:@"2.jpg"]];
+ filespec_jpg.creationDateTime = dateTime;
+ filespec_jpg.modifiedDateTime = dateTime;
+
+ // Associate 2.jpg with marked content.
+ {
+ FSPDFDictionary *page_dict = [page getDict];
+ FSPDFDictionary *resource_dict = (FSPDFDictionary *) [page_dict getElement:@"Resources"];
+ if (resource_dict == nil)
+ return 1;
+
+ long position = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeText];
+ FSGraphicsObject *text_object = [page getGraphicsObject:position];
+ if (text_object != nil) {
+ FSMarkedContent *markcontent = [text_object getMarkedContent];
+ if (markcontent == nil)
+ return 1;
+ if ([markcontent getItemCount] == 0)
+ [markcontent addItem:@"Associated" property_dict:NULL];
+ [associated_files associateFileWithGraphicsObject:text_object mark_content_item_index:0 current_resource:resource_dict property_name:@"textobject" file_spec:filespec_jpg];
+ [page generateContent];
+
+ }
+ }
+ // Save PDF file
+ [doc saveAs:@"associated_files.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ return 0;
+ }
+}
+
+---
+
+### 如何通过切换handler，使用现有功能，如画笔
+
+```objc
+id<IToolHandler> toolHandler = [self.extensionsMgr getToolHandlerByName:Tool_Link];
+self.extensionsMgr.currentToolHandler = toolHandler;
+```
+`ToolHandlerName`可参考`<uiextensionsDynamic/FSUtilities.h>`
+![截图1](https://github.com/foxitsoftware/foxit-developer-guides/tree/main/iOS/ScreenCapture/20230613174112.jpg)
+
+### 如何切换状态，启用现有功能，如搜索功能
+
+```objc
+[self.extensionsMgr changeState:FSUIManagerStateSearch];
+```
+`state`可参考`<uiextensionsDynamic/FSUtilities.h>`
+![截图1](https://github.com/foxitsoftware/foxit-developer-guides/tree/main/iOS/ScreenCapture/20230613174427.jpg)
+
+---
+
+What is Bitcode? Does Foxit PDF SDK for iOS support Bitcode?
+
+Bitcode is an intermediate representation of a compiled binary. Including bitcode will allow Apple to re-optimize your app binary in the future without the need to submit a new version of your app to the store.
+Yes. Foxit PDF SDK for iOS supports Bitcode since version 3.0.
+
+---
+
+How to use Foxit PDF SDK to get annotation rectangle in device coordinate system.
+
+```objective-c
+#include "FSPDFObjC.h"
+
+NSString* sn = @"";
+NSString* key = @"";
+
+int main(int argc, const char * argv[]) {
+
+ @autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"Library Initialize Error: %ld", errorCode);
+ return -1;
+ }
+
+ @try {
+ NSString* input_pdf_name = @"input_file.pdf";
+ // Load a document
+ FSPDFDoc* doc = [[FSPDFDoc alloc] initWithPath:input_pdf_name];
+ FSErrorCode errorCode = [doc load:nil];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+ FSPDFPage* page = [doc getPage:0];
+ int width = (int)[page getWidth];
+ int height = (int)[page getHeight];
+ NSArray *bmpWidth = @[@(width), @(2 * width)];
+ NSArray *bmpHeight = @[@(height), @(2 * height)];
+
+ for (NSInteger i = 0; i < 2; i++) {
+ FSMatrix2D *setMatrix = [page getDisplayMatrix:0 y:0 width:bmpWidth[i] height:bmpHeight[i] rotation:FSRotation0];
+ NSInteger iAnnotCount = [page getAnnotCount];
+
+ for (NSInteger j = 0; j < iAnnotCount; j++) {
+ FSAnnot* pAnnot = [page getAnnot:j];
+ FSRectI* deviceRect = [pAnnot getDeviceRect:setMatrix];
+ }
+ }
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ }
+}
+```
+
+---
+
+Here are some descriptions of the json configuration items：
+
+Feature Module	Description
+readingbookmark	User-defined bookmark
+outline	PDF document bookmark
+annotations
+(highlight, underline, squiggly, strikeout, insert, replace, line, rectangle, oval, arrow, pencil, eraser, typewriter, textbox, callout, note, stamp, polygon, cloud, polyline, measure, image, audio, video, redaction)	Annotation module collection
+thumbnail	PDF page thumbnail display and page management
+attachment	PDF document attachments and attachment annotations
+signature	Digital signatures and handwritten signatures
+fillSign	Fill flat forms (i.e. non-interactive forms) with text and symbols.
+search	Text search
+navigation	PDF page navigation
+form	Form Filling and form data importing and exporting
+selection	Text selection
+encryption	PDF encryption
+multipleSelection	Multiple annotations selection
+runJavaScript	whether to allow to execute JavaScript
+copyText	whether to allow to copy text
+disableLink	whether to disable hyperlink
+
+---
+
+How to associate file to image object?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ //Create filespec with 2.jpg
+ FSFileSpec *filespec_jpg = [[FSFileSpec alloc] initWithDocument:doc];
+ [filespec_jpg setAssociteFileRelationship:FSAssociatedFilesRelationshipSource];
+ [filespec_jpg setFileName:@"2.jpg"];
+ filespec_jpg.description = @"jpeg";
+ [filespec_jpg embed:@"2.jpg"];
+ FSDateTime *dateTime = [[FSDateTime alloc] initWithYear:2017 month:9 day:15 hour:17 minute:20 second:20 milliseconds:0 utc_hour_offset:8 utc_minute_offset:0];
+ filespec_jpg.creationDateTime = dateTime;
+ filespec_jpg.modifiedDateTime = dateTime;
+ filespec_jpg.subtype = @"application/octet-stream";
+
+ FSPDFPage *page = [doc getPage:0];
+ [page startParse];
+ long position = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeImage];
+ FSImageObject *image_oject = [[page getGraphicsObject:position] getImageObject];
+ if (form_x_object) {
+ [associated_files associateFileWithFormXobject:image_oject file_spec:filespec_jpg];
+ }
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+Add the scanning feature based on the full-featured PDF Reader
+
+The scanning feature is a stand-alone module which is not shipped in the UI Extensions Component, so if you want to use this feature in your project, you should add the core code below to call the scan module:
+
+```objc
+#import <FoxitPDFScanUI/PDFScanManager.h>
+
+// Initialize the scan module.
+[PDFScanManager initializeScanner:0 serial2:0];
+[PDFScanManager initializeCompression:0 serial2:0];
+
+// Get the PDFScan controller.
+UIViewController *VC = [[PDFScanManager shareManager] getPDFScanView];
+if (VC) [self presentViewController:VC animated:YES completion:nil];
+
+[PDFScanManager setSaveAsCallBack:^(NSError * _Nonnull error, NSString * _Nonnull savePath) {
+ // <add your code>
+}];
+```
+
+For PDFScanManager::initializeScanner and PDFScanManager::initializeCompression interfaces, if you set the parameters to 0, then the scanned image will be with watermark. If you do not want to have watermark, you should contact Foxit sales or support team to get the license key.
+
+---
+
+How to get associate files in graphics objects?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ FSPDFPage *page = [doc getPage:0];
+ [page startParse:FSPDFPageParsePageNormal pause:nil is_reparse:NO];
+
+ long pos = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeImage];
+ FSGraphicsObject *image_x_object = [page getGraphicsObject:pos];
+ int count = [associated_files getAssociatedFilesCountWithGraphicsObject:image_x_object];
+ FSFileSpec *filespec = [associated_files getAssociatedFileWithGraphicsObject:image_x_object index:0];
+ [filespec exportToFile:@"af_5.txt"];
+
+ pos = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeFormXObject];
+ FSGraphicsObject *form_x_object = [page getGraphicsObject:pos];
+ count = [associated_files getAssociatedFilesCountWithGraphicsObject:form_x_object];
+ filespec = [associated_files getAssociatedFileWithGraphicsObject:form_x_object index:0];
+ [filespec exportToFile:@"af_6.txt"];
+}
+[FSLibrary destroy];
+```
+
+---
+
+FoxitPDFScanUI.framework 公开的头文件如下：
+<FoxitPDFScanUI.framework/PDFScanToolbarManager.h>
+<FoxitPDFScanUI.framework/PDFScanMenuViewManager.h>
+<FoxitPDFScanUI.framework/FoxitPDFScanUI.h>
+<FoxitPDFScanUI.framework/PDFScanManager.h>
+
+---
+
+How to associate file to FormX object?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ //Create filespec with 2.jpg
+ FSFileSpec *filespec_jpg = [[FSFileSpec alloc] initWithDocument:doc];
+ [filespec_jpg setAssociteFileRelationship:FSAssociatedFilesRelationshipSource];
+ [filespec_jpg setFileName:@"2.jpg"];
+ filespec_jpg.description = @"jpeg";
+ [filespec_jpg embed:@"2.jpg"];
+ FSDateTime *dateTime = [[FSDateTime alloc] initWithYear:2017 month:9 day:15 hour:17 minute:20 second:20 milliseconds:0 utc_hour_offset:8 utc_minute_offset:0];
+ filespec_jpg.creationDateTime = dateTime;
+ filespec_jpg.modifiedDateTime = dateTime;
+ filespec_jpg.subtype = @"application/octet-stream";
+
+ FSPDFPage *page = [doc getPage:0];
+ [page startParse];
+ long position = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeFormXObject];
+ FSFormXObject *form_x_object = [[page getGraphicsObject:position] getFormXObject];
+ if (form_x_object) {
+ [associated_files associateFileWithFormXobject:form_x_object file_spec:filespec_jpg];
+ }
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to associate file to catalog dictionary?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ // Create filespec with 1.txt
+ FSFileSpec *filespec_txt = [[FSFileSpec alloc] initWithDocument:doc];
+ [filespec_txt setAssociteFileRelationship:FSAssociatedFilesRelationshipSource];
+ [filespec_txt setFileName:@"1.txt"];
+ FSDateTime *dateTime = [[FSDateTime alloc] initWithYear:2017 month:9 day:15 hour:17 minute:20 second:20 milliseconds:0 utc_hour_offset:8 utc_minute_offset:0];
+ filespec_txt.description = @"text";
+ [filespec_txt embed:@"1.txt"];
+ filespec_txt.creationDateTime = dateTime;
+ filespec_txt.modifiedDateTime = dateTime;
+ filespec_txt.subtype = @"application/octet-stream";
+
+ //Associate 1.txt with catalog dictionary.
+ FSPDFObject *catalog_dict = [doc getCatalog];
+ [associated_files associateFile:catalog_dict file_spec:filespec_txt];
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+UI Extensions Component Overview
+
+The UI Extensions Component uses "module" mechanism which refines each feature into a module.
+All of the modules except LocalModule (used for file management) will be loaded by default if UI
+Extensions is added. Users can customize module through implementing Module interface class,
+and then call UIExtensionsManager#registerModule to register the custom module to current
+UIExtensions manager. When not in use, you can call UIExtensionsManager#unregisterModule to
+unregister it from current UIExtensions manager.
+UIExtensionsManager contains the main-frame UI, such as top/bottom toolbar, and other UI
+components which are shared between each module. Meanwhile, through UIExtensionsManager,
+each feature module can also be loaded separately. And when loaded, the feature module will adapt
+and adjust the main-frame UI, as well as establish the connection of message event response. Each
+feature module may contain its module-specific UI components, and have its self-contained
+message event handling logic. UIExtensionsManager will also be responsible for distributing
+messages and events received from View Control component to each feature module.
+
+Tool handler and annotation handler will process the events from touch screen or gestures of
+PDFViewCtrl. When the touch screen and gestures occur, PDFViewCtrl will send the corresponding
+events to UIExtensionsManager:
+a) If a tool handler exists currently, UIExtensionsManager will send the corresponding events to
+the current tool handler, and then event-handing process ends.
+b) If an annotation is selected currently, UIExtensionsManager will send the corresponding
+events to the annotation handler corresponding to the currently selected annotation, and
+then event-handing process ends.
+c) If currently no tool handler exists and no annotation is selected, UIExtensionsManager will
+send the corresponding events to selection tool handler. Text Selection tool is used for
+processing the related events for text selection. For example, select a piece of text, and add
+Highlight annotation. Blank Selection tool is used for processing the related events for blank
+space. For example, add a Note annotation on the blank space.
+Note: Tool Handler and Annotation Handler will not respond the events at the same time. Tool Handler is
+primarily used for annotation creation (currently, the creation of link annotation is not supported),
+signature creation and text selection. Annotation Handler is mainly used for annotation editing and form
+filling. The following figure shows the event response flow chart between Tool Handler and Annotation
+Handler.
+
+---
+
+How to get bookmark information?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+void showBookmarkInfo(FSBookmark *bookmark, NSMutableString *doc, int depth) {
+ if (depth > 32)
+ return;
+ if ([bookmark isEmpty])
+ return;
+ for (int i = 0; i < depth; i++) {
+ [doc appendString:@"\t"];
+ }
+
+ // Show bookmark's title.
+ [doc appendFormat:@"%@\t", [bookmark getTitle]];
+
+ // Show bookmark's color.
+ [doc appendFormat:@"color: %x\r\n", [bookmark getColor]];
+
+ showBookmarkInfo([bookmark getFirstChild], doc, depth + 1);
+ showBookmarkInfo([bookmark getNextSibling], doc, depth);
+}
+
+void showBookmarksInfo(FSPDFDoc *doc, NSString *info_path) {
+ NSMutableString *text_doc = [NSMutableString string];
+ FSBookmark *root = [doc getRootBookmark];
+ if (![root isEmpty]) {
+ showBookmarkInfo(root, text_doc, 0);
+ } else {
+ [text_doc appendString:@"No bookmark information!\r\n"];
+ }
+ [text_doc writeToFile:info_path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+}
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"AboutFoxit.pdf"];
+ [doc load];
+
+ // Show original bookmark information.
+ showBookmarksInfo(doc, @"bookmark_info.txt");
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+How to add a link annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add link annotation
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:350 bottom1:350 right1:380 top1:400];
+ FSAnnot *annot = [page addAnnot:FSAnnotUnderline rect:rectF];
+ FSLink *link = [[FSLink alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ link.flags = FSAnnotFlagPrint;
+ link.highlightingMode = FSAnnotHighlightingPush;
+
+ // Add action for link annotation
+
+ FSURIAction *action = [[FSURIAction alloc] initWithAction:[FSAction create:doc action_type:FSActionTypeURI]];
+ [action setTrackPositionFlag:YES];
+ action.uRI = @"www.foxitsoftware.com";
+ link.action = action;
+ [link resetAppearanceStream];
+ NSLog(@"Add a link annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+The three elements of Foxit PDF SDK for Android, iOS and UWP
+
+1. PDF Core API
+The PDF Core API is the heart of this SDK and is built on Foxit’s powerful underlying technology. It
+provides the functionality for basic PDF operation features, and is utilized by the PDF View Control
+and UI Extensions Component, which ensures the apps can achieve high performance and
+efficiency. The Core API can be used independently for document rendering, analysis, text
+extraction, text search, form filling, digital signatures, Pressure Sensitive Ink, certificate and
+password security, annotation creation and manipulation and much more.
+2. PDF View Control
+The PDF View Control is a utility class that provides the functionality for developers to interact with
+rendering PDF documents per their requirements. With Foxit’s renowned and widely used PDF
+rendering technology at its core, the View Control provides fast and high quality rendering, zooming,
+scrolling and page navigation features. The View Control derives from platform related viewer
+classes such as UIView on iOS and allows for extension to accommodate specific user needs.
+• UI Extensions Component
+The UI Extensions Component is an open source library that provides a customizable user interface
+with built-in support for text selection, markup annotation, outline navigation, reading bookmarks,
+full-text searching, form filling, text reflow, attachment, digital/handwritten signature, reflow,
+document editing and password encryption. These features in the UI Extensions Component are
+3。Foxit PDF SDK for iOS
+Developer Guide
+implemented using the PDF Core API and PDF View Control. Developers can utilize these ready-touse UI implementations to build a PDF viewer quickly with the added benefit of complete flexibility
+and control to customize the UI design as desired.
+From version 4.0, Foxit PDF SDK for iOS made a big change and optimization for the UI Extensions
+Component. Now, it wraps the basic UI implementations to FSPDFReader class, such as panel
+controller, toolbar settings, and alert view, etc. Building a full-featured PDF Reader is getting simpler
+and easier. Furthermore, users can flexibly customize the features they want through a
+configuration file.
+From version 5.0, Foxit PDF SDK for iOS removed the FSPDFReader class, and moved the wrapped
+APIs in FSPDFReader class to UI Extensions Component. In version 5.0, every element in the built-in
+UI can be configurable. More advanced APIs and more powerful configuration file are provided for
+developers to further customize the UI elements, such as showing or hiding a specific panel,
+top/bottom toolbar, the items in the top toolbar, and the items in the View setting bar and More
+Menu view.
+
+---
+
+How to associate file to page dictionary?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ // Create filespec with 1.txt
+ FSFileSpec *filespec_txt = [[FSFileSpec alloc] initWithDocument:doc];
+ [filespec_txt setAssociteFileRelationship:FSAssociatedFilesRelationshipSource];
+ [filespec_txt setFileName:@"1.txt"];
+ FSDateTime *dateTime = [[FSDateTime alloc] initWithYear:2017 month:9 day:15 hour:17 minute:20 second:20 milliseconds:0 utc_hour_offset:8 utc_minute_offset:0];
+ filespec_txt.description = @"text";
+ [filespec_txt embed:@"1.txt"];
+ filespec_txt.creationDateTime = dateTime;
+ filespec_txt.modifiedDateTime = dateTime;
+ filespec_txt.subtype = @"application/octet-stream";
+
+ FSPDFPage *page = [doc getPage:0];
+ [page startParse];
+ [associated_files associateFileWithPage:page file_spec:filespec_txt];
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+What is in the Package
+Foxit PDF SDK for iOS provides two packages as follows:
+
+> * foxitpdfsdk_xx_ios.zip: only support building apps on an iPhone or iPad.
+> * foxitpdfsdk_xx_ios_catalyst.zip: support building apps on an iPhone, iPad or a Mac.
+
+Note: If you want to build apps on macOS, you can choose the foxitpdfsdk_xx_ios_catalyst.zip package.
+
+---
+
+How to add a freetext annotation as textbox
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add freetext annotation, as text box.
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:450 bottom1:550 right1:550 top1:600];
+ FSAnnot *annot = [page addAnnot:FSAnnotFreeText rect:rectF];
+ FSFreeText *freetext = [[FSFreeText alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ freetext.flags = FSAnnotFlagPrint;
+ // Set default appearance
+ FSDefaultAppearance *default_ap = [FSDefaultAppearance new];
+ default_ap.flags = FSDefaultAppearanceFlagFont | FSDefaultAppearanceFlagFontSize | FSDefaultAppearanceFlagTextColor;
+ default_ap.font = [[FSFont alloc] initWithFont_id:FSFontStdIDHelveticaB];
+ default_ap.text_size = 12.0f;
+ default_ap.text_color = 0x000000;
+ freetext.defaultAppearance = default_ap;
+ // Set default appearance for form.
+ freetext.content = @"A text box annotation.";
+ freetext.subject = @"Textbox";
+ freetext.title = @"Foxit SDK";
+ freetext.creationDateTime = [FSDateTime getLocalTime];
+ freetext.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance must be reset.
+ [freetext resetAppearanceStream];
+ NSLog(@"Add a text box freetext annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+Foxit PDF SDK for iOS
+
+Foxit PDF SDK allows users to download trial version to evaluate SDK. The trial version has no difference from the standard licensed version except for the free 10-day trial limitation and the trial watermarks in the generated pages. After the evaluation period expires, customers should contact the Foxit sales team and purchase licenses to continue using Foxit PDF SDK.
+
+Developers should purchase licenses to use Foxit PDF SDK in their solutions. Licenses grant developers permission to release their apps which utilize Foxit PDF SDK. However, users are prohibited to distribute any documents, sample code, or source code in the released package of Foxit PDF SDK to any third party without written permission from Foxit Software Incorporated.
+
+---
+
+Hide the whole bottom toolbar. (Only for iPhone)
+
+Objective-C:
+```objc
+[self.extensionsMgr enableBottomToolbar:false];
+```
+Swift:
+```swift
+extensionsManager.enableBottomToolbar(false)
+```
+
+---
+
+How to add a line annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add line annotation
+ // No special intent, as a common line.
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:0 bottom1:650 right1:100 top1:750];
+ FSAnnot *annot = [page addAnnot:FSAnnotLine rect:rectF];
+ FSLine *line = [[FSLine alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ line.flags = FSAnnotFlagPrint;
+ line.startPoint = [[FSPointF alloc] initWithX:20 Y:650];
+ line.endPoint = [[FSPointF alloc] initWithX:100 Y:740];
+ // Intent, as line arrow.
+ line.content = @"A line arrow annotation";
+ line.intent = @"LineArrow";
+ line.subject = @"Arrow";
+ line.title = @"Foxit SDK";
+ line.creationDateTime = [FSDateTime getLocalTime];
+ line.modifiedDateTime = [FSDateTime getLocalTime];
+ // Appearance must be reset.
+ [line resetAppearanceStream];
+ NSLog(@"Add a line annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to compare two pdf documents and marked the difference of replace text type.
+
+#include "FSPDFObjC.h"
+NSString *sn = @"";
+NSString *key = @"";
+FSDateTime* getLocalDateTime() {
+ time_t t = time(NULL);
+ struct tm* rime = localtime(&t);
+ tzset();
+ int timezone_hour = (int)timezone / 3600 * -1;
+ int timezone_minute = (abs((int)timezone) % 3600) / 60;
+ FSDateTime* datetime = [[FSDateTime alloc] initWithYear:(rime->tm_year + 1900) month:(rime->tm_mon + 1) day:(rime->tm_mday) hour:(rime->tm_hour) minute:(rime->tm_min) second:(rime->tm_sec) milliseconds:0 utc_hour_offset:timezone_hour utc_minute_offset:timezone_minute];
+
+ return datetime;
+}
+
+NSString* randomUID() {
+ NSString* uuid = @"";
+ const char* c = "0123456789qwertyuiopasdfghjklzxcvbnm";
+ for (int n = 0; n < 16; n++) {
+ NSString* uuid_temp = @"";
+ int b = rand() % 255;
+ switch (n) {
+ case 6:
+ uuid_temp = [NSString stringWithFormat:@"4%x", b % 15];
+ break;
+ case 8:
+ uuid_temp = [NSString stringWithFormat:@"%c%x", c[rand() % strlen(c)], b % 15];
+ break;
+ default:
+ uuid_temp = [NSString stringWithFormat:@"%02x", b];
+ break;
+ }
+ uuid = [uuid stringByAppendingString:uuid_temp];
+ switch (n) {
+ case 3:
+ case 5:
+ case 7:
+ case 9:
+ uuid = [uuid stringByAppendingString:@"-"];
+ break;
+ }
+ }
+ return uuid;
+}
+void createSquigglyRect(FSPDFPage* page, FSRectFArray* rects, int color, NSString *csContents, NSString *csType, NSString *csObjType) {
+ if (rects == NULL) return;
+ int rectSize = [rects getSize];
+ if (rectSize == 0) return;
+ FSRectF* annot_rect = [[FSRectF alloc] init];
+ FSSquiggly* squiggly = [[FSSquiggly alloc] initWithAnnot:[page addAnnot:FSAnnotSquiggly rect:annot_rect]];
+ [squiggly setContent:csContents];
+
+ FSQuadPointsArray* quad_points_array = [FSQuadPointsArray new];
+
+ for (int i=0; i<rectSize; i++)
+ {
+ FSRectF* item = [rects getAt:i];
+ FSQuadPoints* quad_points = [FSQuadPoints new];
+ FSPointF* point = [FSPointF new];
+ [point set:item.left y:item.top];
+ quad_points.first = point;
+ [point set:item.right y:item.top];
+ quad_points.second = point;
+ [point set:item.left y:item.bottom];
+ quad_points.third = point;
+ [point set:item.right y:item.bottom];
+ quad_points.fourth = point;
+ [quad_points_array add:quad_points];
+ }
+ [squiggly setQuadPoints:quad_points_array];
+ [squiggly setBorderColor:color];
+ [squiggly setSubject:csObjType];
+ [squiggly setTitle:csType];
+ FSDateTime* local_time = getLocalDateTime();
+ [squiggly setCreationDateTime:local_time];
+ [squiggly setModifiedDateTime:local_time];
+ [squiggly setUniqueID:randomUID()];
+
+ [squiggly resetAppearanceStream];
+}
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+ @try {
+ FSPDFDoc *base_doc = [[FSPDFDoc alloc] initWithPath:input_base_file];
+ errorCode = [base_doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+ FSPDFDoc *compared_doc = [[FSPDFDoc alloc] initWithPath:input_compared_file];
+ errorCode = [compared_doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ FSComparison* comparison = [[FSComparison alloc] initWithBase_doc:base_doc compared_doc:compared_doc];
+ FSCompareResults* result = [comparison doCompare:0 compared_page_index:0 compare_flags:FSComparisonCompareTypeText];
+ int oldInfoSize = [result.base_doc_results getSize];
+ FSPDFPage* page1 = [base_doc getPage:0];
+ for (int i=0; i<oldInfoSize; i++)
+ {
+ FSCompareResultInfo* item = [result.compared_doc_results getAt:i];
+ FSCompareResultInfoCompareResultType type = item.type;
+ if (type == FSCompareResultInfoCompareResultTypeReplaceText)
+ {
+ NSString* res_string = [NSString stringWithFormat:@"[Old]: \"%@\"\r\n[New]: \"%@\"",[result.base_doc_results getAt:i].diff_contents,item.diff_contents];
+ createSquigglyRect(page1, item.rect_array, 0xe7651a, res_string, @"Compare : Replace", @"Text");
+ }
+ }
+ FSPDFDoc* new_doc = [comparison generateComparedDoc:FSComparisonCompareTypeAll];
+ [new_doc saveAs:@"generate_result.pdf" save_flags:FSPDFDocSaveFlagNormal];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ return 0;
+ }
+}
+
+---
+
+## 如何修改默认文件夹？
+
+截止RDK v8.4，RDK不支持自定义文件夹的选择，即没有提供接口。（v8.4之后的版本情况不详）
+
+但RDK包中有提供UI Extensions Component的源码，可以通过直接调整源码来达到目的。
+
+使用源码的方式，请参看\docs目录下的`developer_guide_ios.pdf`，"5 Customizing User Interface"。
+
+源码位置：`\libs\uiextensions_src`
+
+---
+
+How to get all annotations in all pages?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"Sample"];
+ FSErrorCode error_code = [doc load:@"123"];
+ if (error_code != FSErrSuccess) {
+ NSLog(@"Load document error!");
+ }
+ int page_count = [doc getPageCount];
+ for (int i = 0; i < page_count; i++) {
+ FSPDFPage *page = [doc getPage:i];
+ int annot_count = [page getAnnotCount];
+ for (int j = 0; j < annot_count; j++) {
+ FSAnnot *annot = [page getAnnot:j];
+ }
+ }
+}
+[FSLibrary destroy];
+```
+
+---
+
+How can I set whether to highlight the links in PDF documents? And how to set the highlight color if I want to highlight links?
+
+By default, highlighting links in PDF documents is enabled. If you want to disable it or to set the highlight color, you can do it in the configuration JSON file (only support for version 6.3 or higher) or by calling the APIs.
+Note: If you want to set the highlight color, please make sure the highlighting links feature is enabled.
+
+1.Through JSON file
+Set ""highlightLink": false," to disable highlighting the links in PDF document.
+Set ""highlightLinkColor": "#16007000"," to set the highlight color (input the color value as you wish).
+
+2.Through calling API
+UIExtensionsManager.enableHighlightLinks property is provided to set whether to enable highlighting the links in PDF documents. If you do not want to highlight links, please set the parameter to "false" as follows:
+
+```objc
+// Assume you have already Initialized a UIExtensionsManager object
+extensionsManager.enableHighlightLinks = false;
+```
+UIExtensionsManager.linksHighlightColor property is used to set the highlight color. Following is a sample for setting this property:
+
+```objc
+// Assume you have already Initialized a UIExtensionsManager object
+extensionsManager.linksHighlightColor = [UIColor colorWithRed:0 green:0 blue:1 alpha:0.3];
+```
+
+---
+
+How can I automatically update page binding to support Right-to-Left?
+
+For most languages, the reading habits we use are left-to-right, which calls for a page binding on the left edge. However, there are also some languages that read from right to left, such as Arabic and Hebrew and several East Asian scripts. In this case, binding on the right edge is preferable for users, which the pages will be arranged from right to left (the first page is on the top right). To do this, we made the adaptation of the right-to-left page layout.
+The page binding is used with horizontal scrolling. For vertical scrolling, it has effect only when double-page mode is enabled.
+Updating the Page Binding Programmatically
+Foxit PDF SDK for iOS defines an enumeration in the FSPDFViewCtrl class to infer how a document should be presented to the user. The possible values are:
+> * PDF_PAGE_BINDING_LEFT_EDGE: the document flows from left to right
+> * PDF_PAGE_BINDING_RIGHT_EDGE: the document flows from right to left
+> * PDF_PAGE_BINDING_UNKNOWN: the document doesn’t explicitly define a page binding, so the behavior may be the same as it is with
+```objc
+PDF_PAGE_BINDING_LEFT_EDGE
+ /**
+ * @brief Enumeration for page binding edge.
+ *
+ * @details Values of this enumeration should be used alone.
+ */
+typedef enum {
+ /** The document doesn’t explicitly define a page binding, so the behavior is the same as it is with LEFT_EDGE or RIGHT_EDGE.*/
+ PDF_PAGE_BINDING_UNKNOWN = 0,
+ /** The document flows from left to right.*/
+ PDF_PAGE_BINDING_LEFT_EDGE = 1,
+ /** The document flows from right to left.*/
+ PDF_PAGE_BINDING_RIGHT_EDGE = 2,
+} PDF_PAGE_BINDING_EDGE;
+```
+Then, call the following function to update the page binding to swith the page layout:
+```objc
+[pdfViewerCtrl setPageBindingEdge:PDF_PAGE_BINDING_RIGHT_EDGE];
+```
+
+Updating the Page Binding via the UI
+You can create a demo using uiextensionsDynamic.framework or use complete_pdf_viewer demo directly to update the page binding. After running the demo, find the View settings bar, you can enable or disable the Right to Letf.
+
+---
+
+How to add a freetext annotation as typewriter
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add freetext annotation, as type writer.
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:10 bottom1:550 right1:200 top1:600];
+ FSAnnot *annot = [page addAnnot:FSAnnotFreeText rect:rectF];
+ FSFreeText *freetext = [[FSFreeText alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ freetext.flags = FSAnnotFlagPrint;
+ // Set default appearance
+ FSDefaultAppearance *default_ap = [FSDefaultAppearance new];
+ default_ap.flags = FSDefaultAppearanceFlagFont | FSDefaultAppearanceFlagFontSize | FSDefaultAppearanceFlagTextColor;
+ default_ap.font = [[FSFont alloc] initWithFont_id:FSFontStdIDHelvetica];
+ default_ap.text_size = 12.0f;
+ default_ap.text_color = 0x000000;
+ freetext.defaultAppearance = default_ap;
+ freetext.intent = @"FreeTextTypewriter";
+ freetext.content = @"A typewriter annotation";
+ freetext.subject = @"FreeTextTypewriter";
+ freetext.title = @"Foxit SDK";
+ freetext.creationDateTime = [FSDateTime getLocalTime];
+ freetext.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance must be reset.
+ [freetext resetAppearanceStream];
+ NSLog(@"Add a typewriter freetext annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to get associate files in catalog dictionary ?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ FSPDFDictionary* doc_catalog_dict = [doc getCatalog];
+ int count = [associated_files getAssociatedFilesCount:doc_catalog_dict];
+ FSFileSpec *filespec = [associated_files getAssociatedFile:doc_catalog_dict index:0];
+ [filespec exportToFile:@"af_1.txt"];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to add a "file attachment" annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add file attachment annotation
+ NSString *pdf_file = @"AboutFoxit.pdf";
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:280 bottom1:350 right1:300 top1:380];
+ FSAnnot *annot = [page addAnnot:FSAnnotFileAttachment rect:rectF];
+ FSFileAttachment *file_attachment = [[FSFileAttachment alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ file_attachment.flags = FSAnnotFlagPrint;
+ file_attachment.iconName = @"Graph";
+
+ FSFileSpec *file_spec = [[FSFileSpec alloc] initWithDocument:[page getDocument]];
+ file_spec.fileName = @"attachment.pdf";
+ file_spec.description = @"The original file";
+ [file_spec embed:pdf_file];
+ file_attachment.fileSpec = file_spec;
+ file_attachment.subject = @"File Attachment";
+ file_attachment.title = @"Foxit SDK";
+ file_attachment.creationDateTime = [FSDateTime getLocalTime];
+ file_attachment.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance must be reset.
+ [file_attachment resetAppearanceStream];
+ NSLog(@"Add a attachment annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to transform bitmap?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+void saveBitmap(FSBitmap * bitmap, NSString *bmp_name)
+{
+ // Add the bitmap to image and save the image.
+ FSImage *image = [FSImage new];
+ [image addFrame:bitmap];
+
+ [image saveAs:bmp_name];;
+}
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ FSImage *image = [[FSImage alloc] initWithPath:@"Sample.png"];
+ FSBitmap *bitmap = [image getFrameBitmap:0];
+
+ int width = [bitmap getWidth];
+ int height = [bitmap getHeight];
+
+ // Transform bitmap.
+ int left, top;
+ FSMatrix2D *matrix2D = [[FSMatrix2D alloc] initWithA1:width * 2.0f b1:0.f c1:0.f d1:height / 2.0f e1:0.f f1:0.f];
+ FSBitmap *transform_bitmap = [bitmap transformTo:matrix2D flag:FSBitmapDownsample out_left:&left out_top:&top];
+ saveBitmap(transform_bitmap, @"transform_bitmap_Foxit.bmp");
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+Hide the "View" item in the bottom toolbar for iPhone, or hide the "View" tab from the list in the center of the top toolbar for iPad. (For iPhone and iPad)
+
+Objective-C:
+```objc
+[self.extensionsMgr setToolbarItemHiddenWithTag:FS_TOOLBAR_ITEM_TAG_VIEW hidden:YES];
+//or
+//[self.extensionsMgr setToolbarItemHiddenWithTag:FS_TOOLBAR_ITEM_TAG_VIEW_SETTINGS hidden:YES];
+```
+Swift:
+```swift
+extensionsManager.setToolbarItemHiddenWithTag(FS_TOOLBAR_ITEM_TAG_VIEW, hidden: true)
+//or
+//extensionsManager.setToolbarItemHiddenWithTag(FS_TOOLBAR_ITEM_TAG_VIEW_SETTINGS, hidden: true)
+```
+
+---
+
+The package without Mac Catalyst
+
+In the "libs" folder, there are items that make up the core components of Foxit PDF SDK for iOS, and a configuration file for cocoaPods tool and a script file for stripping the arm architectures.
+
+> * FoxitRDK.framework – The framework that includes the Foxit PDF SDK dynamic library and associated header files.
+> * uiextensionsDynamic.framework – The framework that includes UIExtensions dynamic library, associated header files, and the resource files that are needed for the default built-in UI implementations.
+> * FoxitPDFScanUI.framework – The framework that includes Foxit PDF SDK for scanning dynamic library, associated header files, and the resource files that are needed for the default built-in UI implementations of scanning feature.
+> * FoxitPDF.podspec – A configuration file for cocoaPods tool which is used to manage the third-party libraries. It has been used in section "Implement Foxit PDF SDK for iOS using React Native".
+> * prepare-framework-to-publish-to-appstore.sh – A script file used to strip the arm architectures from Foxit SDK Framwork. This is because Foxit SDK Framwork includes arm64, armv7, i386, and x86_64 architectures, but the i386, and x86_64 architectures are not allowed to be uploaded to Apple App Store.
+> * pdfscan project – It is an open source library that contains the UI implementations for scanning feature, which can help developers rapidly integrate scanning feature into their iOS app, or customize the UI for scanning as desired.
+> * uiextensions project – found in the "libs/uiextensions_src" folder. It is an open source library that contains some ready-to-use UI module implementations and the basic UI design for app, which can help developers rapidly embed a fully functional PDF reader into their iOS app. Of course, developers are not forced to use the default UI, they can freely customize and design the UI for their specific apps through the "uiextensions" project.
+Note: For iOS 13 or higher, you should use Xcode 11 or higher to build the "uiextensions" project.
+
+---
+
+Customize UI implementation through source code
+
+If you do not want to use the ready-made UI framework, you can redesign it through modifying the source code of the UI Extensions Component.
+There is one thing to take note of. The source code of the UI Extensions Component is written in Objective-C, so you need to use Objective-C to modify the UI layout. If you are a Swift developer and not already familiar with Objective-C, you might only be able to customize the UI appearance that does not need writing code, such as icons and other UI resources.
+To customize the UI implementation, you need to follow these steps:
+First, add the following required files into your app.
+> * FoxitRDK.framework – The framework that includes the Foxit PDF SDK for iOS dynamic library and associated header files. It can be found in the "libs" folder.
+> * uiextensions project – It is an open source library that contains some ready-to-use UI module implementations, which can help developers rapidly embed a fully functional PDF reader into their iOS app. Of course, developers are not forced to use the default UI, they can freely customize and design the UI for their specific apps through the "uiextensions" project. It can be found in the "libs/uiextensions_src" folder.
+Tip: The built-in UI customization can be done in the uiextensions project, and then you can add the new uiextensionsDynamic.framework generated by the modified uiextensions project to your app instead of the whole uiextensions project.
+Second, find the specific code or images related to the UI that you want to customize in the uiextensions project, then modify them based on your requirements.
+
+---
+
+How to add a squiggly annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add squiggly annotation.
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:200 bottom1:450 right1:300 top1:550];
+ FSAnnot *annot = [page addAnnot:FSAnnotSquiggly rect:rectF];
+ FSSquiggly *squiggly = [[FSSquiggly alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ squiggly.flags = FSAnnotFlagPrint;
+ squiggly.intent = @"Squiggly";
+
+ FSQuadPoints *quad_points = [FSQuadPoints new];
+ quad_points.first = [[FSPointF alloc] initWithX:210 Y:500];
+ quad_points.second = [[FSPointF alloc] initWithX:290 Y:500];
+ quad_points.third = [[FSPointF alloc] initWithX:210 Y:480];
+ quad_points.fourth = [[FSPointF alloc] initWithX:290 Y:480];
+ FSQuadPointsArray *quad_points_array = [FSQuadPointsArray new];
+ [quad_points_array add:quad_points];
+ squiggly.quadPoints = quad_points_array;
+ squiggly.subject = @"Squiggly";
+ squiggly.title = @"Foxit SDK";
+ squiggly.creationDateTime = [FSDateTime getLocalTime];
+ squiggly.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance must be reset.
+ [underline resetAppearanceStream];
+ NSLog(@"Add a squiggly annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to adds a new PDF page to document, from a named template.
+
+#include "FSPDFObjC.h"
+
+NSString* sn = @"";
+NSString* key = @"";
+
+int main(int argc, const char * argv[]) {
+
+ @autoreleasepool {
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"Library Initialize Error: %ld", errorCode);
+ return -1;
+ }
+
+ @try {
+ NSString* input_pdf_path = @"/Users/xxx/Desktop/test.pdf";
+ // Load a document
+ FSPDFDoc* doc = [[FSPDFDoc alloc] initWithPath:input_pdf_path];
+ FSErrorCode errorCode = [doc load:nil];
+ if (errorCode != FSErrSuccess) {
+ NSLog(@"The Doc [%@] Error: %ld", input_pdf_path, errorCode);
+ return -1;
+ }
+ FSPDFNameTree* templates_name_tree = [[FSPDFNameTree alloc] initWithDocument:doc type:FSPDFNameTreeTemplates];
+ if ([templates_name_tree hasName:@"Page3"]) {
+ [doc addPageFromTemplate: @"Page3"];
+ }
+ // Save PDF file
+ NSString* save_pdf_path = @"/Users/xxx/Desktop/add_test_template.pdf";
+ [doc saveAs:save_pdf_path save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ }
+}
+
+---
+
+How to get associate files in page dictionary ?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ FSPDFPage *page = [doc getPage:0];
+ FSPDFDictionary *page_dict = [page getDict];
+ [associated_files getAssociatedFilesCount:page_dict];
+ FSFileSpec *filespec = [associated_files getAssociatedFile:page_dict index:0];
+ [filespec exportToFile:@"af_2.txt"];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to swap bitmap?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+void saveBitmap(FSBitmap * bitmap, NSString *bmp_name)
+{
+ // Add the bitmap to image and save the image.
+ FSImage *image = [FSImage new];
+ [image addFrame:bitmap];
+
+ [image saveAs:bmp_name];;
+}
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ FSImage *image = [[FSImage alloc] initWithPath:@"Sample.png"];
+ FSBitmap *bitmap = [image getFrameBitmap:0];
+
+ // Swap the X and Y axis, and then vertical and horizontal flip bitmap.
+ FSBitmap *swap_xy_bitmap = [bitmap swapXY:true is_flip_vert:true];
+ saveBitmap(swap_xy_bitmap, @"swap_xy_flip_horz_vert_Foxit.bmp");
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+Customize to hide the UI elements in the More Menu view
+
+You only need to use the following API:
+
+```objc
+//Set the enabled state of group according to "groupTag".
+- [MoreMenuView setMoreViewItemHiddenWithGroup:(NSUInteger)groupTag hidden:(BOOL)isHidden];
+
+//Set the enabled state of item according to "groupTag" and "itemTag".
+- [MoreMenuView setMoreViewItemHiddenWithGroup:(NSUInteger)groupTag andItemTag:(NSUInteger)itemTag hidden:(BOOL)isHidden];
+
+//Set visible or invisible state for the individual group.
+- [MoreMenuView setIndividualMenuItemHiddenWithItemTag:(NSUInteger)itemTag hidden:	(BOOL)isHidden
+```
+
+The values of the parameters "groupTag" and "itemTag" in the setMoreViewItemHiddenWithGroup interface can be set as follows:
+
+1.groupTag NSUInteger
+TAG_GROUP_PROTECT	10
+TAG_GROUP_COMMENT_FIELD	20
+TAG_GROUP_PROTECT	TAG_ITEM_REDACTION	10
+TAG_ITEM_PASSWORD	20
+TAG_ITEM_CERTIFICATE	30
+TAG_GROUP_COMMENT_FIELD	TAG_ITEM_IMPORTCOMMENT	40
+TAG_ITEM_EXPORTCOMMENT	50
+TAG_ITEM_SUMARIZECOMMENT	60
+TAG_ITEM_RESETFORM	70
+TAG_ITEM_IMPORTFORM	80
+TAG_ITEM_EXPORTFORM	90
+
+2.The value of the parameter "itemTag" in the setIndividualMenuItemHiddenWithItemTag interface can be set as follows:
+itemTag	NSUInteger
+TAG_ITEM_SAVE_AS	110
+TAG_ITEM_REDUCEFILESIZE	120
+TAG_ITEM_WIRELESSPRINT	130
+TAG_ITEM_FLATTEN	140
+TAG_ITEM_SCREENCAPTURE	150
+
+---
+
+How to create a new pdf document.
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [FSPDFDoc new];
+ [doc insertPage:0];
+
+ //Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to get associate files in Marked Content
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+ NSString *input_file = @"AF_Catalog_Page_Annot.pdf"
+
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ input_file = @"AF_MarkedContent.pdf";
+ @try {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ errorCode = [doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ FSPDFPage *page = [doc getPage:0];
+ [page startParse:FSPDFPageParsePageNormal pause:nil is_reparse:NO];
+
+ long pos = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeText];
+ FSGraphicsObject *text_object = [page getGraphicsObject:pos];
+ int count = [associated_files getAssociatedFilesCountWithGraphicsObject:text_object];
+ FSFileSpec *filespec = [associated_files getAssociatedFileWithGraphicsObject:text_object index:0];
+ [filespec exportToFile:@"bitmap.bmp"];
+
+ filespec = [associated_files getAssociatedFileWithGraphicsObject:text_object index:1];
+ [filespec exportToFile:@"text.txt"];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ return 0;
+ }
+}
+
+---
+
+如何修改主题色
+
+使用`-[UIExtensionsManager primaryColor]`接口来设置你的主题色，
+
+示例代码：
+```objc
+// 导入
+#import <FoxitRDK/FSPDFViewControl.h>
+#import <uiextensionsDynamic/UIExtensionsManager.h>
+
+- (void)viewDidLoad {
+ [super viewDidLoad];
+ FSPDFViewCtrl *pdfViewControl = [[FSPDFViewCtrl alloc] initWithFrame:[UIScreen mainScreen].bounds];
+ UIExtensionsManager *extensionsMgr = [[UIExtensionsManager alloc] initWithPDFViewControl:pdfViewControl];
+ extensionsMgr.primaryColor = [UIColor yellowColor];
+}
+```
+
+另外可以在`FSFoundation/FSPreferences.h`配置一些其它的颜色(源码位置`uiextensions_src/FSFoundation/Utilities/FSPreferences.h`)
+
+注意：
+
+ FSPreferences并未导出到API reference，也就是没有注释说明
+
+ 该方法执行后，主题色才会发生变化。建议在app初始化或初始创建时就调用。
+
+---
+
+Add an item in the right top toolbar at the first position. (For Phone and Tablet)
+
+```objc
+FSMainTopbar *topbar = self.extensionsMgr.topToolbar;
+NSMutableArray *items = topbar.itemsForPositionRight.mutableCopy;
+UIButton *btn = [UIButton new];
+[btn setImage:[UIImage imageNamed:@"your image"] forState:UIControlStateNormal];
+FSMainToolbarItem *item = [[FSMainToolbarItem alloc] initWithCustomView:btn];
+[items insertObject:item atIndex:0];
+topbar.itemsForPositionRight = items;
+```
+
+---
+
+How to use Foxit PDF SDK to add associate files into image form xObject.
+
+#include "FSPDFObjC.h"
+
+NSString *sn = @"";
+NSString *key = @"";
+
+int main(int argc, const char *argv[]) {
+ @autoreleasepool {
+ NSString *input_file = @"AF_Catalog_Page_Annot.pdf"
+
+ // Initialize library
+ FSErrorCode errorCode = [FSLibrary initialize:sn key:key];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ // Associate files with objects in PDF documents.
+ input_file = @"AssociateTestFile.pdf";
+ @try {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:input_file];
+ errorCode = [doc load:@""];
+ if (errorCode != FSErrSuccess) {
+ return -1;
+ }
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ // Create filespec with 2.jpg image.
+ FSFileSpec *filespec_jpg = [[FSFileSpec alloc] initWithDocument:doc];
+ filespec_jpg.associteFileRelationship = FSAssociatedFilesRelationshipSource;
+ filespec_jpg.fileName = @"2.jpg";
+ filespec_jpg.description = @"jpeg";
+ [filespec_jpg embed:@"2.jpg"];
+ filespec_jpg.creationDateTime = dateTime;
+ filespec_jpg.modifiedDateTime = dateTime;
+
+ // Associate 2.jpg with form XObject.
+ {
+ long position = [page getFirstGraphicsObjectPosition:FSGraphicsObjectTypeFormXObject];
+ FSFormXObject *form_x_object = [[page getGraphicsObject:position] getFormXObject];
+ if (form_x_object != nil) {
+ [associated_files associateFileWithFormXObject:form_x_object file_spec:filespec_jpg];
+
+ FSPDFStream *stream = [form_x_object getStream];
+ FSPDFDictionary *dictionary = [stream getDictionary];
+ FSFileSpec *filespec_form_x_object = [associated_files getAssociatedFile:dictionary index:0];
+ [filespec_form_x_object exportToFile:"form_x_object.jpg"];
+ }
+ }
+
+ // Save PDF file
+ [doc saveAs:@"associated_files.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+ @catch (NSException *e) {
+ NSLog(@"Unknown Exception, %@", e);
+ }
+ return 0;
+ }
+}
+
+---
+
+How to add a square annotation
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSPDFPage *page = [doc getPage:0];
+
+ // Add square annotation
+ FSRectF *rectF = [[FSRectF alloc] initWithLeft1:200 bottom1:650 right1:300 top1:750];
+ FSAnnot *annot = [page addAnnot:FSAnnotSquare rect:rectF];
+ FSSquare *square = [[FSSquare alloc] initWithAnnot:annot];
+ //This flag is used for printing annotations.
+ square.flags = FSAnnotFlagPrint;
+ square.fillColor = 0x00FF00;
+ square.innerRect = [[FSRectF alloc] initWithLeft1:220 bottom1:660 right1:260 top1:740];
+ square.subject = @"Square";
+ square.title = @"Foxit SDK";
+ square.creationDateTime = [FSDateTime getLocalTime];
+ square.modifiedDateTime = [FSDateTime getLocalTime];
+
+ // Appearance must be reset.
+ [square resetAppearanceStream];
+ NSLog(@"Add a square annotation.");
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```
+
+---
+
+Add an item to the bottom toolbar at the first position. (Only for Phone)
+
+```objc
+FSMainBottombar *bottomBar = self.extensionsMgr.bottomToolbar;
+NSMutableArray *items = bottomBar.itemsForPositionCenter.mutableCopy;
+UIButton *btn = [UIButton new];
+[btn setImage:[UIImage imageNamed:@"your image"] forState:UIControlStateNormal];
+FSMainToolbarItem *item = [[FSMainToolbarItem alloc] initWithCustomView:btn];
+[items insertObject:item atIndex:0];
+bottomBar.itemsForPositionCenter = items;
+```
+
+---
+
+How to create a root node for bookmark?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+int main(int argc, char *argv[])
+{
+ int err_ret = 0;
+ FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+ {
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"AboutFoxit.pdf"];
+ [doc load];
+
+ //Get bookmark root node or Create new bookmark root node.
+ FSBookmark *root = [doc getRootBookmark];
+ if ([root isEmpty])
+ root = [doc createRootBookmark];
+ for (int i = 0; i < [doc getPageCount]; i += 2) {
+ FSDestination *dest = [FSDestination createFitPage:doc page_index:i];
+ FSBookmark *child = [root insert:[NSString stringWithFormat:@"A bookmark to a page (index: %d)", i] position:FSBookmarkPosLastChild];
+ child.destination = dest;
+ child.color = i * 0xF68C21;
+ }
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+ }
+
+ [FSLibrary destroy];
+ return err_ret;
+}
+```
+
+---
+
+SDK 8.4版本 uiextensionsDynamic.framework 公开的头文件如下：
+<uiextensionsDynamic/UIExtensionsManager.h>
+<uiextensionsDynamic/SpeechModule.h>
+<uiextensionsDynamic/ThumbnailModule.h>
+<uiextensionsDynamic/UIExtensionsConfig.h>
+<uiextensionsDynamic/uiextensionsDynamic.h>
+<uiextensionsDynamic/PanelController.h>
+<uiextensionsDynamic/PanelHost.h>
+<uiextensionsDynamic/SignatureModule.h>
+<uiextensionsDynamic/FSUtilities.h>
+<uiextensionsDynamic/MoreView.h>
+<uiextensionsDynamic/FSPermissionProvider.h>
+<uiextensionsDynamic/FSReadToolbarItem.h>
+<uiextensionsDynamic/FSSettingBar.h>
+<uiextensionsDynamic/FSMenuControl.h>
+<uiextensionsDynamic/FSMenuViewManager.h>
+<uiextensionsDynamic/FSHistoryDataModule.h>
+<uiextensionsDynamic/FSMainToolbar.h>
+<uiextensionsDynamic/FileListViewController.h>
+
+---
+
+Hide the item "TAG_ITEM_REDACTION" in the More Menu view. (For Phone and Tablet)
+
+Objective-C:
+```objc
+[self.extensionsMgr.more setMoreViewItemHiddenWithGroup:TAG_GROUP_PROTECT andItemTag:TAG_ITEM_REDACTION hidden:YES];
+```
+Swift:
+```swift
+extensionsManager.more.setMoreViewItemHiddenWithGroup(UInt(TAG_GROUP_PROTECT), andItemTag:UInt(TAG_ITEM_REDACTION), hidden: true);
+```
+
+---
+
+Customize to hide the UI elements in the View setting bar
+
+You only need to use the following API:
+
+// SettingItemType enum
+```objc
+/**
+ * @brief	Enumeration for item types in setting bar.
+ *
+ * @details	Values of this enumeration should be used alone.
+ */
+typedef NS_ENUM(NSUInteger, SettingItemType) {
+ /** @brief Single page layout button. */
+ SINGLE,
+ /** @brief Double page layout button. */
+ DOUBLEPAGE,
+ /** @brief Cover page layout button. */
+ COVERPAGE,
+ /** @brief Day mode button. */
+ DAYMODE,
+ /** @brief Page color mode button. */
+ PAGECOLOR,
+ /** @brief Night mode button. */
+ NIGHTMODE,
+ /** @brief Continuous page layout button. */
+ CONTINUOUS,
+ /** @brief Page from right to left button. */
+ PAGERTL,
+ /** @brief Fitpage button. */
+ FITPAGE,
+ /** @brief Fitwidth button. */
+ FITWIDTH,
+ /** @brief Reflow button. */
+ REFLOW,
+ /** @brief Crop page button. */
+ CROPPAGE,
+ /** @brief Speak button. */
+ SPEECH,
+ /** @brief Auto flip button. */
+ AUTOFLIP,
+ /** @brief rotate button. */
+ ROTATE,
+ /** @brief Pan&zoom button. */
+ PANZOOM,
+};
+```
+
+```objc
+- [FSSettingBar setItem:(SettingItemType)itemType hidden:(BOOL)hidden]
+```
+
+1.Hide the "Reflow" item in the View setting bar. (For Phone and Tablet)
+
+Objective-C:
+```objc
+[self.extensionsMgr.settingBar setItem:REFLOW hidden:YES];
+```
+Swift:
+```swift
+extensionsManager.settingBar.setItem(.REFLOW, hidden: true)
+```
+
+---
+
+Customize to hide a specific Panel
+
+You only need to use the following API:
+
+//FSPanelType enum
+```objc
+/** @brief Panel types. */
+typedef NS_ENUM(NSUInteger, FSPanelType) {
+ /** @brief Annotation panel type. */
+ FSPanelTypeAnnotation = 1,
+ /** @brief Attachment panel type. */
+ FSPanelTypeAttachment,
+ /** @brief Outline panel type. */
+ FSPanelTypeOutline,
+ /** @brief Reading bookmark panel type. */
+ FSPanelTypeReadingBookmark,
+ /** @brief Reading digital signature panel type. */
+ FSPanelTypeDigitalSignature,
+ /** @brief Custom panel type. */
+ FSPanelTypeCustom,
+};
+```
+```objc
+- [FSPanelController setPanelHidden:(BOOL)isHidden type:(FSPanelType)type];
+```
+
+1.Hide the "Outline" panel. (For iPhone and iPad)
+
+Objective-C:
+```objc
+[self.extensionsMgr.panelController setPanelHidden:true type:FSPanelTypeOutline];
+```
+Swift:
+```objc
+extensionsManager.panelController.setPanelHidden(true, type: .outline);
+```
+
+---
+
+How to render pages or convert pdf to image.
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"Sample"];
+ [doc load];
+ NSArray *support_image_extends = [NSArray arrayWithObjects:@".bmp", @".jpg", @".jpeg", @".png", @".jpx", @".jp2", nil];
+
+ //Get page count
+ int page_count = [doc getPageCount];
+ for (int i = 0; i < page_count; i++) {
+ FSPDFPage *page = [doc getPage:i];
+ // Parse page.
+ [page startParse:FSPDFPageParsePageNormal pause:nil is_reparse:NO];
+
+ int width = [page getWidth];
+ int height = [page getHeight];
+ FSMatrix2D *matrix = [page getDisplayMatrix:0 top:0 width:width height:height rotate:[page getRotation]];
+
+ // Prepare a bitmap for rendering.
+ FSBitmap *bitmap = [[FSBitmap alloc] initWithWidth:width height:height format:FSBitmapDIBArgb];
+ [bitmap fillRect:0xFFFFFFFF];
+
+ // Render page
+ FSRenderer *render = [[FSRenderer alloc] initWithBitmap:bitmap is_rgb_order:NO];
+ [render startRender:page matrix:matrix];
+ }
+}
+[FSLibrary destroy];
+```
+
+---
+
+How to associate file to annotation dictionary?
+
+```objc
+// Include Foxit SDK header files.
+#import <FoxitRDK/FSPDFObjC.h>
+```
+
+```objc
+//The correct sn and key must be filled in here
+static NSString *const sn = @"";
+static NSString *const key = @"";
+
+FSErrorCode error_code = [FSLibrary initialize:sn key:key];
+{
+ // Load a document
+ FSPDFDoc *doc = [[FSPDFDoc alloc] initWithPath:@"sample.pdf"];
+ [doc load];
+
+ FSAssociatedFiles *associated_files = [[FSAssociatedFiles alloc] initWithPdf_doc:doc];
+
+ // Create filespec with 1.txt
+ FSFileSpec *filespec_txt = [[FSFileSpec alloc] initWithDocument:doc];
+ [filespec_txt setAssociteFileRelationship:FSAssociatedFilesRelationshipSource];
+ [filespec_txt setFileName:@"1.txt"];
+ FSDateTime *dateTime = [[FSDateTime alloc] initWithYear:2017 month:9 day:15 hour:17 minute:20 second:20 milliseconds:0 utc_hour_offset:8 utc_minute_offset:0];
+ filespec_txt.description = @"text";
+ [filespec_txt embed:@"1.txt"];
+ filespec_txt.creationDateTime = dateTime;
+ filespec_txt.modifiedDateTime = dateTime;
+ filespec_txt.subtype = @"application/octet-stream";
+
+ FSPDFPage *page = [doc getPage:0];
+ FSRectF *rect = [[FSRectF alloc] initWithLeft1:100 bottom1:50 right1:220 top1:100];
+ FSAnnot *annot = [page addAnnot:FSAnnotNote rect:rect];
+ [annot resetAppearanceStream];
+ [associated_files associateFileWithAnnot:annot file_spec:filespec_txt];
+
+ // Save PDF file
+ [doc saveAs:@"newpdf.pdf" save_flags:FSPDFDocSaveFlagNoOriginal];
+}
+[FSLibrary destroy];
+```

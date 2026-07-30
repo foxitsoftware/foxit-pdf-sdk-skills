@@ -1,0 +1,251 @@
+如何用 Foxit PDF SDK 将注释移动到 PDF 坐标系中的新位置
+```javascript
+const FSDK = require("@foxitsoftware/foxit-pdf-sdk-node");
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+var sn = "";
+var key = "";
+
+let error_code = FSDK.Library.Initialize(sn, key);
+if (FSDK.e_ErrSuccess != error_code) {
+ if (FSDK.e_ErrInvalidLicense == error_code)
+ console.log("[Failed] Current used Foxit PDF SDK key information is invalid.");
+ else
+ console.log("Library Initialize Error: %d", FSDK.e_ErrSuccess);
+ return;
+}
+
+// 加载PDF文档.
+let doc = new FSDK.PDFDoc("input_file.pdf");
+error_code = doc.Load("");
+if (error_code != FSDK.e_ErrSuccess) {
+ return 1;
+}
+let page = doc.GetPage(0);
+let iAnnotCount = page.getAnnotCount();
+for (let j = 0; j < iAnnotCount; j++) {
+ let pAnnot = page.GetAnnot(j);
+ let annotType = pAnnot.GetType();
+ let orgRect = pAnnot.GetRect();
+ let newRect = new RectF();
+ newRect.left = orgRect.left;
+ newRect.bottom = orgRect.bottom;
+ if (FSDK.Annot.e_Popup != annotType) {
+ newRect.left += fDelta;
+ newRect.bottom += fDelta;
+ }
+ newRect.right = orgRect.right + fDelta;
+ newRect.top = orgRect.top + fDelta;
+ pAnnot.Move(newRect);
+}
+doc.SaveAs("output_file.pdf", FSDK.PDFDoc.e_SaveFlagNoOriginal);
+FSDK.Library.Release();
+```
+
+---
+
+如何用 Foxit PDF SDK 实现多个签名共享签名数据
+
+```javascript
+const FSDK = require("@foxitsoftware/foxit-pdf-sdk-node");
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+var sn = "";
+var key = "";
+
+let error_code = FSDK.Library.Initialize(sn, key);
+if (FSDK.e_ErrSuccess != error_code) {
+ if (FSDK.e_ErrInvalidLicense == error_code)
+ console.log("[Failed] Current used Foxit PDF SDK key information is invalid.");
+ else
+ console.log("Library Initialize Error: %d", FSDK.e_ErrSuccess);
+ return;
+}
+
+// 加载PDF文档.
+let doc = new FSDK.PDFDoc("blank.pdf");
+error_code = doc.Load("");
+if (error_code != FSDK.e_ErrSuccess) {
+ return 1;
+}
+ let page = doc.GetPage(0);
+ let sigRect = new FSDK.RectF(0, 400, 200, 475);
+ let pNewSig = page.AddSignature(sigRect);
+ pNewSig.SetKeyValue(FSDK.Signature.e_KeyNameSigner, "Neko");
+ pNewSig.SetKeyValue(FSDK.Signature.e_KeyNameReason, "For test");
+ pNewSig.GenerateAppearance();
+ let sigRect1 = new FSDK.RectF(200, 200, 400, 275);
+ let sign1 = page.AddSignatureWithExistedVDict(sigRect1, "test1", FSDK.Signature.e_SignatureTypeOrdinary, false, pNewSig);
+ sign1.SetKeyValue(FSDK.Signature.e_KeyNameSigner, "Jack");
+ sign1.SetKeyValue(FSDK.Signature.e_KeyNameReason, "For test GSDK");
+ sign1.GenerateAppearance();
+ pNewSig.StartSign("foxit_all.pfx", "123456", FSDK.Signature.e_DigestSHA1, "Signed.pdf", null, null);
+ FSDK.Library.Release();
+
+```
+
+---
+
+如何用 Foxit PDF SDK 获取设备坐标系中的注释矩形
+
+```javascript
+const FSDK = require("@foxitsoftware/foxit-pdf-sdk-node");
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+var sn = "";
+var key = "";
+
+let error_code = FSDK.Library.Initialize(sn, key);
+if (FSDK.e_ErrSuccess != error_code) {
+ if (FSDK.e_ErrInvalidLicense == error_code)
+ console.log("[Failed] Current used Foxit PDF SDK key information is invalid.");
+ else
+ console.log("Library Initialize Error: %d", FSDK.e_ErrSuccess);
+ return;
+}
+
+// 加载PDF文档.
+let doc = new FSDK.PDFDoc("input_file.pdf");
+error_code = doc.Load("");
+if (error_code != FSDK.e_ErrSuccess) {
+ return 1;
+}
+let page = doc.GetPage(0);
+let width = page.GetPageWidth();
+let height = page.GetPageHeight();
+const bmpWidth = [width, 2 * width];
+const bmpHeight = [height, 2 * height];
+for (let i = 0; i < 2; i++) {
+ let setMatrix = page.GetDisplayMatrix(0, 0, bmpWidth[i], bmpHeight[i], FSDK.e_Rotation0);
+ let iAnnotCount = page.GetAnnotCount();
+ for (let j = 0; j < iAnnotCount; j++) {
+ let pAnnot = page.GetAnnot(j);
+ let deviceRect = pAnnot.GetDeviceRect(setMatrix);
+ }
+}
+
+FSDK.Library.Release();
+
+```
+
+---
+
+如何用 Foxit PDF SDK 在 PDF 坐标系中获取指定位置上的注释
+```javascript
+const FSDK = require("@foxitsoftware/foxit-pdf-sdk-node");
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+var sn = "";
+var key = "";
+
+let error_code = FSDK.Library.Initialize(sn, key);
+if (FSDK.e_ErrSuccess != error_code) {
+ if (FSDK.e_ErrInvalidLicense == error_code)
+ console.log("[Failed] Current used Foxit PDF SDK key information is invalid.");
+ else
+ console.log("Library Initialize Error: %d", FSDK.e_ErrSuccess);
+ return;
+}
+
+// 加载PDF文档.
+let doc = new FSDK.PDFDoc("input_file.pdf");
+error_code = doc.Load("");
+if (error_code != FSDK.e_ErrSuccess) {
+ return 1;
+}
+let page = doc.GetPage(0);
+let point = new FSDK.PointF(350.94733, 450.00256);
+let annot = page.GetAnnotAtPoint(point, 0);
+FSDK.Library.Release();
+```
+
+---
+
+如何用 Foxit PDF SDK 将 PDF 转换为 RTF 文件？
+
+不，该 SDK 不提供将 PDF 文件转换为 RTF 文件的功能。
+
+---
+
+How to use Foxit PDF SDK to Get the annotation at a specified position in device coordinate system.
+```javascript
+const FSDK = require("@foxitsoftware/foxit-pdf-sdk-node");
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+var sn = "";
+var key = "";
+
+let error_code = FSDK.Library.Initialize(sn, key);
+if (FSDK.e_ErrSuccess != error_code) {
+ if (FSDK.e_ErrInvalidLicense == error_code)
+ console.log("[Failed] Current used Foxit PDF SDK key information is invalid.");
+ else
+ console.log("Library Initialize Error: %d", FSDK.e_ErrSuccess);
+ return;
+}
+
+// 加载PDF文档.
+let doc = new FSDK.PDFDoc("input_file.pdf");
+error_code = doc.Load("");
+if (error_code != FSDK.e_ErrSuccess) {
+ return 1;
+}
+let page = doc.GetPage(0);
+let point = new FSDK.PointF(5.0, 5.0);
+let matrix = page.GetDisplayMatrix(0, 0, page.GetWidth(), page.GetHeight(), FSDK.e_Rotation0);
+let annot = page.GetAnnotAtDevicePoint(point, 0, matrix);
+FSDK.Library.Release();
+```
+
+---
+
+如何用 Foxit PDF SDK 向 PDF 文件添加目录 (Table of Contents)
+
+const FSDK = require("@foxitsoftware/foxit-pdf-sdk-node");
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+var sn = "";
+var key = "";
+
+let error_code = FSDK.Library.Initialize(sn, key);
+if (FSDK.e_ErrSuccess != error_code) {
+ if (FSDK.e_ErrInvalidLicense == error_code)
+ console.log("[Failed] Current used Foxit PDF SDK key information is invalid.");
+ else
+ console.log("Library Initialize Error: %d", FSDK.e_ErrSuccess);
+ return;
+}
+
+// 加载PDF文档.
+let doc = new FSDK.PDFDoc("Bookmark.pdf");
+error_code = doc.Load("");
+if (error_code != FSDK.e_ErrSuccess) {
+ return 1;
+}
+let toc_config = new FSDK.TableOfContentsConfig();
+toc_config.include_toc_pages = false;
+toc_config.title = L"Table of Contents";
+toc_config.is_show_serial_number = true;
+toc_config.bookmark_level_array = new FSDK.Int32Array();
+let depth = doc.GetBookmarkLevelDepth();
+if (depth > 0) {
+ if (depth > 5) depth = 5;
+ for (let i = 1; i <= depth; i++) {
+ toc_config.bookmark_level_array.Add(i);
+ }
+}
+doc.AddTableOfContents(toc_config);
+doc.SaveAs("TOC.pdf",FSDK.PDFDoc.e_SaveFlagNormal);
+FSDK.Library.Release();

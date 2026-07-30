@@ -1,0 +1,735 @@
+![image](https://local-dev.foxitcloud.com/api/backend/files/a5d4d476-58b2-4bd0-9761-213193cec3cc/image-preview)
+Table of Contents
+福昕PDF SDK简介
+福昕PDFSDK
+福昕PDF SDK提供高性能的开发库，帮助软件开发人员使用最流行的开发语言和环境在不同平台(包括Windows、Mac、Linux、Web、Android、iOS以及鸿蒙)的企业版、移动版和云应用程序中添加强大的PDF功能。
+使用福昕PDF SDK的应用开发人员可以利用Foxit强大、标准化的PDF技术安全地显示、创建、编辑、批注、格式化、管理、打印、共享，搜索PDF文档，以及填写PDF文档。此外，福昕PDF SDK包括一个内置可嵌入的PDF Viewer，使得开发过程更加简单和快速。有关更多详细信息，可以访问网站[https://developers.foxitsoftware.cn/](https://developers.foxitsoftware.cn/")。
+在本指南中，我们将重点介绍福昕PDF SDK鸿蒙版平台。
+福昕PDF SDK鸿蒙版
+您是否曾经为PDF规范的复杂性而感到不知所措？您是否曾经为被要求在有限的时间内构建一个功能齐全的PDF应用而感到迷茫。如果您的答案是"Yes",那么恭喜您！您找到了在业界中快速将PDF功能集成到应用程序中的优选方案。
+福昕PDF SDK鸿蒙版致力于帮助开发者快速构建高性能、跨平台的鸿蒙PDF应用程序。通过福昕SDK开发包，即使是对PDF了解有限的开发人员也可以仅用数行代码，快速打造专业的PDF阅读器。
+为什么选择福昕PDF SDK鸿蒙版
+福昕是领先的PDF软件解决方案供应商，专注于PDF显示、编辑、创建、管理以及安全方面。福昕PDF SDK开发库已在当今许多知名的应用程序中使用，并且经过长期的测试证明福昕PDF SDK的质量、性能和功能正是业界大部分应用程序所需要的。
+福昕PDF SDK鸿蒙版提供了快速PDF阅读和鸿蒙设备的操作控制。选择福昕PDF SDK鸿蒙版的几大理由：
+易于集成
+开发人员可以通过几行代码将SDK无缝集成到他们自己的应用程序中。
+设计完美
+福昕PDF SDK鸿蒙版拥有简单、干净和友好的风格，并且提供了最好的用户体验。
+灵活定制
+福昕PDF SDK鸿蒙版提供了应用层用户界面的源代码，可以帮助开发人员对应用程序的功能和界面外观进行灵活定制。
+移动平台上的鲁棒性
+福昕PDF SDK鸿蒙版提供了OOM (内存溢出)恢复机制，以确保应用程序在内存有限的移动设备上运行时仍然具备较高的鲁棒性。
+基于福昕高保真的PDF渲染引擎
+福昕PDF SDK的核心技术是基于世界众多知名企业所信赖的福昕PDF引擎。福昕强大的PDF引擎可快速解析和渲染文档，不受设备环境的约束。
+优秀的技术支持
+福昕对自己的开发产品提供了优秀的技术支持，当您在开发关键重要的产品时，可以提供高效的帮助和支持。福昕拥有一支PDF行业优秀的技术支持工程师团队，同时将定期地进行版本更新发布，通过添加新的功能和增强已有的功能来提升用户体验。
+福昕PDF SDK鸿蒙版的主要框架
+福昕PDF SDK鸿蒙版由三种组件组成，如下表所示。福昕PDF SDK的所有移动平台版本共享此结构，这样便于在您的应用程序中集成，以及支持多种手机操作系统和框架。
+| 组件名称 | 描述 | 平台与提供方式 |
+| --- | --- | --- |
+| UI EXTENSIONS | 带内置 UI 的开源库（或工程） | Android: FoxitRDKUIExtensions.aar
+iOS: uiextensionsDynamic.framework
+MacOS: uiextensionsDynamic.xcframework
+HarmonyOS Next: FoxitRDKUIExtensions.har |
+| PDF VIEW CONTROL | PDF 基础显示类 | Android: FoxitRDK.aar
+iOS: FoxitRDK.framework
+MacOS： FoxitRDK.xcframework
+HarmonyOS Next: FoxitRDK.har
+OpenHarmony: FoxitRDK.har |
+| PDF CORE | PDF 数据处理层的核心操作类 | 所有平台通用，相关数据及接口封装在 FoxitRDK.har 中 |
+提示：
+OpenHarmony平台暂不提供UI EXTENSIONS组件。
+macOS平台通过Catalyst技术支持iOS SDK。
+组件介绍
+PDF Core API
+PDF Core API是SDK的核心部分，建立在福昕强大的底层PDF技术上。它提供了PDF基础功能操作相关的函数，包含了PDF View控件和UI Extensions组件中使用到的PDF核心处理功能，以确保应用程序达到高的性能和效率。该API可单独用于文档的渲染、分析、文本提取、文本搜索、表单填写、数字签名、压感笔迹(PSI)、证书和密码加密、注释的创建和管理等等。
+PDF View Control
+PDF View控件是一个工具类，根据开发人员的需求提供开发人员与渲染的PDF文档进行交互所需要的功能接口。以福昕享有盛誉且使用广泛的PDF渲染技术为核心，View Control支持快速高质量的渲染、缩放、滚动和页面导览功能。该View是一个自定义组件，用户可以将这个组件集成到自己的业务逻辑中，并且允许进行扩展来满足特定用户的需求。
+UI Extensions组件
+UI Extensions组件是一个带内置UI的开源库，支持对内置的文本选择，标记注释、大纲导航、阅读书签、全文检索、填表、文本重排、文档附件、数字/手写签名、文档编辑和密码加密等功能进行自定义。UI Extensions组件中的这些功能是通过使用PDF core API和PDF View Control来实现的。开发人员可以利用这些已有的UI实现快速构建一个PDF阅读器，同时可以根据需要灵活自定义其UI界面。
+UI Extensions组件概述
+UI Extensions组件是一个带内置UI的开源库，采用模块化设计，将各项功能细化为独立的模块（module）。默认情况下，除了用于文件管理的LocalModule外，所有模块都会自动加载。开发者可通过实现Module接口类自定义模块，并使用UIExtensionsManager#registerModule进行注册，或使用UIExtensionsManager#unregisterModule进行反注册。
+UIExtensionsManager包含主框架UI (如顶部/底部工具栏)和模块间共享的UI组件，并支持各功能模块的独立加载
+
+---
+
+UI Extensions组件概述
+UI Extensions组件是一个带内置UI的开源库，采用模块化设计，将各项功能细化为独立的模块（module）。默认情况下，除了用于文件管理的LocalModule外，所有模块都会自动加载。开发者可通过实现Module接口类自定义模块，并使用UIExtensionsManager#registerModule进行注册，或使用UIExtensionsManager#unregisterModule进行反注册。
+UIExtensionsManager包含主框架UI (如顶部/底部工具栏)和模块间共享的UI组件，并支持各功能模块的独立加载。功能模块加载时，会适配调整主框架UI，并建立消息事件响应机制。每个功能模块可包含特有的UI组件和独立的消息事件处理逻辑。UIExtensionsManager负责将来自PDF View Control组件的消息和事件分发到各功能模块。
+UIExtensionsManager和modules的关系：
+![image](https://local-dev.foxitcloud.com/api/backend/files/299bc4f8-98c5-4e0c-9e1e-f68cc2acf77a/image-preview)
+事件处理机制
+Tool handler和annotation handler处理来自PDFViewCtrl的触屏、手势等事件。事件触发时，PDFViewCtrl将事件传递给UIExtensionsManager：
+Tool Handler响应：若存在当前tool handler，UIExtensionsManager将事件传递给它，事件处理结束。
+Annotation Handler响应：若存在选中的annotation，UIExtensionsManager将事件传递给其对应的annotation handler，事件处理结束。
+Selection Tool Handler响应：若不存在tool handler和选中的annotation，UIExtensionsManager将事件传递给selection tool handler。
+Text Selection Tool：处理文本选择事件(如选择一段文本添加高亮注释)。
+Blank Selection Tool：处理空白区域事件(如在空白处添加笔记注释)。
+提示:
+Tool Handler和Annotation Handler不会同时响应事件。
+Tool Handler主要用于创建注释(暂不支持Link Annotation)、创建签名和文本选择。
+Annotation Handler主要用于编辑注释和填写表单。
+Tool Handler和Annotation Handler事件响应流程：
+![image](https://local-dev.foxitcloud.com/api/backend/files/52cf03e5-a750-4dca-8a57-5566bf8fe991/image-preview)
+福昕PDF SDK鸿蒙版的主要功能
+福昕PDF SDK鸿蒙版包括了一些主要的功能，用来帮助应用程序开发人员在快速实现他们所需要的功能的同时减少开发成本。
+| 功能 | 描述 |
+| --- | --- |
+| PDF Document | 打开和关闭文件，设置和获取metadata |
+| PDF Page | 解析、渲染、阅读、编辑文档页面 |
+| Render | 平台图像设备在bitmap上创建图像渲染引擎 |
+| Reflow | 重排页面内容 |
+| Crop | 裁剪PDF页面 |
+| Text Select | 文本选择 |
+| Text Search | 文本搜索，并且支持全文索引搜索 |
+| Outline | 定位和链接到文档中的兴趣点 |
+| Reading Bookmark | 标记文档中感兴趣的页面和段落位置 |
+| Annotation | 创建、编辑和移除annotations |
+| Layers | 添加、编辑和移除PDF层内容 |
+| Attachments | 添加、编辑和移除文档级的附件 |
+| Form | 支持JavaScript填表，通过XFDF/FDF/XML文件导入和导出表单数据 支持创建文本域、复选框、单选按钮、组合框、列表框和签名域 |
+| XFA | 支持静态和动态XFA |
+| Signature | 签名PDF文档，验证签名，添加或删除签名域 添加和验证第三方数字签名 支持签名的长期验证 (LTV) |
+| Fill | 用文本和符号填写扁平化表单（即非交互式表单） |
+| Security | 密码和证书加密PDF文档 |
+| Comparison | 对比两个PDF文档，并且标记文档之间的差异 |
+| Split Screen | 支持分屏 |
+| Right to Left | 支持RTL (Right to Left) |
+| Out of Memory | 从内存不足中恢复运行 |
+备注：Outline是PDF规范中的技术术语，在传统的桌面PDF阅读器中常叫做书签。Reading bookmarks常用于移动端和平板的PDF阅读器中，用来标记阅读进度或者用户感兴趣的段落。Reading bookmark在技术上并不是outline，它存储在应用程序中而不是PDF本身。
+福昕PDF SDK鸿蒙版支持鲁棒性的PDF应用程序
+在有限内存的移动平台上开发鲁棒性的PDF应用程序是具有挑战性的。当内存分配失败，应用程序可能会crash或者意外退出。为了解决这个问题，福昕PDF SDK鸿蒙版提供了一种内存溢出(OOM)机制。
+OOM是福昕PDF SDK鸿蒙版的一个高级功能，因为其本身的复杂性。OOM机制的关键点是福昕PDF SDK鸿蒙版会监视内存的使用情况，并在检测到OOM后自动执行恢复操作。在恢复的过程中，福昕PDF SDK鸿蒙版会自动重新加载文档和页面，将恢复到发生OOM之前的原始状态。这意味着当前阅读的页面和位置，以及页面阅读模式(单页或者连续页面)都能够恢复，但是编辑相关的内容将会丢失。
+评估
+用户可申请下载福昕PDF SDK的试用版本进行试用评估。试用版除了有试用期10天时间的限制以及生成的PDF页面上会有试用水印以外，其他都和标准认证版一样。当试用期到期后，用户需联系福昕销售团队并购买授权码以便继续使用福昕PDF SDK.
+授权
+程序开发人员需购买授权码才能在其解决方案中使用福昕PDF SDK。授权码授予用户发布基于福昕PDF SDK开发的应用程序的权限。然而，在未经福昕软件公司授权下，用户不能将福昕PDF SDK包中的任何文档、示例代码以及源代码分发给任何第三方机构。
+关于此文档
+此文档适用于需要将福昕PDF SDK鸿蒙版集成到自己的鸿蒙应用程序中的开发人员。它旨在介绍以下章节：
+章节1:介绍福昕PDF SDK，特别是鸿蒙版SDK。
+章节2:说明包的结构，以及运行demo。
+章节3:介绍如何快速创建功能齐全的PDF阅读器。
+章节4:介绍如何自定义用户界面。
+章节5:介绍如何使用福昕PDF SDKcore API。
+章节6:列出常见问题。
+章节7:提供技术支持信息。
+入门指南
+福昕PDF SDK鸿蒙版旨在助力开发者高效构建高性能、跨平台的鸿蒙PDF应用。即便您对PDF开发知之甚少，也能通过我们的SDK，仅用数行代码，快速打造专业的PDF阅读器
+
+---
+
+章节2:说明包的结构，以及运行demo。
+章节3:介绍如何快速创建功能齐全的PDF阅读器。
+章节4:介绍如何自定义用户界面。
+章节5:介绍如何使用福昕PDF SDKcore API。
+章节6:列出常见问题。
+章节7:提供技术支持信息。
+入门指南
+福昕PDF SDK鸿蒙版旨在助力开发者高效构建高性能、跨平台的鸿蒙PDF应用。即便您对PDF开发知之甚少，也能通过我们的SDK，仅用数行代码，快速打造专业的PDF阅读器。
+鸿蒙版SDK全面支持HarmonyOS Next（纯血鸿蒙）和OpenHarmony（原生鸿蒙）操作系统，并与Android、iOS SDK共享统一的组件化架构。了解更多，请参阅福昕PDF SDK鸿蒙版的主要框架。
+我们提供一系列核心功能，旨在帮助应用程序开发者在大幅降低开发成本的同时，快速实现所需功能。功能详情请参阅福昕PDF SDK鸿蒙版的主要功能。
+环境配置
+环境要求
+HarmonyOS Next
+DevEcoStudio:推荐获取与HarmonyOS Release SDK版本配套的IDE进行开发。
+HarmonyOS SDK: ≥ 5.0 Release (API Level 12)
+OpenHarmony
+DevEcoStuidio：推荐获取与OpenHarmonyRelease版本配套的IDE进行开发。
+OpenHarmonySDK: ≥ 4.1 Release (API Level 12)
+系统要求
+arm64-v8a和x86_64架构
+HarmonyOS Next与OpenHarmony支持差异
+福昕PDF SDK鸿蒙版在HarmonyOS Next和OpenHarmony两个操作系统上的支持基本一致，仅在以下两个方面存在差异。
+组件支持：
+OpenHarmony平台库：仅提供基础的PDF显示类组件。详细信息请参考。
+HarmonyOS Next平台库：提供基础的PDF显示类组件和即用型UIEXTENSIONS组件。
+示例支持：
+OpenHarmony平台库：提供基础显示示例-view_ctrl_demo。
+HarmonyOS Next平台库：提供功能完整的阅读器示例-complete_pdf_viewer。
+授权码：两个操作系统平台需要使用不同的授权码。
+包结构说明
+备注：以下涉及uiextensions相关库仅适用于HarmonyOS Next操作系统。
+鸿蒙版SDK包解压后，内容结构如下：
+docs/
+├──API手册
+├──开发文档
+└──版本升级说明文档
+libs/（包含核心库文件和其他必需资源）
+├──uiextensions/（开源库）
+├──FoxiRDK.har
+├──FoxiRDKUIExtensions.har
+├──xxxsdk_key.txt
+├──xxxsdk_sn.txt
+samples/
+└──鸿蒙示例工程
+legal.txt (法律和版权信息)
+release_notes.txt (更新日志)
+libs文件夹说明
+uiextensions工程:开源库，提供了一系列即用型的UI模块实现，帮助开发者快速将功能齐全的PDF阅读器嵌入应用中。此外，还允许根据特定需求自定义UI。
+FoxitRDK.har:包括所有的ArtTSAPIs及.so库，这是SDK的核心部分，支持arm64-v8a和x86_64架构。
+FoxitRDKUIExtensions.har:由uiextensions工程编译生成。包含内置UI实现，以及UI所需要的资源文件，如图片，字符串、颜色值、布局文件以及其他UI资源。
+xxx_key.txt和xxx_sn.txt:包含初始化SDK必须的授权信息。
+运行示例
+OpenHarmony操作系统
+示例工程位于SDK包的"samples/view_ctrl_demo"目录下。
+准备工作：
+安装IDE：下载并安装与您的OpenHarmony发布版本（建议≥ 4.1）相匹配的。
+配置SDK环境：
+本SDK的编译环境最低要求API 12，运行环境兼容最低目标API 11的设备。为确保SDK能够正常编译并兼容以目标API 11编译的设备，您需要安装API 12或更高版本的适用于OpenHarmony系统的SDK。
+打开DevEcoStudio，进入Settings窗口。
+在左侧导航栏中，选择SDK，然后选择OpenHarmonySDK。
+勾选并安装API 12。
+提示：
+由于部分OpenHarmony4.x版本的DevEcoStudio IDE不支持直接下载API 12及更高版本的SDK，您可能需要通过其他途径获取相应的API软件包并进行手动安装。比如通过与5.0发布版本配套的IDE来下载。
+打开示例工程：
+在DevEcoStudio中，选择File -> Open...。
+导航至SDK包中的"samples/view_ctrl_demo"目录。
+选中view_ctrl_demo文件夹，然后点击OK。
+运行示例：
+连接鸿蒙设备(设备支持的目标API ≥ 11 )。
+运行示例时，"samples/complete_pdf_viewer/entry/src/main/resources/rawfile"目录下的sample.pdf文件将自动复制到模拟器的沙盒目录。
+点击Run -> Run 'entry'运行示例。
+连接成功后，点击OpenDoc，然后选择sample.pdf文档。
+体验示例：
+以上操作完成后，您可以体验基础的视图功能，包括“单页、双开、封面、连续等”。
+![image](https://local-dev.foxitcloud.com/api/backend/files/938caf86-a14b-4020-962b-781006582415/image-preview)
+HarmonyOS Next操作系统
+示例工程位于SDK包的"samples/complete_pdf_viewer"目录下。
+准备工作：
+安装IDE：下载并安装与您的HamonyOSNext发布版本（建议≥ 5.0）相匹配的。
+打开示例工程：
+打开DevEcoStudio，选择File -> Open…。
+找到"samples/complete_pdf_viewer"目录，选择"complete_pdf_viewer"文件夹，点击OK。
+运行示例：
+启动鸿蒙模拟器或连接鸿蒙设备。
+运行示例时，"samples/complete_pdf_viewer/entry/src/main/resources/rawfile"目录下的sample.pdf文件将自动复制到模拟器的沙盒目录。
+点击Run -> Run 'entry'运行示例。
+安装成功后，模拟器将显示示例的主页。点击"所有PDF"，然后选择sample.pdf文档。
+体验示例：
+以上操作完成后，您可以看到如下图所示的功能选项。该示例实现了功能齐全的PDF阅读器，您可以随意体验各项功能。
+![image](https://local-dev.foxitcloud.com/api/backend/files/651c57b5-49f9-48fc-8794-29407edcf4ba/image-preview)
+快速构建一个功能齐全的PDF阅读器
+福昕PDF SDK鸿蒙版将所有的UI实现（包括应用程序的基本UI和即用型UI功能模块）封装在UI Extensions组件中，因此开发人员可以轻松快速通过几行代码构建一个功能齐全的PDF阅读器。本章将提供详细的教程来帮助您快速开始使用福昕PDF SDK鸿蒙版在HarmonyOS Next平台创建PDF阅读器。
+如果您正在基于OpenHarmony操作系统开发应用，以下示例工程的步骤同样适用
+
+---
+
+![image](https://local-dev.foxitcloud.com/api/backend/files/651c57b5-49f9-48fc-8794-29407edcf4ba/image-preview)
+快速构建一个功能齐全的PDF阅读器
+福昕PDF SDK鸿蒙版将所有的UI实现（包括应用程序的基本UI和即用型UI功能模块）封装在UI Extensions组件中，因此开发人员可以轻松快速通过几行代码构建一个功能齐全的PDF阅读器。本章将提供详细的教程来帮助您快速开始使用福昕PDF SDK鸿蒙版在HarmonyOS Next平台创建PDF阅读器。
+如果您正在基于OpenHarmony操作系统开发应用，以下示例工程的步骤同样适用。
+提示：
+由于OpenHarmony平台暂未提供UIExtensions组件，您需要忽略示例工程中所有与UIExtensions组件相关的步骤。
+创建一个新的示例工程
+以下将创建一个名为PDFReader的示例工程。构建的示例工程环境，使用DevEcoStudio NEXT Developer Beta3，以及OpenHarmonySDK API Version 12 Beta3。
+打开DevEcoStudio，创建新工程：
+选择File -> New -> Create Project…。
+在Choose Your Ability Template向导中，选择Empty Ability。
+点击Next。
+![image](https://local-dev.foxitcloud.com/api/backend/files/2249da01-3936-45dc-a95c-deb9f429fa02/image-preview)
+配置工程信息：
+在Configure Your Project对话框中，填写工程相关信息，例如工程名称、存储路径等。
+点击Finish。
+![image](https://local-dev.foxitcloud.com/api/backend/files/3c12139c-dfd7-44fa-b3b3-90da5713bf8d/image-preview)
+集成福昕PDF SDK鸿蒙版到您的应用程序
+我们将集成SDK默认的内置UI到示例工程。为了简单和方便，本示例工程将直接使用UI Extensions组件，而非源代码工程。我们只需要添加以下的库文件到PDFReader示例工程中。
+FoxitRDK.har
+FoxitRDKUIExtensions.har
+操作步骤：
+拷贝库文件夹
+将下载包中的libs文件夹拷贝到工程根目录，即PDFReader文件夹下。
+安装FoxitRDK.har库
+打开Terminal，在工程根目录下，运行以下命令来安装FoxitRDK.har：
+ohpminstall libs/FoxitRDK.har
+安装成功后，
+在PDFReader/oh_modules目录下会生成foxit_rdk文件夹。
+在PDFReader/oh-package.json5文件中会自动生成引用，如下图所示。
+![image](https://local-dev.foxitcloud.com/api/backend/files/c548f9be-053a-46a0-90e5-aab83e47084e/image-preview)
+安装FoxitRDKUIExtensions.har库
+由于FoxitRDKUIExtensions.har依赖FoxitRDK.har，因此当在本地环境安装时，您需要在PDFReader/oh-package.json5文件中添加如下的命令：
+"overrides": {"foxit_rdk":"file:libs/FoxitRDK.har"},
+打开Terminal，在工程根目录下，运行以下命令来安装FoxitRDKUIExtensions.har：
+ohpminstall libs/FoxitRDKUIExtensions.har
+安装成功后，
+在PDFReader/oh_modules目录下会生成uiextensions文件夹。
+在PDFReader/oh-package.json5文件中会自动生成引用，如下图所示。
+![image](https://local-dev.foxitcloud.com/api/backend/files/8658c5ab-8145-4b5e-8d48-113e95510d4c/image-preview)
+初始化SDK
+在调用任何APIs之前，应用程序必须使用license授权码初始化SDK库。静态初始化函数Library.Initialize(sn, key)用于SDK库的初始化。试用license文件在下载包的libs文件夹下。当试用期结束后，您需要购买正式license以继续使用该SDK。以下是初始化SDK库的步骤，您需要根据系统加载正确的模块。
+引入foxit_rdk模块和uiextensions模块：
+在"PDFReader/entry/src/main/ets/pages/Index.ets"文件中，添加如下的代码：
+//引入foxit_rdk模块
+import{FoxitRDKNative,PDFViewCtrl,PDFViewCtrlModel,}from'foxit_rdk';
+//引入uiextensions模块
+import{UIExtensionsManager,UIExtensionsComponent}from'uiextensions';
+备注
+OpenHarmony的SDK库仅支持PDFViewCtrl模块。如果您正使用该库，则不需要引入uiextensions模块。
+初始化SDK库：
+letsn:string='sn'letkey:string='key'FoxitRDKNative.common.Library.Initialize(sn,key);
+备注：
+参数"sn"的值在**_sn.txt文件中("SN="后面的字符串)，"key"的值在**_key.txt文件中("Sign="后面的字符串)。
+添加PDF文件到沙盒目录
+PDF文件的管理由应用层自己实现。应用层可以创建一个文件列表来管理文件，详细信息可参考鸿蒙系统的接口手册。本示例为了简单起见，将PDF文件拷贝到沙盒目录下。
+首先，将PDF文件，比如"sample.pdf"，拷贝到"PDFReader/entry/src/main/resources/rawfile"文件夹下。然后，在"PDFReader/entry/src/main/ets/pages/Index.ets"文件中添加如下的代码：
+操作步骤：
+将PDF文件，比如"Sample.pdf"拷贝到"PDFReader/entry/src/main/resources/rawfile"文件夹下。
+在"PDFReader/entry/src/main/ets/pages/Index.ets"文件中添加如下的代码：
+importfsfrom'@ohos.file.fs';letcontext=getContext(this)letfilesDir=context.filesDir;letfileName="sample.pdf";letopenDocPath=filesDir+"/"+fileName;export async functioncopy_rawfile__to_sandbox(cb:(error:Error)=>void){try{letsss=fs.createStreamSync(openDocPath,"w");sss.closeSync();//获取rawfile目录下的"sample.pdf"context.resourceManager.getRawFd('rawfile/'+fileName,async(error,value)=>{if(error!=null){//getRawFileDescriptor运行失败console.log("[rawfile_copy_to_sandbox]未能成功将rawfile目录下的sample.pdf文件拷贝到应用沙盒目录下");}else{//getRawFileDescriptor运行成功letfd=value.fd;console.log("LXGfd:"+fd)console.log("LXGfileDir:"+filesDir)//打开文件流letinputStream=fs.fdopenStreamSync(fd,"r+");console.log("LXGinputStream:")letoutputStream=fs.createStreamSync(openDocPath,"w+");//以流的形式读取源文件内容并写入目标文件letbufSize=value.length;letreadSize=0;letbuf=newArrayBuffer(bufSize);classOption{publicoffset:number=0;publiclength:number=bufSize;}letoption=newOption();option.offset=value.offset;letreadLen=awaitinputStream.read(buf,option);readSize+=readLen;while(readLen>0){awaitoutputStream.write(buf);option.offset=readSize+value.offset;option.length=value.length-readSize>=bufSize?bufSize:value.length-readSize;readLen=awaitinputStream.read(buf,option);readSize+=readLen;}//关闭文件流inputStream.closeSync();outputStream.closeSync();}returncb(error);});}catch(error){console.log("[rawfile_copy_to_sandbox]未能成功将rawfile目录下的sample.pdf文件拷贝到应用沙盒目录下");returncb(error);}returncb(newError());}
+使用PDFViewCtrl组件显示PDF文档
+到目前为止，我们已经在PDFReader示例工程中集成和初始化了SDK，并且添加了PDF文档。现在，我们将使用PDFViewCtrl组件，通过几行代码来显示一个PDF文档
+
+---
+
+现在，我们将使用PDFViewCtrl组件，通过几行代码来显示一个PDF文档。
+操作步骤：
+在"PDFReader/entry/src/main/ets/pages/Index.ets"文件中添加如下的代码：
+@Entry@ComponentstructIndex{@Statemessage:string='Open Doc';@StateclickID:number=0;@StatepdfViewCtrlModel:PDFViewCtrlModel=newPDFViewCtrlModel(getContext(this))publicopenDoc(){this.pdfViewCtrlModel.openDoc(openDocPath,'',(error)=>{if(error==FoxitRDKNative.common.e_ErrSuccess){this.clickID=1;}})}build(){Row(){Column(){if(this.clickID==0){Button(this.message).fontSize(50).fontWeight(FontWeight.Bold).onClick(()=>{letres=fs.accessSync(openDocPath);if(!res){copy_rawfile__to_sandbox((error)=>{if(error==null){try{this.openDoc()}catch(err){console.info(` fail callback, code:${err.code}, msg:${err.msg}`)}}})}else{this.openDoc()}})}else{PDFViewCtrl({model:this.pdfViewCtrlModel}).width('100%').height('100%').backgroundColor(Color.Black)}}.width('100%')}.height('100%')}}
+当前，"PDFReader/entry/src/main/ets/pages/Index.ets"的全部代码如下所示：
+import{FoxitRDKNative,PDFViewCtrl,PDFViewCtrlModel,}from'foxit_rdk';importfsfrom'@ohos.file.fs';//初始化SDK库letsn:string=''letkey:string=''FoxitRDKNative.common.Library.Initialize(sn,key);//将PDF文档拷贝到应用沙盒目录下letcontext=getContext(this)letfilesDir=context.filesDir;letfileName="sample.pdf";letopenDocPath=filesDir+"/"+fileName;export async functioncopy_rawfile__to_sandbox(cb:(error:Error)=>void){try{letsss=fs.createStreamSync(openDocPath,"w");sss.closeSync();//获取rawfile目录下的"sample.pdf"context.resourceManager.getRawFd('rawfile/'+fileName,async(error,value)=>{if(error!=null){//getRawFileDescriptor运行失败console.log("[rawfile_copy_to_sandbox]未能成功将rawfile目录下的sample.pdf文件拷贝到应用沙盒目录下");}else{//getRawFileDescriptor运行成功letfd=value.fd;console.log("LXGfd:"+fd)console.log("LXGfileDir:"+filesDir)//打开文件流letinputStream=fs.fdopenStreamSync(fd,"r+");console.log("LXGinputStream:")letoutputStream=fs.createStreamSync(openDocPath,"w+");//以流的形式读取源文件内容并写入目标文件letbufSize=value.length;letreadSize=0;letbuf=newArrayBuffer(bufSize);classOption{publicoffset:number=0;publiclength:number=bufSize;}letoption=newOption();option.offset=value.offset;letreadLen=awaitinputStream.read(buf,option);readSize+=readLen;while(readLen>0){awaitoutputStream.write(buf);option.offset=readSize+value.offset;option.length=value.length-readSize>=bufSize?bufSize:value.length-readSize;readLen=awaitinputStream.read(buf,option);readSize+=readLen;}//关闭文件流inputStream.closeSync();outputStream.closeSync();}returncb(error);});}catch(error){console.log("[rawfile_copy_to_sandbox]未能成功将rawfile目录下的sample.pdf文件拷贝到应用沙盒目录下");returncb(error);}returncb(newError());}//使用PDFViewCtrl打开一个PDF文档@Entry@ComponentstructIndex{@Statemessage:string='Open Doc';@StateclickID:number=0;@StatepdfViewCtrlModel:PDFViewCtrlModel=newPDFViewCtrlModel(getContext(this))publicopenDoc(){this.pdfViewCtrlModel.openDoc(openDocPath,'',(error)=>{if(error==FoxitRDKNative.common.e_ErrSuccess){this.clickID=1;}})}build(){Row(){Column(){if(this.clickID==0){Button(this.message).fontSize(50).fontWeight(FontWeight.Bold).onClick(()=>{letres=fs.accessSync(openDocPath);if(!res){copy_rawfile__to_sandbox((error)=>{if(error==null){try{this.openDoc()}catch(err){console.info(` fail callback, code:${err.code}, msg:${err.msg}`)}}})}else{this.openDoc()}})}else{PDFViewCtrl({model:this.pdfViewCtrlModel}).width('100%').height('100%').backgroundColor(Color.Black)}}.width('100%')}.height('100%')}}
+如果您使用华为模拟器来运行该示例工程。运行成功后，点击"Open Doc"按钮，即可看到Sample.pdf文档显示如下图所示。
+备注
+PDFViewCtrl是视图控制组件，仅提供一些基本功能，比如，显示PDF文档、放大、缩小，及翻页等。
+![image](https://local-dev.foxitcloud.com/api/backend/files/6aa0a09c-0714-4937-ab92-68cd368de976/image-preview)
+使用UI Extensions组件构建一个功能齐全的PDF阅读器
+福昕PDF SDK鸿蒙版提供内置的UI设计，包含应用程序基础UI和功能模块UI。这些内置UI通过SDK鸿蒙版实现，并封装在UI Extensions组件中。因此，构建功能齐全的PDF阅读器变得非常简单，您只需实例化一个UIExtensionsManager对象。
+操作步骤：
+在"PDFReader/entry/src/main/ets/pages/Index.ets"文件中添加如下的代码：
+@Entry@ComponentstructIndex{@Statemessage:string='Open Doc';@StateclickID:number=0;@StateuiextensionsManager:UIExtensionsManager=newUIExtensionsManager(getContext(this));publicopenDoc(){this.uiextensionsManager.openDocument(openDocPath,'',(error:number)=>{if(error==FoxitRDKNative.common.e_ErrSuccess){this.clickID=1;}})}build(){Row(){Column(){if(this.clickID==0){Button(this.message).fontSize(50).fontWeight(FontWeight.Bold).onClick(()=>{letres=fs.accessSync(openDocPath);if(!res){copy_rawfile__to_sandbox((error)=>{if(error==null){try{this.openDoc()}catch(err){console.info(` fail callback, code:${err.code}, msg:${err.msg}`)}}})}else{this.openDoc()}})}else{UIExtensionsComponent({uiExtMgr:this.uiextensionsManager}).width('100%').height('100%').backgroundColor(Color.Black)}}.width('100%')}.height('100%')}}
+当前，"PDFReader/entry/src/main/ets/pages/Index.ets"的全部代码如下所示：
+import{FoxitRDKNative,PDFViewCtrl,PDFViewCtrlModel,}from'foxit_rdk';import{UIExtensionsManager,UIExtensionsComponent}from'uiextensions';importfsfrom'@ohos.file.fs';//初始化SDK库letsn:string=''letkey:string=''FoxitRDKNative.common.Library.Initialize(sn,key);//将PDF文档拷贝到应用沙盒目录下letcontext=getContext(this)letfilesDir=context.filesDir;letfileName="sample.pdf";letopenDocPath=filesDir+"/"+fileName;export async functioncopy_rawfile__to_sandbox(cb:(error:Error)=>void){try{letsss=fs.createStreamSync(openDocPath,"w");sss.closeSync();//获取rawfile目录下的"sample.pdf"context.resourceManager.getRawFd('rawfile/'+fileName,async(error,value)=>{if(error!=null){//getRawFileDescriptor运行失败console.log("[rawfile_copy_to_sandbox]未能成功将rawfile目录下的sample.pdf文件拷贝到应用沙盒目录下");}else{//getRawFileDescriptor运行成功letfd=value.fd;console.log("LXGfd:"+fd)console.log("LXGfileDir:"+filesDir)//打开文件流letinputStream=fs.fdopenStreamSync(fd,"r+");console.log("LXGinputStream:")letoutputStream=fs.createStreamSync(openDocPath,"w+");//以流的形式读取源文件内容并写入目标文件letbufSize=value.length;letreadSize=0;letbuf=newArrayBuffer(bufSize);classOption{publicoffset:number=0;publiclength:number=bufSize;}letoption=newOption();option.offset=value.offset;letreadLen=awaitinputStream.read(buf,option);readSize+=readLen;while(readLen>0){awaitoutputStream.write(buf);option.offset=readSize+value.offset;option.length=value.length-readSize>=bufSize?bufSize:value.length-readSize;readLen=awaitinputStream.read(buf,option);readSize+=readLen;}//关闭文件流inputStream.closeSync();outputStream.closeSync();}returncb(error);});}catch(error){console.log("[rawfile_copy_to_sandbox]未能成功将rawfile目录下的sample.pdf文件拷贝到应用沙盒目录下");returncb(error);}returncb(newError());}//使用UI Extensions组件构建一个功能齐全的PDF阅读器@Entry@ComponentstructIndex{@Statemessage:string='Open Doc';@StateclickID:number=0;@StateuiextensionsManager:UIExtensionsManager=newUIExtensionsManager(getContext(this));publicopenDoc(){this.uiextensionsManager.openDocument(openDocPath,'',(error:number)=>{if(error==FoxitRDKNative.common.e_ErrSuccess){this.clickID=1;}})}build(){Row(){Column(){if(this.clickID==0){Button(this.message).fontSize(50).fontWeight(FontWeight.Bold).onClick(()=>{letres=fs.accessSync(openDocPath);if(!res){copy_rawfile__to_sandbox((error)=>{if(error==null){try{this.openDoc()}catch(err){console.info(` fail callback, code:${err.code}, msg:${err.msg}`)}}})}else{this.openDoc()}})}else{UIExtensionsComponent({uiExtMgr:this.uiextensionsManager}).width('100%').height('100%').backgroundColor(Color.Black)}}.width('100%')}.height('100%')}}
+如果您使用华为模拟器来运行该示例工程。运行成功后，点击"Open Doc"按钮，即可看到Sample.pdf文档显示如下图所示。至此，您已经成功构建了一个功能齐全的PDF阅读器。功能支持详情，请参阅。
+![image](https://local-dev.foxitcloud.com/api/backend/files/e78a8d6c-436a-492e-ac1d-069d84215867/image-preview)
+其他地方自定义UI
+福昕PDF SDK鸿蒙版提供简洁友好的内置UI，开发者无需耗费过多时间进行界面设计，即可快速构建功能齐全的PDF应用。此外，SDK还支持两种灵活的UI自定义方式，满足开发者个性化需求：
+UI Extensions组件源代码：提供即用型UI模块，支持深度定制。
+JSON配置文件(uiextensions_config.json)：高效灵活地修改内置UI元素
+
+---
+
+功能支持详情，请参阅。
+![image](https://local-dev.foxitcloud.com/api/backend/files/e78a8d6c-436a-492e-ac1d-069d84215867/image-preview)
+其他地方自定义UI
+福昕PDF SDK鸿蒙版提供简洁友好的内置UI，开发者无需耗费过多时间进行界面设计，即可快速构建功能齐全的PDF应用。此外，SDK还支持两种灵活的UI自定义方式，满足开发者个性化需求：
+UI Extensions组件源代码：提供即用型UI模块，支持深度定制。
+JSON配置文件(uiextensions_config.json)：高效灵活地修改内置UI元素。
+以下将介绍如何通过配置文件自定义功能模块、权限管理和UI元素。配置文件允许开发者轻松选择功能模块，设置权限和修改UI元素属性，无需编写额外代码或重新设计界面。
+JSON配置文件详解
+通过配置文件，开发人员可以轻松选择功能模块，设置权限管理和UI元素的属性，而无需编写任何额外的代码或者重新设计应用程序的UI。
+JSON文件介绍
+配置文件支持JSON文件格式或直接在代码中编写。推荐使用JSON文件，其结构清晰，易于查看和配置。
+您可以参考福昕PDF SDK鸿蒙版包中"samples/complete_pdf_viewer/entry/src/main/resources/rawfile"目录下的JSON配置文件，了解其结构和配置选项。其内容如下所示：
+{"modules": {"readingbookmark":true,"outline":true,"annotations": {"highlight":true,"underline":true,"squiggly":true,"strikeout":true,"insert":true,"replace":true,"line":true,"rectangle":true,"oval":true,"arrow":true,"pencil":true,"eraser":true,"typewriter":true,"textbox":true,"callout":true,"note":true,"stamp":true,"polygon":true,"cloud":true,"polyline":true,"measure":true,"image":true,"audio":true,"video":true},"thumbnail":true,"attachment":true,"signature":true,"search":true,"pagenavigation":true,"form":true},"permissions": {"runJavaScript":true,"enableLink":true},"uiSettings": {"pageMode":"Single","continuous":false,"zoomMode":"FitWidth","colorMode":"Normal","mapForegroundColor":"#5d5b71","mapBackgroundColor":"#00001b","enableFormNavigationBar":true,"highlightForm":true,"highlightFormColor":"#200066cc","highlightLink":true,"highlightLinkColor":"#16007fff","annotations": {"continuouslyAdd":true,"highlight": {"color":"#ff0000","opacity":1.0},"areaHighlight": {"color":"#ffff00","opacity":1.0},"underline": {"color":"#66cc33","opacity":1.0},"squiggly": {"color":"#993399","opacity":1.0},"strikeout": {"color":"#ff0000","opacity":1.0},"insert": {"color":"#993399","opacity":1.0},"replace": {"color":"#0000ff","opacity":1.0},"line": {"color":"#ff0000","opacity":1.0,"thickness":2},"rectangle": {"color":"#ff0000","opacity":1.0,"thickness":2,"fillColor":null},"oval": {"color":"#ff0000","opacity":1.0,"thickness":2,"fillColor":null},"arrow": {"color":"#ff0000","opacity":1.0,"thickness":2},"pencil": {"color":"#ff0000","opacity":1.0,"thickness":2,"stylusOnly":false},"polygon": {"color":"#ff0000","opacity":1.0,"thickness":2,"fillColor":null},"cloud": {"color":"#ff0000","opacity":1.0,"thickness":2,"fillColor":null},"polyline": {"color":"#ff0000","opacity":1.0,"thickness":2},"typewriter": {"textColor":"#0000ff","opacity":1.0,"textFace":"Courier","textSize":18},"textbox": {"color":"#ff0000","textColor":"#0000ff","opacity":1.0,"textFace":"Courier","textSize":18},"callout": {"color":"#ff0000","textColor":"#0000ff","opacity":1.0,"textFace":"Courier","textSize":18},"note": {"color":"#ff0000","opacity":1.0,"icon":"Comment"},"attachment": {"color":"#ff0000","opacity":1.0,"icon":"PushPin"},"image": {"rotation":0,"opacity":1.0},"measure": {"color":"#ff0000","opacity":1.0,"thickness":2,"scaleFromUnit":"inch","scaleToUnit":"inch","scaleFromValue":1.0,"scaleToValue":1.0}},"form": {"textField": {"textColor":"#000000","textFace":"Courier","textSize":0},"checkBox": {"textColor":"#000000"},"radioButton": {"textColor":"#000000"},"comboBox": {"textColor":"#000000","textFace":"Courier","textSize":0,"customText":false},"listBox": {"textColor":"#000000","textFace":"Courier","textSize":0,"multipleSelection":false}},"signature": {"color":"#000000","thickness":8}}}
+备注：
+上述JSON文件中的值是配置项的默认值。如果某些配置项不在JSON文件中，则将使用其默认值。例如，如果您注释掉""highlight":true,",但高亮功能仍然是可用的。
+JSON配置项描述
+JSON配置文件包括三个部分：功能模块，权限管理和UI设置(例如，UI元素属性)。本节将详细介绍这些配置项。
+功能模块配置项
+功能模块配置项的值类型是bool，其中"true"表示启用该功能模块，"false"表示将禁用该功能模块。默认值为"true"。
+| 功能模块 | 描述 |
+| --- | --- |
+| readingbookmark | 用户定义书签 |
+| outline | PDF文档书签 |
+| annotations (highlight, underline, squiggly, strikeout, insert, replace, line, rectangle, oval, arrow, pencil, eraser, typewriter, textbox, callout, note, stamp, polygon, cloud, polyline, measure, image, audio, video) | 注释模块集合 |
+| thumbnail | PDF页面缩略图显示和页面管理 |
+| attachment | PDF文档附件和附件注释 |
+| signature | 电子签名和手写签名 |
+| search | 文本搜索 |
+| pagenavigation | PDF页面导航 |
+| form | 表单填写和表单数据导入导出 |
+权限管理配置项
+权限管理配置项的值类型为bool，其中"true"表示将启用该权限，"false"表示将禁用该权限。runJavaScript和enableLink的默认值为"true"。
+| 权限管理 | 描述 |
+| --- | --- |
+| runJavaScript | 是否允许执行JavaScript |
+| enableLink | 是否启用超链接 |
+UI配置项及其属性
+| UI配置子项 | | UI配置子项 | | 描述/属性 | 值类型 | 可选值 |
+| --- | --- | --- | --- | --- | --- | --- |
+| pageMode | | pageMode | | 页面显示模式 | String | Single/ Facing/ CoverLeft/ CoverMiddle/ CoverRight/ Reflow |
+| continuous | | continuous | | 是否连续的显示单页页面 | Bool | true/false |
+| zoomMode | | zoomMode | | 页面缩放模式 | String | FitWidth/FitPage |
+| colorMode | | colorMode | | 页面颜色显示模式 | String | Normal/Night/Map |
+| mapForegroundColor | | mapForegroundColor | | 页面显示的前景颜色 | RGB | --- |
+| mapBackgroundColor | | mapBackgroundColor | | 页面显示的背景颜色 | RGB | --- |
+| enableFormNavigationBar | | enableFormNavigationBar | | 是否启用Form工具类 | Bool | true/false |
+| highlightForm | | highlightForm | | 是否高亮表单域 | Bool | true/false |
+| highlightFormColor | | highlightFormColor | | 表单高亮颜色 | ARGB | |
+| highlightLink | | highlightLink | | 是否高亮超链接 | Bool | true/false |
+| highlightLinkColor | | highlightLinkColor | | 超链接高亮颜色 | ARGB | |
+| annotations | continuouslyAdd | | Bool | true/false | true | 是否连续添加某个注释 |
+| annotations | highlight | color | RGB | | #ffff00 | |
+| annotations | highlight | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | areaHighlight | color | RGB | | #ffff00 | |
+| annotations | areaHighlight | opacity | numeric | [0.0-1.0] | 1.0 | 如果区域超出页面，则使用默认的配置
+
+---
+
+|
+| annotations | underline | color | RGB | | #66cc33 | |
+| annotations | underline | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | squiggly | color | RGB | | #993399 | |
+| annotations | squiggly | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | strikeout | color | RGB | | #ff0000 | |
+| annotations | strikeout | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | insert | color | RGB | | #993399 | |
+| annotations | insert | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | replace | color | RGB | | #0000ff | |
+| annotations | replace | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | line | color | RGB | | #ff0000 | |
+| annotations | line | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | line | thickness | numeric | [1-12] | 2 | |
+| annotations | rectangle | color | RGB | | #ff0000 | |
+| annotations | rectangle | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | rectangle | thickness | numeric | [1-12] | 2 | |
+| annotations | rectangle | fillColor | RGB | | null | |
+| annotations | oval | color | RGB | | #ff0000 | |
+| annotations | oval | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | oval | thickness | numeric | [1-12] | 2 | |
+| annotations | oval | fillColor | RGB | | null | |
+| annotations | arrow | color | RGB | | #ff0000 | |
+| annotations | arrow | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | arrow | thickness | numeric | [1-12] | 2 | |
+| annotations | pencil | color | RGB | | #ff0000 | |
+| annotations | pencil | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | pencil | thickness | numeric | [1-12] | 2 | |
+| annotations | pencil | addHistoricalPoints | Bool | true/false | true | 是否添加当前帧的历史坐标点 |
+| annotations | polygon | color | RGB | | #ff0000 | |
+| annotations | polygon | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | polygon | thickness | numeric | [1-12] | 2 | |
+| annotations | polygon | fillColor | RGB | | null | |
+| annotations | cloud | color | RGB | | #ff0000 | |
+| annotations | cloud | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | cloud | thickness | numeric | [1-12] | 2 | |
+| annotations | cloud | fillColor | RGB | | null | |
+| annotations | polyline | color | RGB | | #ff0000 | |
+| annotations | polyline | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | polyline | thickness | numeric | [1-12] | 2 | |
+| annotations | typewriter | textColor | RGB | | #0000ff | |
+| annotations | typewriter | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | typewriter | textFace | String | Courier/ Helvetica/ Times | Courier | 文本字体名称。 如果设置为非法值，则使用默认字体。 |
+| annotations | typewriter | textSize | Integer | >=1 | 18 | |
+| annotations | textbox | color | RGB | | #ff0000 | |
+| annotations | textbox | textColor | RGB | | #0000ff | |
+| annotations | textbox | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | textbox | textFace | String | Courier/ Helvetica/ Times | Courier | 文本字体名称。 如果设置为非法值，则使用默认字体。 |
+| annotations | textbox | textSize | Integer | >=1 | 18 | |
+| annotations | callout | color | RGB | | #ff0000 | |
+| annotations | callout | textColor | RGB | | #0000ff | |
+| annotations | callout | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | callout | textFace | String | Courier/ Helvetica/ Times | Courier | 文本字体名称。 如果设置为非法值，则使用默认字体。 |
+| annotations | callout | textSize | Integer | >=1 | 18 | |
+| annotations | note | color | RGB | | #ff0000 | |
+| annotations | note | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | note | icon | String | Comment/ Key/ Note/ Help/ NewParagraph/ Paragraph/ Insert | Comment | 如果设置为非法值，则使用默认值。 |
+| annotations | attachment | color | RGB | | #ff0000 | |
+| annotations | attachment | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | attachment | icon | String | Graph/ PushPin/ Paperclip/ Tag | PushPin | 如果设置为非法值，则使用默认值。 |
+| annotations | image | rotation | numeric | 0/90/180/270 | 0 | |
+| annotations | image | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | image | textSize | Integer | >=1 | 12 | |
+| annotations | measure | color | RGB | | #ff0000 | |
+| annotations | measure | opacity | numeric | [0.0-1.0] | 1.0 | |
+| annotations | measure | thickness | numeric | [1-12] | 2 | |
+| annotations | measure | scaleFromUnit | String | pt/m/cm/mm/inch/p/ft/yd | inch | 缩放的基准单位。 |
+| annotations | measure | scaleToUnit | String | pt/m/cm/mm/inch/p/ft/yd | inch | 缩放的目标单位。 |
+| annotations | measure | scaleFromValue | numeric | | 1.0 | 缩放的基准数值。 |
+| annotations | measure | scaleToValue | numeric | | 1.0 | 缩放的目标数值。 |
+| form | textField | textColor | RGB | | #000000 | |
+| form | textField | textFace | String | Courier/ Helvetica/ Times | Courier | 文本字体名称。 如果设置为非法值，则使用默认字体。 |
+| form | textField | textSize | Integer | >=0 | 0 | 0表示自动调整字体大小。 |
+| form | checkBox | textColor | RGB | | #000000 | |
+| form | radioButton | textColor | RGB | | #000000 | |
+| form | comboBox | textColor | RGB | | #000000 | |
+| form | comboBox | textFace | String | Courier/ Helvetica/ Times | Courier | 文本字体名称。 如果设置为非法值，则使用默认字体。 |
+| form | comboBox | textSize | Integer | >=0 | 0 | 0表示自动调整字体大小。 |
+| form | comboBox | customText | | | false | True表示允许自定义文本。 False表示不允许自定义文本。 |
+| form | listBox | textColor | RGB | | #000000 | |
+| form | listBox | textFace | String | Courier/ Helvetica/ Times | Courier | 文本字体名称。 如果设置为非法值，则使用默认字体。 |
+| form | listBox | textSize | Integer | >=0 | 0 | 0表示自动调整字体大小。 |
+| form | listBox | multipleSelection | | | false | True表示支持多选。 False表示不支持多选。 |
+| signature | | signature | | color | RGB | |
+| signature | | signature | | thickness | numeric | [1-12] |
+通过配置文件实例化UIExtensionsManager对象
+在3.6小节""，我们介绍了如何使用UI Extensions组件实例化UIExtensionsManager对象，并默认加载所有内置UI框架。本节将介绍如何使用配置文件实例化UIExtensionsManager，以便开发者根据需求轻松自定义UI。
+前提条件：
+您已将名为"uiextensions_config.json"的JSON配置文件放置于"PDFReader/entry/src/main/resources/rawfile"目录下。
+操作步骤：
+在"PDFReader/entry/src/main/ets/pages/Index.ets"文件中，添加以下代码：
+import{UIExtensionsManager,UIExtensionsComponent,ConfigModel}from'uiextensions';
+...
+// @StateuiextensionsManager:UIExtensionsManager= newUIExtensionsManager(getContext(this));@StateuiextensionsManager:UIExtensionsManager=newUIExtensionsManager(getContext(this),newConfigModel(getContext(this),'uiextensions_config.json'));
+通过配置文件自定义UI示例
+以下将演示如何通过修改配置文件，在项目中自定义功能模块、权限管理和UI设置（例如，UI元素属性）。
+为便于理解，我们将以"samples"文件夹下的"complete_pdf_viewer"示例为例进行演示。
+打开complete_pdf_viewer示例步骤：
+在DevEcoStudio中打开"complete_pdf_viewer"示例工程。
+在"samples/complete_pdf_viewer/entry/src/main/resources/rawfile"目录下找到配置文件"uiextensions_config.json"。
+示例1：禁用"search"和"pagenavigation"功能模块
+在JSON配置文件中，将"search"和"pagenavigation"的值设置为"false"，如下所示：
+"search":false,"pagenavigation":false,
+重新编译并运行示例，对比效果如下：
+修改前:修改后:
+![image](https://local-dev.foxitcloud.com/api/backend/files/8fd6db65-d689-474b-a546-136c3ea36759/image-preview)![image](https://local-dev.foxitcloud.com/api/backend/files/a9c39374-20a0-44d6-a890-274ca0509ec0/image-preview)
+"search"和"pagenavigation"功能模块被移除了。
+示例2：禁止执行JavaScript
+在JSON配置文件中，将permissions对象的"runJavaScript"属性设置为"false"，如下所示：
+"permissions": {"runJavaScript":false,},
+重新编译并运行示例，此时点击包含JavaScript脚本的按钮将无任何响应。
+示例3：将高亮颜色从黄色设置为红色
+在JSON配置文件中，将"highlight"对象的color属性设置为"#ff0000"（红色），如下所示：
+"highlight": {"color":"#ff0000","opacity":1.0},
+重新编译并运行示例，对比效果如下：
+修改前:修改后:
+![image](https://local-dev.foxitcloud.com/api/backend/files/1b1cb060-0a7e-42ae-b39a-3f4715f66c31/image-preview)![image](https://local-dev.foxitcloud.com/api/backend/files/20a54b1e-72c4-4739-b9af-1e1e9e18e398/image-preview)
+高亮颜色变为红色了。
+使用SDK API
+福昕PDF SDK鸿蒙版将所有功能实现封装在UI Extensions组件中
+
+---
+
+示例3：将高亮颜色从黄色设置为红色
+在JSON配置文件中，将"highlight"对象的color属性设置为"#ff0000"（红色），如下所示：
+"highlight": {"color":"#ff0000","opacity":1.0},
+重新编译并运行示例，对比效果如下：
+修改前:修改后:
+![image](https://local-dev.foxitcloud.com/api/backend/files/1b1cb060-0a7e-42ae-b39a-3f4715f66c31/image-preview)![image](https://local-dev.foxitcloud.com/api/backend/files/20a54b1e-72c4-4739-b9af-1e1e9e18e398/image-preview)
+高亮颜色变为红色了。
+使用SDK API
+福昕PDF SDK鸿蒙版将所有功能实现封装在UI Extensions组件中。如果您对功能实现的详细过程感兴趣，请参考本节内容。
+在本节中，我们将介绍福昕PDF SDK鸿蒙版的主要功能，并列举相关示例来展示如何使用福昕PDF SDKCore API实现这些功能。
+Render
+PDF渲染是通过Foxit渲染引擎实现的，Foxit渲染引擎是一个图形引擎，用于将页面渲染到位图或平台设备上下文。福昕PDF SDK提供了APIs用来设置渲染选项/flags，例如设置flag来决定是否渲染表单域和签名，是否绘制图像反锯齿(anti-aliasing)和路径反锯齿。可以使用以下APIs进行渲染：
+渲染页面和注释时，首先使用Renderer.SetRenderContentFlags接口来决定是否同时渲染页面和注释，然后使用Renderer.StartRender接口进行渲染。Renderer.StartQuickRender接口也可以用来渲染页面，但仅用于缩略图。
+渲染单个annotation注释，使用Renderer.RenderAnnot接口。
+在位图上渲染，使用Renderer.StartRenderBitmap接口。
+渲染一个重排的页面，使用接口。
+在福昕PDF SDK中，Widget注释常与表单域和表单控件相关联。渲染widget注释，推荐使用如下的流程：
+加载PDF页面后，首先渲染页面以及该页面上所有的注释(包括widget注释)。
+然后，如果使用FoxitRDKNative.pdf.interform.Filler对象来填表，则应使用FoxitRDKNative.pdf.interform.Filler.Render接口来渲染当前获取到焦点的表单控件，而不是使用Renderer.RenderAnnot接口。
+如何将指定的PDF页面渲染到bitmap
+import{image}from'@kit.ImageKit';import{FoxitRDKNative}from'foxit_rdk';import{BusinessError}from'@ohos.base';classRenderUnit{publicpixelMap?:image.PixelMap;publicrenderPage(page:FoxitRDKNative.pdf.PDFPage,width:number,height:number):void{try{if(!page.IsParsed()){classPauseCallBackImplextendsFoxitRDKNative.common.PauseCallback{NeedToPauseNow():boolean{return false;}}constprogressive=page.StartParse(FoxitRDKNative.pdf.PDFPage.e_ParsePageNormal,newPauseCallBackImpl(),false)letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=progressive.Continue();}}constw:number=Math.ceil(width);consth:number=Math.ceil(height);constsize:number=w*h*4;constmatrix:FoxitRDKNative.common.fxcrt.Matrix2D=page.GetDisplayMatrix(0,0,w,h,FoxitRDKNative.common.e_Rotation0)constcolor:ArrayBuffer=newArrayBuffer(size)constbitmap:FoxitRDKNative.common.Bitmap=newFoxitRDKNative.common.Bitmap(w,h,FoxitRDKNative.common.Bitmap.e_DIBArgb,color,w*4)bitmap.FillRect(0xFFFFFFFF)constrender:FoxitRDKNative.common.Renderer=newFoxitRDKNative.common.Renderer(bitmap,false);classPauseCallBackImplextendsFoxitRDKNative.common.PauseCallback{NeedToPauseNow():boolean{return false;}}constprogressive=render.StartRender(page,matrix,newPauseCallBackImpl());letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=progressive.Continue();}letopts:image.InitializationOptions={editable:false,pixelFormat:image.PixelMapFormat.RGBA_8888,size:{height:h,width:w} }image.createPixelMap(color,opts,(error:BusinessError,pixelMap:image.PixelMap)=>{if(error){console.error('Failed to createpixelMap.');return;}this.pixelMap=pixelMap;//使用Image或者其他组件将pixelMap加载到布局上面console.log('Succeeded in creatingpixelMap.');})}catch(e){console.error(e);}}}
+TextPage
+福昕PDF SDK提供APIs来提取，选择，搜索和检索PDF文档中的文本。PDF文本内容存储在与特定页面相关的TextPage对象中。TextPage类可用于检索PDF页面中文本的信息，例如单个字符，单个单词，指定字符范围或矩形内的文本内容等。它还可用于构造其他文本相关类的对象，用来对文本内容执行更多操作或从文本内容访问指定信息：
+在PDF页面的文本内容中搜索文本，使用TextPage对象来构建TextSearch对象。
+访问类似超文本链接的文本，使用TextPage对象来构建PageTextLinks对象。
+高亮PDF页面上的选中文本，构建一个TextPage对象来计算选中文本区域。
+如何通过选择获取页面上的文本区域
+import{FoxitRDKNative}from'foxit_rdk';classTextPageUnit{publicgetTextRectsBySelection(page:FoxitRDKNative.pdf.PDFPage,startPos:FoxitRDKNative.common.fxcrt.PointF,endPos:FoxitRDKNative.common.fxcrt.PointF):Array<FoxitRDKNative.common.fxcrt.RectF> |null{try{if(!page.IsParsed()){classPauseCallBackImplextendsFoxitRDKNative.common.PauseCallback{NeedToPauseNow():boolean{return false;}}constprogressive=page.StartParse(FoxitRDKNative.pdf.PDFPage.e_ParsePageNormal,newPauseCallBackImpl(),false)letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=progressive.Continue();}}//从解析的PDF页面创建一个text pageconsttextPage=newFoxitRDKNative.pdf.TextPage(page,FoxitRDKNative.pdf.TextPage.e_ParseTextNormal);if(textPage==null||textPage.IsEmpty()){return null;}letstartCharIndex=textPage.GetIndexAtPos(startPos.x,startPos.y,5);letendCharIndex=textPage.GetIndexAtPos(endPos.x,endPos.y,5);//getTextRectCountAPI要求开始字符索引必须小于或等于结束字符索引startCharIndex=startCharIndex<endCharIndex?startCharIndex:endCharIndex;endCharIndex=endCharIndex>startCharIndex?endCharIndex:startCharIndex;constcount=textPage.GetTextRectCount(startCharIndex,endCharIndex-startCharIndex);if(count>0){constarray:Array<FoxitRDKNative.common.fxcrt.RectF> =newArray();for(leti=0;i<count;i++){constrectF=textPage.GetTextRect(i);if(rectF==null||rectF.IsEmpty()){continue;}array.push(rectF);}//返回的矩形是以PDF单位表示的，如果调用者需要在屏幕上高亮显示这些文本矩形，那么首先应该将这些矩形转换为设备单位returnarray;}}catch(e){console.error(e);}return null;}}
+Text Search
+福昕PDF SDK提供APIs来搜索PDF文档、XFA文档、文本页面或者PDF注释中的文本。它提供了文本搜索和获取搜索结果的函数：
+指定搜索模式和选项，使用TextSearch.SetPattern、TextSearch.SetStartPage(仅对PDF文档中的文本搜索有用)、TextSearch.SetEndPage(仅对PDF文档中的文本搜索有用)和TextSearch.SetSearchFlags接口。
+进行搜索，使用TextSearch.FindNext和TextSearch.FindPrev接口。
+获取搜索结果，使用TextSearch.GetMatchXXX()接口。
+如何在PDF文档中搜索指定的文本模型
+import{FoxitRDKNative}from'foxit_rdk';classTextSearchUnit{privatesearchText(){try{constpdfpath="XXX/Sample.pdf";constdoc=newFoxitRDKNative.pdf.PDFDoc(pdfpath);doc.Load('');classSearchCancelCallbackImplextendsFoxitRDKNative.pdf.SearchCancelCallback{NeedToCancelNow():boolean{return false;}}//创建一个text search handlerconsttextSearch=newFoxitRDKNative.pdf.TextSearch(doc,newSearchCancelCallbackImpl(),FoxitRDKNative.pdf.TextPage.e_ParseTextNormal);//设置搜索开始的起始页索引。默认情况下，结束页将是最后一页textSearch.SetStartPage(0);//设置要搜索的文本textSearch.SetPattern("foxit");//设置搜索标志以匹配大小写和整个单词
+
+---
+
+获取搜索结果，使用TextSearch.GetMatchXXX()接口。
+如何在PDF文档中搜索指定的文本模型
+import{FoxitRDKNative}from'foxit_rdk';classTextSearchUnit{privatesearchText(){try{constpdfpath="XXX/Sample.pdf";constdoc=newFoxitRDKNative.pdf.PDFDoc(pdfpath);doc.Load('');classSearchCancelCallbackImplextendsFoxitRDKNative.pdf.SearchCancelCallback{NeedToCancelNow():boolean{return false;}}//创建一个text search handlerconsttextSearch=newFoxitRDKNative.pdf.TextSearch(doc,newSearchCancelCallbackImpl(),FoxitRDKNative.pdf.TextPage.e_ParseTextNormal);//设置搜索开始的起始页索引。默认情况下，结束页将是最后一页textSearch.SetStartPage(0);//设置要搜索的文本textSearch.SetPattern("foxit");//设置搜索标志以匹配大小写和整个单词。textSearch.SetSearchFlags(FoxitRDKNative.pdf.TextSearch.e_SearchMatchCase|FoxitRDKNative.pdf.TextSearch.e_SearchMatchWholeWord);while(textSearch.FindNext()){//如果为true，则找到了一个匹配项//获取找到的匹配项的页面索引constpageIndx=textSearch.GetMatchPageIndex();//获取找到的匹配项文本的起始字符索引conststartCharIndex=textSearch.GetMatchStartCharIndex();//获取找到的匹配项文本的结束字符索引constendCharIndex=textSearch.GetMatchEndCharIndex();//获取找到的匹配项文本的矩形区域constmatchRects:FoxitRDKNative.common.fxcrt.RectFArray=textSearch.GetMatchRects();}}catch(e){console.error(e);}}}
+Bookmark (Outline)
+福昕PDF SDK提供了名为Bookmarks的导航工具，允许用户在PDF文档中快速定位和链接他们感兴趣的部分。PDF书签也称为outline，每个书签包含一个目标位置或动作来描述它链接到的位置。它是一个树形的层次结构，因此在访问bookmark树之前，必须首先调用接口PDFDoc.GetRootBookmark以获取整个bookmark树的root。这里，"root bookmark"是一个抽象对象，它只有一些child bookmarks，没有next sibling bookmarks,也没有任何数据(包括bookmark数据，目标位置数据和动作数据)。因为它没有任何数据，因此无法在应用程序界面上显示，能够调用的接口只有Bookmark.GetFirstChild。
+在检索root bookmark后，就可以调用以下的接口去访问其他的bookmarks:
+访问parent bookmark，使用Bookmark.GetParent接口。
+访问第一个child bookmark，使用Bookmark.GetFirstChild接口。
+访问next sibling bookmark，使用Bookmark.GetNextSibling接口。
+插入一个新的bookmark，使用Bookmark.Insert接口。
+移动一个bookmark，使用Bookmark.MoveTo接口。
+如何使用深度优先顺序遍历PDF文档的bookmarks
+import{FoxitRDKNative}from'foxit_rdk';classBookmarkUnit{privatedepthFistTravelBookmarkTree(bookmark:FoxitRDKNative.pdf.Bookmark,doc:FoxitRDKNative.pdf.PDFDoc):void{if(bookmark==null||bookmark.IsEmpty()){return;}try{this.depthFistTravelBookmarkTree(bookmark.GetFirstChild(),doc);while(true){//获取书签标题consttitle=bookmark.GetTitle();constdest=bookmark.GetDestination();if(dest!=null&& !dest.IsEmpty()){letleft:number,right:number,top:number,bottom:number;letzoom:number;constpageIndex=dest.GetPageIndex(doc);//left,right,top,bottom,zoom只在一些特殊的缩放模式下有意义constmode=dest.GetZoomMode();switch(mode){caseFoxitRDKNative.pdf.actions.Destination.e_ZoomXYZ:left=dest.GetLeft();top=dest.GetTop();zoom=dest.GetZoomFactor();break;caseFoxitRDKNative.pdf.actions.Destination.e_ZoomFitPage:break;caseFoxitRDKNative.pdf.actions.Destination.e_ZoomFitHorz:top=dest.GetTop();break;caseFoxitRDKNative.pdf.actions.Destination.e_ZoomFitVert:left=dest.GetLeft();break;caseFoxitRDKNative.pdf.actions.Destination.e_ZoomFitRect:left=dest.GetLeft();bottom=dest.GetBottom();right=dest.GetRight();top=dest.GetTop();break;caseFoxitRDKNative.pdf.actions.Destination.e_ZoomFitBBox:break;caseFoxitRDKNative.pdf.actions.Destination.e_ZoomFitBHorz:top=dest.GetTop();break;caseFoxitRDKNative.pdf.actions.Destination.e_ZoomFitBVert:left=dest.GetLeft();break;default:break;}}bookmark=bookmark.GetNextSibling();if(bookmark==null||bookmark.IsEmpty()){break;}this.depthFistTravelBookmarkTree(bookmark.GetFirstChild(),doc);}}catch(e){console.error(e);}}}
+Reading Bookmark
+Reading bookmark不是PDF bookmark，换句话说，它不是PDF outlines。Reading bookmark是应用层的书签。它存储在目录的元数据（XML格式）中，允许用户根据他们的阅读偏好添加或删除reading bookmark，并通过选择reading bookmark可以轻松导航到一个PDF页面。
+为了检索reading bookmark，可以调用PDFDoc.GetReadingBookmarkCount接口来计算其个数，并且可以调用PDFDoc.GetReadingBookmark接口以索引方式获取相应的reading bookmark。
+此类提供了接口用来获取/设置reading bookmarks属性，比如标题，目标页面索引，以及创建/修改日期时间。
+如何添加自定义reading bookmark并枚举所有的reading bookmarks
+import{FoxitRDKNative}from'foxit_rdk';classReadingBookmarkUnit{privateaddReadingBookmark(pdfDoc:FoxitRDKNative.pdf.PDFDoc,title:string,pageIndex:number):FoxitRDKNative.pdf.ReadingBookmark{constcount=pdfDoc.GetReadingBookmarkCount();returnpdfDoc.InsertReadingBookmark(count,title,pageIndex);}//枚举PDF文档中所有的reading bookmarksprivategetReadingBookmark(pdfDoc:FoxitRDKNative.pdf.PDFDoc):void{try{constcount=pdfDoc.GetReadingBookmarkCount();for(leti=0;i<count;i++){constreadingBookmark=pdfDoc.GetReadingBookmark(i);if(readingBookmark.IsEmpty()){continue;}//获取reading bookmark的标题consttitle=readingBookmark.GetTitle();//获取与reading bookmark关联的页面索引constpageIndex=readingBookmark.GetPageIndex();//获取reading bookmark的创建日期constcreationTime=readingBookmark.GetDateTime(true);//获取reading bookmark的修改日期constmodificationTime=readingBookmark.GetDateTime(false);}}catch(e){console.error(e);}}}
+Attachment
+在福昕PDF SDK中，attachments指的是文档附件而不是文件附件注释。它允许将整个文件封装在文档中，就像电子邮件附件一样。福昕PDF SDK提供应用程序APIs来访问附件，例如加载附件，获取附件，插入/删除附件，以及访问附件的属性。
+如何将指定文件嵌入到PDF文档
+import{FoxitRDKNative}from'foxit_rdk';classAttachmentUnit{privateaddFileAttachment():void{try{constpdfpath="XXX/Sample.pdf";constdoc=newFoxitRDKNative.pdf.PDFDoc(pdfpath);doc.Load('');//将指定文件嵌入到PDF文档中constfilePath="/xxx/fileToBeEmbedded.xxx";constnameTree=newFoxitRDKNative.pdf.objects.PDFNameTree(doc,FoxitRDKNative.pdf.objects.PDFNameTree.e_EmbeddedFiles);constattachments=newFoxitRDKNative.pdf.Attachments(doc,nameTree);constfileSpec=newFoxitRDKNative.pdf.FileSpec(doc);fileSpec.SetFileName(filePath);if(!fileSpec.Embed(filePath)){return;}attachments.AddEmbeddedFile(filePath,fileSpec);}catch(e){console.error(e);}}}
+如何从PDF文档中导出嵌入的附件文件，并将其另存为单个文件
+import{FoxitRDKNative}from'foxit_rdk';classAttachmentUnit2{privateexportAttachment():void{try{constpdfpath="XXX/Sample.pdf";constdoc=newFoxitRDKNative.pdf.PDFDoc(pdfpath);doc.Load('');constnameTree=newFoxitRDKNative.pdf.objects.PDFNameTree(doc,FoxitRDKNative.pdf.objects.PDFNameTree.e_EmbeddedFiles);constattachments=newFoxitRDKNative.pdf.Attachments(doc,nameTree);//提取嵌入的附件文件constcount=attachments.GetCount();for(leti=0;i<count;i++){constkey:string=attachments.GetKey(i);if(key!=null&&key.length>0){constfileSpec1=attachments.GetEmbeddedFile(key);constexportedFile="/somewhere/"+fileSpec1.GetFileName();if(fileSpec1!=null&& !fileSpec1.IsEmpty()){fileSpec1.ExportToFile(exportedFile);}}}}catch(e){console.error(e);}}}
+Annotation
+一个annotation注释将对象（如注释，线条和高亮）与PDF文档页面上的位置相关联。PDF包括如Table5-1中列出的各种标准注释类型。在这些注释类型中，许多被定义为标记注释，因为它们主要用于标记PDF文档。Table5-1中的"Markup"列用来说明是否为标记注释。
+福昕PDF SDK支持PDF Reference中定义的大多数注释类型。福昕PDF SDK提供了注释创建，属性访问和修改，外观设置和绘制的APIs
+
+---
+
+PDF包括如Table5-1中列出的各种标准注释类型。在这些注释类型中，许多被定义为标记注释，因为它们主要用于标记PDF文档。Table5-1中的"Markup"列用来说明是否为标记注释。
+福昕PDF SDK支持PDF Reference中定义的大多数注释类型。福昕PDF SDK提供了注释创建，属性访问和修改，外观设置和绘制的APIs。
+Table5-1
+| Annotation type | Description | Markup | Supported by SDK |
+| --- | --- | --- | --- |
+| Text(Note) | Text annotation | Yes | Yes |
+| Link | Link Annotation | No | Yes |
+| FreeText (TypeWriter/TextBox/Callout) | Free text annotation | Yes | Yes |
+| Line | Line annotation | Yes | Yes |
+| Square | Square annotation | Yes | Yes |
+| Circle | Circle annotation | Yes | Yes |
+| Polygon | Polygon annotation | Yes | Yes |
+| PolyLine | PolyLine annotation | Yes | Yes |
+| Highlight | Highlight annotation | Yes | Yes |
+| Underline | Underline annotation | Yes | Yes |
+| Squiggly | Squiggly annotation | Yes | Yes |
+| StrikeOut | StrikeOut annotation | Yes | Yes |
+| Stamp | Stamp annotation | Yes | Yes |
+| Caret | Caret annotation | Yes | Yes |
+| Ink(pencil) | Ink annotation | Yes | Yes |
+| Popup | Popup annotation | No | Yes |
+| File Attachment | FileAttachment annotation | Yes | Yes |
+| Sound | Sound annotation | Yes | No |
+| Movie | Movie annotation | No | No |
+| Widget* | Widget annotation | No | Yes |
+| Screen | Screen annotation | No | Yes |
+| PrinterMark | PrinterMark annotation | No | No |
+| TrapNet | Trap network annotation | No | No |
+| Watermark* | Watermark annotation | No | No |
+| 3D | 3D annotation | No | No |
+| Redact | Redact annotation | Yes | Yes |
+备注：福昕PDF SDK支持名为PSI (pressure sensitive ink，压感笔迹)的自定义注释类型。在PDF规范中没有对该注释进行描述。通常，PSI用于手写功能，福昕SDK将其视为PSI注释，以便其他PDF产品可以对其进行相关处理。
+如何向PDF页面中添加注释
+import{FoxitRDKNative}from'foxit_rdk';classAnnotationUnit{privateaddAnnot():void{try{constpdfpath="xxx/Sample.pdf";constdoc=newFoxitRDKNative.pdf.PDFDoc(pdfpath);doc.Load('');constpdfPage=doc.GetPage(1);constrect=newFoxitRDKNative.common.fxcrt.RectF(100,100,120,120);constnote=newFoxitRDKNative.pdf.annots.Note(pdfPage.AddAnnot(FoxitRDKNative.pdf.annots.Annot.e_Note,rect));if(note==null||note.IsEmpty()){return;}note.SetIconName("Comment");//将边框颜色设置为蓝色note.SetBorderColor(0xff0000ff);note.SetContent("This is the note comment, write any content here.");note.ResetAppearanceStream();classSearchCancelCallbackImplextendsFoxitRDKNative.pdf.SearchCancelCallback{NeedToCancelNow():boolean{return false;}}//以下代码展示如何在搜索到的文本上添加高亮注释consttextSearch=newFoxitRDKNative.pdf.TextSearch(pdfPage.GetDocument(),newSearchCancelCallbackImpl(),FoxitRDKNative.pdf.TextPage.e_ParseTextNormal);if(textSearch==null||textSearch.IsEmpty()){return;}//假设需要高亮的文本是"foxit"textSearch.SetPattern("foxit");constbMatched=textSearch.FindNext();if(bMatched){constrects=textSearch.GetMatchRects();constrectCount=rects.GetSize();//根据搜索到的文本矩形，填充quadpoints数组。constarrayOfQuadPoints=newFoxitRDKNative.pdf.annots.QuadPointsArray();letmatchRect:FoxitRDKNative.common.fxcrt.RectF;for(leti=0;i<rectCount;i++){matchRect=rects.GetAt(i);constquadPoints=newFoxitRDKNative.pdf.annots.QuadPoints();quadPoints.first=newFoxitRDKNative.common.fxcrt.PointF(matchRect.left,matchRect.top);quadPoints.second=newFoxitRDKNative.common.fxcrt.PointF(matchRect.right,matchRect.top);quadPoints.third=newFoxitRDKNative.common.fxcrt.PointF(matchRect.left,matchRect.bottom);quadPoints.fourth=newFoxitRDKNative.common.fxcrt.PointF(matchRect.right,matchRect.bottom);arrayOfQuadPoints.Add(quadPoints);}//只需给markup annotation设置一个空矩形，然后根据quadPoints的坐标值来计算annotation矩形constrect2=newFoxitRDKNative.common.fxcrt.RectF(0,0,0,0);consttextMarkup=newFoxitRDKNative.pdf.annots.TextMarkup(pdfPage.AddAnnot(FoxitRDKNative.pdf.annots.Annot.e_Highlight,rect2));//将quadpoints设置给markup annotationtextMarkup.SetQuadPoints(arrayOfQuadPoints);//将边框颜色设置为红色textMarkup.SetBorderColor(0xffff0000);//设置为30%的透明度textMarkup.SetOpacity(0.3);//生成外观textMarkup.ResetAppearanceStream();}}catch(e){console.error(e);}}}
+如何删除PDF页面中的注释
+import{FoxitRDKNative}from'foxit_rdk';classAnnotationUnit2{privateremoveAnnot():void{try{constpdfpath="xxx/Sample.pdf";constdoc=newFoxitRDKNative.pdf.PDFDoc(pdfpath);doc.Load('');constpdfPage=doc.GetPage(1);constannot=pdfPage.GetAnnot(0);if(annot==null||annot.IsEmpty()){return;}//删除第一个annot，使第二个annot变为第一个pdfPage.RemoveAnnot(annot);}catch(e){console.error(e)}}}
+如何注册监听器接收注释事件
+在接收注释事件之前需要提前注册注释监听器。具体参考下述代码。
+import{FoxitRDKNative}from'foxit_rdk';import{UIExtensionsManager}from'uiextensions';import{IAnnotEventListener}from'uiextensions/src/main/ets/event/IAnnotEventListener';classAnnotationUnit3{privateannotEventListener:IAnnotEventListener={onAnnotAdded:(page:FoxitRDKNative.pdf.PDFPage,annot:FoxitRDKNative.pdf.annots.Annot):void=>{},onAnnotWillDelete:(page:FoxitRDKNative.pdf.PDFPage,annot:FoxitRDKNative.pdf.annots.Annot):void=>{},onAnnotDeleted:(page:FoxitRDKNative.pdf.PDFPage,annot:FoxitRDKNative.pdf.annots.Annot):void=>{},onAnnotModified:(page:FoxitRDKNative.pdf.PDFPage,annot:FoxitRDKNative.pdf.annots.Annot):void=>{},onAnnotChanged:(lastAnnot:FoxitRDKNative.pdf.annots.Annot|null,currentAnnot:FoxitRDKNative.pdf.annots.Annot|null):void=>{}}registerYourAnnotEventListener(extensionsManager:UIExtensionsManager):void{//调用registerAnnotEventListener来注册annot事件监听器以接收annot事件extensionsManager.getDocumentManager().registerAnnotEventListener(this.annotEventListener);}unregisterYourAnnotEventListener(extensionsManager:UIExtensionsManager):void{//调佣unregisterAnnotEventListener来取消注册annot事件监听器extensionsManager.getDocumentManager().unregisterAnnotEventListener(this.annotEventListener);}}
+Form
+Form（AcroForm）是用于收集用户交互信息的表单域的集合。福昕PDF SDK提供了以编程方式查看和编辑表单域的APIs。在PDF文档中，表单域通常用于收集数据。Form类提供了APIs用来检索表单域或表单控件，导入/导出表单数据，以及其他功能，例如：
+检索表单域，使用Form.GetFieldCount和Form.GetField接口。
+检索PDF页面中的表单控件，使用Form.GetControlCount和Form.GetControl接口。
+从XML文件导入表单数据，使用Form.ImportFromXML接口；导出表单数据到XML文件，使用Form.ExportToXML接口。
+检索form filler对象，使用Form.GetFormFiller接口。
+从FDF/XFDF文件中导入表单数据，或者导出数据到FDF/XFDF文件，请参考PDFDoc.ImportFromFDF和PDFDoc.ExportToFDF接口。
+如何通过XML文件导入表单数据或将表单数据导出到XML文件
+import{FoxitRDKNative}from'foxit_rdk';classFormUnit{privateformTest():void{try{constpdfpath="xxx/Sample.pdf";constdoc=newFoxitRDKNative.pdf.PDFDoc(pdfpath);doc.Load('');consthasForm=doc.HasForm();if(hasForm){//从文档中创建一个form对象constform=newFoxitRDKNative.pdf.interform.Form(doc);//将表单数据导出到一个XML文件form.ExportToXML("/somewhere/export.xml");//或者从XML文件中导入表单数据form.ImportFromXML("/somewhere/export.xml");}}catch(e){console.error(e);}}}
+Security
+福昕PDF SDK提供了一系列加密和解密功能，以满足不同级别的文档安全保护。用户可以使用常规密码加密和证书驱动加密，或使用自己的安全处理机制来自定义安全实现。
+如何使用密码加密PDF文件
+import{FoxitRDKNative}from'foxit_rdk';classSecurityUnit{publicencryPDF(pdfDoc:FoxitRDKNative.pdf.PDFDoc,ownerPassword:string,userPassword:string,savePth:string):boolean{//设置加密数据。constencryptData=newFoxitRDKNative.pdf.StdEncryptData(true,FoxitRDKNative.pdf.PDFDoc.e_PermModify|FoxitRDKNative.pdf.PDFDoc.e_PermAssemble|FoxitRDKNative.pdf.PDFDoc.e_PermFillForm,FoxitRDKNative.pdf.SecurityHandler.e_CipherAES,16);constsecurityHandler=newFoxitRDKNative.pdf.StdSecurityHandler();try{if(!securityHandler.Initialize(encryptData,userPassword,ownerPassword)){return false;}pdfDoc.SetSecurityHandler(securityHandler);if(!pdfDoc.SaveAs(savePth,FoxitRDKNative.pdf.PDFDoc.e_SaveFlagNormal)){return false;}return true;}catch(e){console.error(e);}return false;}}
+Signature
+PDF签名可用于创建和签署PDF文档的数字签名，从而保护文档内容的安全性并避免文档被恶意篡改。它可以让接收者确保其收到的文档是由签名者发送的，并且文档内容是完整和未被经篡的
+
+---
+
+constencryptData=newFoxitRDKNative.pdf.StdEncryptData(true,FoxitRDKNative.pdf.PDFDoc.e_PermModify|FoxitRDKNative.pdf.PDFDoc.e_PermAssemble|FoxitRDKNative.pdf.PDFDoc.e_PermFillForm,FoxitRDKNative.pdf.SecurityHandler.e_CipherAES,16);constsecurityHandler=newFoxitRDKNative.pdf.StdSecurityHandler();try{if(!securityHandler.Initialize(encryptData,userPassword,ownerPassword)){return false;}pdfDoc.SetSecurityHandler(securityHandler);if(!pdfDoc.SaveAs(savePth,FoxitRDKNative.pdf.PDFDoc.e_SaveFlagNormal)){return false;}return true;}catch(e){console.error(e);}return false;}}
+Signature
+PDF签名可用于创建和签署PDF文档的数字签名，从而保护文档内容的安全性并避免文档被恶意篡改。它可以让接收者确保其收到的文档是由签名者发送的，并且文档内容是完整和未被经篡的。福昕PDF SDK提供APIs用来创建数字签名，验证签名的有效性，删除现有的数字签名，获取和设置数字签名的属性，显示签名和自定义签名表单域的外观。
+备注：福昕PDF SDK提供了默认签名回调函数，支持如下两种类型的signature filter和subfilter:
+(1) filter:Adobe.PPKLitesubfilter: adbe.pkcs7.detached
+(2) filter:Adobe.PPKLitesubfilter: adbe.pkcs7.sha1
+如果您使用以上任意一种的signature filter和subfilter，您可以直接签名PDF文档和验证签名的有效性，而不需要注册自定义回调函数。
+如何对PDF文档进行签名，并验证签名
+import{FoxitRDKNative}from'foxit_rdk';classSignatureUnit{//示例代码展示了如何对PDF文档进行签名，并验证签名publicaddNewSignatureAndSign(page:FoxitRDKNative.pdf.PDFPage,rect:FoxitRDKNative.common.fxcrt.RectF):void{try{//在指定的页面矩形上添加一个新的签名constsignature=page.AddSignature(rect);//设置appearance flagssignature.SetAppearanceFlags(FoxitRDKNative.pdf.Signature.e_APFlagLabel|FoxitRDKNative.pdf.Signature.e_APFlagDN|FoxitRDKNative.pdf.Signature.e_APFlagText|FoxitRDKNative.pdf.Signature.e_APFlagLocation|FoxitRDKNative.pdf.Signature.e_APFlagReason|FoxitRDKNative.pdf.Signature.e_APFlagSigner);//设置signersignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameSigner,"Foxit");//设置locationsignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameLocation,"AnyWhere");//设置reasonsignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameReason,"ANyReason");//设置contact infosignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameContactInfo,"AnyInfo");//设置domain namesignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameDN,"AnyDN");//设置descriptionsignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameText,"AnyContent");//默认支持"Adobe.PPKLite" Filtersignature.SetFilter("Adobe.PPKLite");//默认支持"adbe.pkcs7.sha1"或"adbe.pkcs7.detached"SubFiltersignature.SetSubFilter("adbe.pkcs7.detached");//输入的PKCS＃12格式证书，其包含公钥和私钥constcertPath="/somewhere/cert.pfx";//该证书的密码constcertPassword="123";constsignedPDFPath="/somewhere/signed.pdf";//开始签名，如果成功，签名后的PDF将保存到"save_path"指定的路径classPauseCallBackImplextendsFoxitRDKNative.common.PauseCallback{NeedToPauseNow():boolean{return false;}}constprogressive=signature.StartSign(certPath,certPassword,FoxitRDKNative.pdf.Signature.e_DigestSHA1,signedPDFPath,newArrayBuffer(0),newPauseCallBackImpl());if(progressive!=null){letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=progressive.Continue();}if(state!=FoxitRDKNative.common.Progressive.e_Finished){return;}}//从已签名的PDF文档中获取签名，然后进行验证constpdfDoc=newFoxitRDKNative.pdf.PDFDoc(signedPDFPath);consterr=pdfDoc.Load(null);if(err!=FoxitRDKNative.common.e_ErrSuccess){return;}constcount=pdfDoc.GetSignatureCount();for(leti=0;i<count;i++){constsign=pdfDoc.GetSignature(i);if(sign!=null&& !sign.IsEmpty()){constprogressive_1=sign.StartVerify(newArrayBuffer(0),null);if(progressive_1!=null){letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=progressive_1.Continue();}if(state!=FoxitRDKNative.common.Progressive.e_Finished){continue;}}constverifiedState=sign.GetState();if((verifiedState&FoxitRDKNative.pdf.Signature.e_StateVerifyValid)==FoxitRDKNative.pdf.Signature.e_StateVerifyValid){console.info("Signature","addNewSignatureAndSign: Signature"+i+"is valid.");}}}}catch(e){console.error(e);}}}
+如何为签名设置定制化时间信息
+通过Signature对象的SetSignTime方法不能改变时间格式。我们可以通过传递参数（时间字符串）给签名词典来解决这个问题。具体参考下述代码。
+import{FoxitRDKNative}from'foxit_rdk';classSignatureUnit2{publicaddNewSignatureAndSign(page:FoxitRDKNative.pdf.PDFPage,rect:FoxitRDKNative.common.fxcrt.RectF):void{try{//在指定的页面矩形上添加一个新的签名constsignature=page.AddSignature(rect);//设置appearance flagssignature.SetAppearanceFlags(FoxitRDKNative.pdf.Signature.e_APFlagLabel|FoxitRDKNative.pdf.Signature.e_APFlagDN|FoxitRDKNative.pdf.Signature.e_APFlagText|FoxitRDKNative.pdf.Signature.e_APFlagLocation|FoxitRDKNative.pdf.Signature.e_APFlagReason|FoxitRDKNative.pdf.Signature.e_APFlagSigner|FoxitRDKNative.pdf.Signature.e_APFlagSigningTime);//设置signersignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameSigner,"Foxit");//设置locationsignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameLocation,"AnyWhere");//设置reasonsignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameReason,"ANyReason");//设置contact infosignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameContactInfo,"AnyInfo");//设置domain namesignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameDN,"AnyDN");//设置descriptionsignature.SetKeyValue(FoxitRDKNative.pdf.Signature.e_KeyNameText,"AnyContent");//DateTimedateTime= newDateTime();// ...//signature.SetSignTime(dateTime);//签名日期的默认格式是yyMMddhhmmss-时区//如果您需要设置自定义格式的时间，请参考以下代码constdictionary=signature.GetSignatureDict();dictionary.SetAtString("M","2022/02/13 11:00:00"/* formatted time string*/);//默认支持"Adobe.PPKLite" Filtersignature.SetFilter("Adobe.PPKLite");//默认支持"adbe.pkcs7.sha1"或"adbe.pkcs7.detached"SubFiltersignature.SetSubFilter("adbe.pkcs7.detached");//输入的PKCS＃12格式证书，其包含公钥和私钥constcertPath="/somewhere/cert.pfx";//该证书的密码constcertPassword="123";constsignedPDFPath="/somewhere/signed.pdf";//开始签名，如果成功，签名后的PDF将保存到"save_path"指定的路径classPauseCallBackImplextendsFoxitRDKNative.common.PauseCallback{NeedToPauseNow():boolean{return false;}}constprogressive=signature.StartSign(certPath,certPassword,FoxitRDKNative.pdf.Signature.e_DigestSHA1,signedPDFPath,newArrayBuffer(0),newPauseCallBackImpl());if(progressive!=null){letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=progressive.Continue();}if(state!=FoxitRDKNative.common.Progressive.e_Finished){return;}}//从已签名的PDF文档中获取签名，然后进行验证constpdfDoc=newFoxitRDKNative.pdf.PDFDoc(signedPDFPath);consterr=pdfDoc.Load('');if(err!=FoxitRDKNative.common.e_ErrSuccess){return;}constcount=pdfDoc.GetSignatureCount();for(leti=0;i<count;i++){constsign=pdfDoc.GetSignature(i);if(sign!=null&& !sign.IsEmpty()){constprogressive_1=sign.StartVerify(null,null);if(progressive_1!=null){letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=progressive_1.Continue();}if(state!=FoxitRDKNative.common.Progressive.e_Finished){continue;}}constverifiedState=sign.GetState();if((verifiedState&FoxitRDKNative.pdf.Signature.e_StateVerifyValid)==FoxitRDKNative.pdf.Signature.e_StateVerifyValid){console.info("Signature","addNewSignatureAndSign: Signature"+i+"is valid.");}}}}catch(e){console.error(e);}}}
+FAQ
+从指定的PDF文件路径打开一个PDF文档
+如何从指定的PDF文件路径打开一个PDF文档？
+在构造PDFDoc时，只能使用绝对路径。由于HarmonyOS Next的沙盒机制，您无法访问应用外文件的真实路径。因此，您需要先将文件拷贝到应用内部，然后再打开
+
+---
+
+由于HarmonyOS Next的沙盒机制，您无法访问应用外文件的真实路径。因此，您需要先将文件拷贝到应用内部，然后再打开。请参考如下的代码：
+@Entry@ComponentstructIndex{@StateisShowDoc:boolean=false;@StatepdfViewModel:PDFViewCtrlModel=newPDFViewCtrlModel(getContext());privateappFilesDir=getContext().filesDir;build(){Column(){if(!this.isShowDoc){Button('Open Doc').onClick(async()=>{constfilePath=awaitthis.selectFile();if(filePath!=null){this.isShowDoc=true;this.pdfViewModel.openDoc(filePath);}})}else{PDFViewCtrl({model:this.pdfViewModel})}}.width('100%').height('100%').justifyContent(FlexAlign.Center)}asyncselectFile():Promise<string|null>{try{letdocumentSelectOptions=newpicker.DocumentSelectOptions();//documentSelectOptions.fileSuffixFilters= suffix;documentSelectOptions.maxSelectNumber=10;if(canIUse('SystemCapability.FileManagement.UserFileService.FolderSelection')){documentSelectOptions.selectMode=picker.DocumentSelectMode.FILE;}constdocumentViewPicker=newpicker.DocumentViewPicker(getContext());constdocumentSelectResult:Array<string> =awaitdocumentViewPicker.select(documentSelectOptions);if(documentSelectResult.length===0){return null;}constimportFiles:Array<string> =newArray();for(leti=0;i<documentSelectResult.length;i++){leturi=documentSelectResult[i];letsrc_file=fs.openSync(uri,fs.OpenMode.READ_ONLY);src_file.pathconstdest_filepath=this.appFilesDir+'/'+src_file.name;fs.copyFileSync(src_file.fd,dest_filepath);fs.closeSync(src_file.fd);importFiles.push(dest_filepath);}returnimportFiles[0];}catch(error){console.error(error);}return null;}}
+打开PDF文档时显示指定的页面
+如何在打开PDF文档时，显示指定的页面？
+为了在打开PDF文档时显示指定的页面，您需要使用接口pdfViewModel.gotoPage。福昕PDF SDK鸿蒙版使用多线程来提高渲染速度，因此您需要确保在使用pdfViewModel.gotoPage接口之前，文档已经被成功加载。
+请在IDocEventListener中实现回调接口，然后在onDocOpened事件中调用gotoPage接口。以下是示例代码：
+import{FoxitRDKNative,IDocEventListener,PDFViewCtrl,PDFViewCtrlModel}from'foxit_rdk';importpickerfrom'@ohos.file.picker';importfs,{Filter,Options}from'@ohos.file.fs';@Entry@ComponentstructIndex{@StateisShowDoc:boolean=false;@StatepdfViewModel:PDFViewCtrlModel=newPDFViewCtrlModel(getContext());privateappFilesDir=getContext().filesDir;build(){Column(){if(!this.isShowDoc){Button('Open Doc').onClick(async()=>{constfilePath=awaitthis.selectFile();if(filePath!=null){this.isShowDoc=true;this.pdfViewModel.openDoc(filePath);}})}else{RelativeContainer(){PDFViewCtrl({model:this.pdfViewModel}).id('pdfview').alignRules({top:{anchor:"__container__",align:VerticalAlign.Top},left:{anchor:"__container__",align:HorizontalAlign.Start}})Column(){Button('Goto Last Page').onClick(()=>{constpageCount=this.pdfViewModel.getPageCount();this.pdfViewModel.gotoPage(pageCount-1);})}.width('100%').margin({top:100}).id('ToolAction')}.width('100%').height('100%')}}.width('100%').height('100%').justifyContent(FlexAlign.Center)}aboutToAppear():void{this.pdfViewModel.registerDocEventListener(this.docEventListener);}aboutToDisappear():void{this.pdfViewModel.unregisterDocEventListener(this.docEventListener);}asyncselectFile():Promise<string|null>{try{letdocumentSelectOptions=newpicker.DocumentSelectOptions();//documentSelectOptions.fileSuffixFilters= suffix;documentSelectOptions.maxSelectNumber=10;if(canIUse('SystemCapability.FileManagement.UserFileService.FolderSelection')){documentSelectOptions.selectMode=picker.DocumentSelectMode.FILE;}constdocumentViewPicker=newpicker.DocumentViewPicker(getContext());// await select completeconstdocumentSelectResult:Array<string> =awaitdocumentViewPicker.select(documentSelectOptions);if(documentSelectResult.length===0){return null;}constimportFiles:Array<string> =newArray();for(leti=0;i<documentSelectResult.length;i++){leturi=documentSelectResult[i];letsrc_file=fs.openSync(uri,fs.OpenMode.READ_ONLY);src_file.pathconstdest_filepath=this.appFilesDir+'/'+src_file.name;fs.copyFileSync(src_file.fd,dest_filepath);fs.closeSync(src_file.fd);importFiles.push(dest_filepath);}returnimportFiles[0];}catch(error){console.error(error);}return null;}privatedocEventListener:IDocEventListener={onDocOpened:(document:FoxitRDKNative.pdf.PDFDoc,errCode:number):void=>{if(errCode==FoxitRDKNative.common.e_ErrSuccess){constpageCount=this.pdfViewModel.getPageCount();this.pdfViewModel.gotoPage(pageCount-2);}}}}
+License key和序列号无法正常工作
+从网站下载的SDK包，未进行任何更改，为什么license key和序列号无法正常工作？
+通常，上传到网站的包，里面的license key和序列号是可以正常工作的。在上传到网站之前是经过测试的。因此，如果您发现license key和序列号无法使用，则可能是由设备的日期引起的。如果您设备的时间在下载包"libs"文件夹下xxxsdk_key.txt文件中的StartDate之前，则"librdk.so"库将无法解锁。请检查您设备的日期。
+在PDF文档中添加link注释
+如何在PDF文档中添加link注释？
+为了将link注释添加到PDF文档，首先需要调用PDFPage.AddAnnot将一个link注释添加到指定页面，然后调用Action.Create创建一个action，并将该action设置给刚添加的link注释。以下是在PDF首页添加一个URI link注释的示例代码：
+import{FoxitRDKNative}from'foxit_rdk';classLinkUnit{privateaddLinkAnnot(){try{constpath='xxx/Sample.pdf'//初始化一个PDFDoc对象constdocument=newFoxitRDKNative.pdf.PDFDoc(path);//加载未加密的文档内容document.Load();//获取PDF文件的第一页constpage=document.GetPage(0);//在第一页添加一个link annotationconstlinkAnnot=newFoxitRDKNative.pdf.annots.Link(page.AddAnnot(FoxitRDKNative.pdf.annots.Annot.e_Link,newFoxitRDKNative.common.fxcrt.RectF(250,650,400,750)));//创建一个URI action并设置URIconsturiAction=newFoxitRDKNative.pdf.actions.URIAction(FoxitRDKNative.pdf.actions.Action.Create(document,FoxitRDKNative.pdf.actions.Action.e_TypeURI));uriAction.SetURI("www.foxitsoftware.com");//将action设置给link annotationlinkAnnot.SetAction(uriAction);linkAnnot.ResetAppearanceStream();//保存已添加link annotation的文档document.SaveAs("xxx/sample_link.pdf",FoxitRDKNative.pdf.PDFDoc.e_SaveFlagNormal);}catch(e){console.error(e);}}}
+向PDF文档中插入图片
+如何向PDF文档中插入图片？
+有两种方法可以帮助您将图片插入到PDF文档中。第一钟是调用PDFPage.AddImageFromFilePath接口。您可以参考如下示例代码，该代码将图片插入到PDF文档的首页：
+备注：在调用PDFPage.AddImageFromFilePath接口之前，您需要获取并解析将要添加图片的页面。
+import{FoxitRDKNative}from'foxit_rdk';classImageUnit{//1privateaddImage():void{try{constpath="xxx/Sample.pdf";//初始化一个PDFDoc对象constdocument=newFoxitRDKNative.pdf.PDFDoc(path);//加载未加密的文档内容document.Load();//获取PDF文件的第一页constpage=document.GetPage(0);//解析页面if(!page.IsParsed()){constparse=page.StartParse(FoxitRDKNative.pdf.PDFPage.e_ParsePageNormal,null,false);letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=parse.Continue();}}//在第一页添加一张图片page.AddImageFromFilePath("XXX/2.png",newFoxitRDKNative.common.fxcrt.PointF(20,30),60,50,true)//保存已添加图片的文档document.SaveAs("XXX/sample_image.pdf",FoxitRDKNative.pdf.PDFDoc.e_SaveFlagNormal);}catch(e){console.error(e);}}}
+第二种是使用PDFPage.AddAnnot接口在指定的页面添加一个screen注释，然后将图片设置给刚添加的screen注释。您可以参考以下的示例代码，该代码将图片作为screen注释插入到PDF文件的首页：
+import{FoxitRDKNative}from'foxit_rdk';classImageUnit{privateaddScreenAnnot():void{try{constpath="xxx/Sample.pdf";//初始化一个PDFDoc对象constdocument=newFoxitRDKNative.pdf.PDFDoc(path);//加载未加密的文档内容document.Load();//获取PDF文件的第一页constpage=document.GetPage(0);//在第一页添加一个screen annotationconstscreen=newFoxitRDKNative.pdf.annots.Screen(page.AddAnnot(FoxitRDKNative.pdf.annots.Annot.e_Screen,newFoxitRDKNative.common.fxcrt.RectF(100,350,250,150)));//加载一个本地图片constimage=newFoxitRDKNative.common.Image('xxx/test.png');screen.SetImage(image,0,0);screen.ResetAppearanceStream();//保存已添加screen annotation的文档document.SaveAs("XXX/sample_image.pdf",FoxitRDKNative.pdf.PDFDoc.e_SaveFlagNormal);}catch(e){console.error(e);}}}
+高亮PDF文档中的表单域和设置高亮颜色
+如何设置是否高亮PDF文档中的表单域?以及如何设置高亮的颜色？
+默认情况下，高亮PDF文档中的表单域功能是启用的。如果您想要禁用它或者设置高亮颜色，可以通过JSON文件或调用API进行设置
+
+---
+
+如果您想要禁用它或者设置高亮颜色，可以通过JSON文件或调用API进行设置。
+备注：如果您需要设置高亮的颜色，请确保表单域高亮的功能是启用的。
+通过JSON文件
+设置""highlightForm":false,"在PDF文档中禁用表单域高亮功能。
+设置""highlightFormColor":"#2000ffcc","设置高亮颜色(输入您需要的颜色值)。
+通过调用API
+UIExtensionsManager.enableFormHighlight接口用来设置是否在PDF文档中启用表单域高亮的功能。如果您不需要启用该功能，请将其参数设置为"false"，如下所示：
+//假设已经初始化一个UIExtensionsManager对象:uiextensionsManagerthis.uiextensionsManager.enableFormHighlight(false);
+UIExtensionsManager.setFormHighlightColor接口用来设置高亮的颜色。以下是调用此API的示例代码：
+//假设已经初始化一个UIExtensionsManager对象:uiextensionsManagerthis.uiextensionsManager.setFormHighlightColor(0x4b0000ff);
+支持全文索引搜索
+福昕PDF SDK鸿蒙版是否支持全文索引搜索？如果支持，如何搜索在我的移动设备上离线存储的PDF文件？
+是的。福昕PDF SDK鸿蒙版支持全文索引搜索。
+要使用此功能，请按照如下的步骤：
+根据目录来创建一个文档来源，该目录为文档的搜索目录。
+DocumentsSource#constructor(directory:string);
+创建一个全文文本搜索对象，以及设置用于存储索引数据的数据库路径。
+FullTextSearch#constructor();FullTextSearch#SetDataBasePath(path_of_data_base:string):void;
+开始索引文档来源中的PDF文档。
+FullTextSearch#StartUpdateIndex(source:DocumentsSource,pause:PauseCallback,reupdate:boolean):Progressive;
+备注：您可以索引指定的PDF文件。例如，如果某个PDF文档的内容发生了更改，您可以使用以下的API对其重新进行索引：
+FullTextSearch#UpdateIndexWithFilePath(file_path:string):boolean
+从索引数据源中搜索指定的内容。搜索的结果将通过指定的回调函数来返回给外部，每找到一个匹配结果，则调用一次回调函数。
+FullTextSearch#SearchOf(match_string:string,rank_mode:number,callback:SearchCallback):boolean
+如下是使用全文索引搜索的示例代码：
+import{FoxitRDKNative}from'foxit_rdk';import{systemDateTime}from'@kit.BasicServicesKit';classDocumentsSourceUnit{privatetestSearch():void{try{constdirectory="A search directory...";constsearch=newFoxitRDKNative.fts.FullTextSearch();constdbPath="The path of data base to store the indexed data...";search.SetDataBasePath(dbPath);//获取文档源信息constsource=newFoxitRDKNative.fts.DocumentsSource(directory);//创建一个由用户实现的暂停回调对象，以暂停更新过程constpauseCallback=newPauseCallbackImpl(30);//开始索引文档来源中的PDF文档constprogressive=search.StartUpdateIndex(source,pauseCallback,false);letstate=FoxitRDKNative.common.Progressive.e_ToBeContinued;while(state==FoxitRDKNative.common.Progressive.e_ToBeContinued){state=progressive.Continue();}//创建一个回调对象，当找到匹配项时将被调用constsearchCallback=newMySearchCallback();//从索引的数据源中搜索指定的关键词search.SearchOf("looking for this text",FoxitRDKNative.fts.FullTextSearch.e_RankHitCountASC,searchCallback);}catch(e){console.error(e);}}}
+PauseCallbackImpl回调的示例代码如下所示：
+classPauseCallbackImplextendsFoxitRDKNative.common.PauseCallback{privatem_milliseconds=0;privatem_startTime=0;public constructor(milliSeconds:number){super()this.m_milliseconds=milliSeconds;this.m_startTime=systemDateTime.getTime();}NeedToPauseNow():boolean{if(this.m_milliseconds<1){return false;}constdiff=systemDateTime.getTime()-this.m_startTime;if(diff>this.m_milliseconds){this.m_startTime=systemDateTime.getTime();return true;}else{return false;}}}
+MySearchCallback回调的示例如下所示：
+classMySearchCallbackextendsFoxitRDKNative.fts.SearchCallback{publicrelease():void{}publicretrieveSearchResult(filePath:string,pageIndex:number,matchResult:string,matchStartTextIndex:number,matchEndTextIndex:number):number{consts=`Found file is :${filePath}\n Page index is :${pageIndex}Start text index :${matchStartTextIndex}End text index :${matchEndTextIndex}\n Match is :${matchResult}\n\n`;console.info('MySearchCallback','retrieveSearchResult: '+s);return0;}}
+备注：
+福昕PDF SDK鸿蒙版提供的全文索引搜索将以递归的方式遍历整个目录，以便搜索目录下的文件和文件夹都会被索引。
+如果需要中止索引进程，可以将pause回调参数传递给StartUpdateIndex接口。其回调函数NeedToPauseNow都会被调用，一旦完成一个PDF文档的索引。因此，调用者可以在回调函数NeedToPauseNow返回"true"时中止索引进程。
+索引数据库的位置由SetDataBasePath接口设置。如果要清除索引数据库，请手动清除。目前，不支持从索引函数中删除指定文件相关的索引内容。
+SearchOf接口的每个搜索结果都由指定的回调返回到外部。一旦SearchOf接口返回"true"或"false"，则表示搜索已完成。
+夜间模式颜色设置
+如何设置夜间模式颜色？
+设置夜间模式颜色，需要首先调用PDFViewCtrlModel#setMappingModeBackgroundColor(mappingModeBackgroundColor:number)和PDFViewCtrlModel#setMappingModeForegroundColor(mappingModeForegroundColor:number)接口根据您的需要设置颜色，然后使用PDFViewCtrlModel#setColorMode(colorMode:number)设置颜色模式。
+备注：如果颜色模式已经设置为Renderer.e_ColorModeMapping/Renderer.e_ColorModeMappingGray，在调用PDFViewCtrlModel#setMappingModeBackgroundColor(mappingModeBackgroundColor:number)和PDFViewCtrlModel#setMappingModeForegroundColor(mappingModeForegroundColor:number)接口之后，您仍然需要再次设置。否则，颜色设置可能不会起作用。
+上述接口需要在UI Extensions组件的源代码中调用，请将"libs"文件夹下的"uiextensions"工程添加到您的工程中。然后在"uiextensions/src/main/ets/frame/impl/MainFrame.ets"文件中定位到onValueChanged函数，根据您的需要设置颜色。
+使用UIExtensions设置只读模式
+如何使用UIExtensions设置只读模式？
+1：接口定义
+在UIExtensionsManager提供了以下接口：
+/*** whether the pdf document can be modified** @return whether the pdf document can be modified*/publicisEnableModification():boolean/*** Set whether the pdf document can be modified.The default setting allows modification** @paramisEnabledwhether the pdf document can be modified*/publicenableModification(isEnabled:boolean):void
+2：接口使用
+默认情况下没有权限控制的文档是可以编辑的。如果需要禁用编辑相关的交互功能，可以通过以下方法设置：
+import{UIExtensionsManager}from'uiextensions';classEnableModificationUnit{privateuiextensionsManager:UIExtensionsManager;constructor(uiextMgr:UIExtensionsManager){this.uiextensionsManager=uiextMgr;}privatetest():void{this.uiextensionsManager.enableModification(false);}}
+更新页面绑定(page binding)支持RTL (Right-to-Left)
+如何自动更新页面绑定来支持RTL (Right-to-Left)？
+对于大多数语言，我们使用的阅读习惯都是从左往右，这需要在左边缘进行页面绑定。但是，也有一些语言的阅读习惯是从右往左，比如阿拉伯语和希伯来语以及几种东亚文字。在这种情况下，用户最好在右边缘进行页面绑定，页面将从右到左排列（第一页在最右边）。为此，我们做了从右到左的页面布局的适配。
+页面绑定与水平滚动一起使用。对于垂直滚动，它仅在启用双页模式时才有效
+
+---
+
+但是，也有一些语言的阅读习惯是从右往左，比如阿拉伯语和希伯来语以及几种东亚文字。在这种情况下，用户最好在右边缘进行页面绑定，页面将从右到左排列（第一页在最右边）。为此，我们做了从右到左的页面布局的适配。
+页面绑定与水平滚动一起使用。对于垂直滚动，它仅在启用双页模式时才有效。
+以编程方式更新页面绑定
+福昕PDF SDK鸿蒙版在PDF_PAGE_BINDING_EDGE枚举类中定义了常量LEFT和RIGHT:
+LEFT:表示文档顺序从左往右排列
+RIGHT:表示文档顺序从右往左排列
+然后，通过如下的方法来更新页面绑定来切换页面布局：
+import{PDFViewCtrlModel,PDF_PAGE_BINDING_EDGE}from'foxit_rdk';import{UIExtensionsManager}from'uiextensions';classPageBindingUnit{privateuiExtensionsManager:UIExtensionsManager;privatepdfviewCtrl:PDFViewCtrlModel;constructor(uiExtMgr:UIExtensionsManager){this.uiExtensionsManager=uiExtMgr;this.pdfviewCtrl=this.uiExtensionsManager.getPDFViewCtrlModel();}privatetest():void{this.pdfviewCtrl.setPageBinding(PDF_PAGE_BINDING_EDGE.RIGHT);}}
+打开网页PDF文件的问题
+如何解决使用PDFViewCtrlModel#openDocFromUrl(url:string,password?:string,cacheOption?:FoxitRDKNative.custom.CacheOption,requestOptions?:Record<string,string>,cb?:(errorCode:FoxitRDKNative.Common.ErrorCode)=>void)接口打开网页PDF文件时，一些文档可能无法正确显示或根本无法显示的问题？
+这个问题发生在一些带有大量对象的文档在加载完成之前就被关闭，导致缓存的数据不完整。在尝试加载数据时，当前没有方法来判定数据的有效性，只能判定该数据是否已经被缓存了。
+为了解决这个问题，建议用户清除缓存数据，并使用以下方法重新加载文档。这种方法不会影响文档的打开速度，因为SDK内部是根据页码来加载网页的。
+/*** Clear the cache file by the specifiedurl.** @paramurlTheurlof the document that used in {@linkPDFViewCtrlModel.openDocFromUrl}* @seeopenDocFromUrl(string, string,CacheOption, Record<string, string>, (errorCode:FoxitRDKNative.common.ErrorCode) => void)*/publicclearCacheFile(url:string):void/*** Clear all the cache files.** @seeopenDocFromUrl(string, string,CacheOption, Record<string, string>, (errorCode:FoxitRDKNative.common.ErrorCode) => void)*/publicclearAllCacheFiles():void
+技术支持
+福昕支持
+为了提供更具个性化的技术支持，您可以登陆您的来提交问题报告，以便我们收集问题的详细信息。我们的技术支持团队在收到问题报告后，会第一时间来帮助您解决问题。
+您也可以查看我们的，选择福昕PDF SDK产品，里面有很多有用的文章可能有助于您解决问题。
+联系电话
+电话: 1-866-MYFoxit或者1-866-693-6948

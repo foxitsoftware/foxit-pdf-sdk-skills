@@ -1,0 +1,11 @@
+# Local Claude / IDE worktree copies (not part of the scaffold)
+.claude/
+
+# ignore temp files
+tmp/
+examples
+*.pyc
+
+.DS_Store
+artifacts
+.vscode
