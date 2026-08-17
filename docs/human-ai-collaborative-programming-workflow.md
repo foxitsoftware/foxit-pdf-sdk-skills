@@ -45,7 +45,6 @@
 
 ```markdown
 ## 任务输入
-- Jira 工单：[任务单链接，如无则填"无"]
 - 需求描述：
         - 目标：
         - 功能要求：
@@ -179,7 +178,6 @@ Agent 输出以下内容，**等待人类确认**：
 
 ```markdown
 ## 任务输入
-- Jira 工单：…
 - 需求描述：…
 
 ## AI 决策摘要
@@ -291,7 +289,6 @@ Agent 输出完整的 AI 决策摘要，**等待人类确认**：
 ## [AI] <type>(<scope>): <subject>
 
 ## 任务输入
-- Jira 工单：…
 - 需求描述：…
 
 ## AI 决策摘要
@@ -409,7 +406,7 @@ Agent 输出完整的 AI 决策摘要，**等待人类确认**：
 ## 参考文献
 
 \[1\] Takerngsaksiri, W., Pasuksmit, J., Thongtanunam, P., Tantithamthavorn, C., Zhang, R., Jiang, F., Li, J., Cook, E., Chen, K., & Wu, M. (2025). **Human-In-the-Loop Software Development Agents**. In *Proceedings of the International Conference on Software Engineering (ICSE 2025)*. arXiv:2411.12924.  
-→ 本文是 Atlassian 与 Monash 大学、墨尔本大学合作完成的工业研究，介绍了 HULA 框架在 Jira 工作流中的部署实践，是本工作流"HITL 分阶段确认"设计的核心参考。
+→ 本文是 Atlassian 与 Monash 大学、墨尔本大学合作完成的工业研究，介绍了 HULA 框架在工单工作流中的部署实践，是本工作流"HITL 分阶段确认"设计的核心参考。
 
 \[2\] Jimenez, C. E., Yang, J., Wettig, A., Yao, S., Pei, K., Press, O., & Narasimhan, K. R. (2024). **SWE-bench: Can Language Models Resolve Real-World GitHub Issues?** In *The Twelfth International Conference on Learning Representations (ICLR 2024)*. arXiv:2310.06770.  
 → SWE-bench 是评估 LLM 自主解决真实 GitHub 问题能力的标准基准，其结果揭示了当前 AI Agent 自主编程的能力边界，支持了本工作流采用人机协作而非全自动化的核心论据。

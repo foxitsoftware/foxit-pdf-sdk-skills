@@ -52,9 +52,6 @@ TBD (foxit-sdk.config.json / user confirmation / context inference)
 
 ### Task Input
 
-#### Jira ticket
-N/A
-
 #### Requirement description
 - **Goal:** TBD
 - **Functional requirements:**
@@ -160,7 +157,6 @@ TBD
 #### T1 — [AI] &lt;type&gt;(&lt;scope&gt;): &lt;subject&gt;
 
 ##### Task Input
-- Jira ticket: N/A
 - Requirement description:
   - TBD
 

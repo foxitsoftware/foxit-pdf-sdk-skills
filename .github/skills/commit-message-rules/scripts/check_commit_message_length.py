@@ -10,7 +10,6 @@ FIELD_LINE_HARD_LIMIT = 240
 NONEMPTY_LINE_HARD_LIMIT = 14
 
 FIELD_PATTERNS = {
-    "Jira ticket": (r"^-\s*Jira\s*ticket\s*:.*$", r"^-\s*Jira\s*工单\s*:.*$"),
     "Requirement description": (r"^-\s*Requirement\s*description\s*:.*$", r"^-\s*需求描述\s*:.*$"),
     "Requirement understanding": (r"^-\s*Requirement\s*understanding\s*:.*$", r"^-\s*需求理解\s*:.*$"),
     "Adopted approach": (r"^-\s*Adopted\s*approach\s*:.*$", r"^-\s*采用方案\s*:.*$"),

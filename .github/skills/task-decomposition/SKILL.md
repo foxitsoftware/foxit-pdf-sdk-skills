@@ -177,7 +177,6 @@ Output full description for each subtask **using the heading levels from the "Ma
 #### T1 — [AI] <type>(<scope>): <subject>
 
 ##### Task Input
-- Jira ticket: [inherited from parent task or "N/A"]
 - Requirement description: [specific goal and acceptance criteria for this subtask]
 
 ##### AI Decision Summary

@@ -358,7 +358,6 @@ repository-root/
 
 ```markdown
 ## Task Input
-- Jira ticket: [链接或 "N/A"]
 - Requirement description:
   - Goal:
   - Functional requirements:
@@ -601,7 +600,6 @@ Please choose Step 3 decomposition strategy: Decompose into subtasks (default) o
 ## [AI] <type>(<scope>): <subject>
 
 ### Task Input
-- Jira ticket: [继承自父任务或 "N/A"]
 - Requirement description: [本子任务的具体目标和验收标准]
 
 ### AI Decision Summary

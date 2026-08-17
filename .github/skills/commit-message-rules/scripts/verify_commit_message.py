@@ -16,7 +16,6 @@ SUBJECT_LINE = re.compile(
 )
 
 REQUIRED_FIELDS = {
-    "Jira ticket": (r"-\s*Jira\s*ticket\s*:", r"-\s*Jira\s*工单\s*:"),
     "Requirement description": (r"-\s*Requirement\s*description\s*:", r"-\s*需求描述\s*:"),
     "Requirement understanding": (r"-\s*Requirement\s*understanding\s*:", r"-\s*需求理解\s*:"),
     "Adopted approach": (r"-\s*Adopted\s*approach\s*:", r"-\s*采用方案\s*:"),
@@ -27,7 +26,6 @@ REQUIRED_FIELDS = {
 }
 
 REQUIRED_FIELD_VALUES = {
-    "Jira ticket": (r"-\s*Jira\s*ticket\s*:\s*\S.+|[-\s]*Jira\s*ticket\s*:\s*\S", r"-\s*Jira\s*工单\s*:\s*\S.+|[-\s]*Jira\s*工单\s*:\s*\S"),
     "Requirement description": (r"-\s*Requirement\s*description\s*:\s*\S.+|[-\s]*Requirement\s*description\s*:\s*\S", r"-\s*需求描述\s*:\s*\S.+|[-\s]*需求描述\s*:\s*\S"),
     "Requirement understanding": (r"-\s*Requirement\s*understanding\s*:\s*\S.+|[-\s]*Requirement\s*understanding\s*:\s*\S", r"-\s*需求理解\s*:\s*\S.+|[-\s]*需求理解\s*:\s*\S"),
     "Adopted approach": (r"-\s*Adopted\s*approach\s*:\s*\S.+|[-\s]*Adopted\s*approach\s*:\s*\S", r"-\s*采用方案\s*:\s*\S.+|[-\s]*采用方案\s*:\s*\S"),

@@ -142,7 +142,6 @@ After clarification, output the following and **wait for human confirmation**:
 - Config source: [foxit-sdk.config.json / user confirmation / context inference]
 
 ## Task Input
-- Jira ticket: [link or "N/A"]
 - Requirement description:
   - Goal:
   - Functional requirements:

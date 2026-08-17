@@ -27,9 +27,8 @@ When (1) applies and the focused file is a HACA Workflow Contract:
 
 1. **Step 2 is authoritative for meaning.** Use **`## Step 2 Solution Design`** and its **`### AI Decision Summary`** — including **Requirement understanding / 需求理解**, **Adopted approach / 采用方案**, **Rejected approach / 拒绝方案**, **Key assumptions / 关键假设**, **Known risks / 已知风险**, and **Uncovered scenarios / 未覆盖场景** — to populate the commit template’s **Task Input** and **AI Decision Summary** fields (compress for length; keep intent).
 2. **Do not substitute Step 4 for Step 2.** **`## Step 4 Build`** (implementation summary, TDD evidence, subtask T1–T4 prose, changed-path lists) must **not** replace Step 2 as the source of *what* the change is for and *why*; Step 4 may only refine wording (e.g. concrete filenames) when Step 2 plus **git diff** require disambiguation.
-3. **Jira ticket.** Prefer Step 1 **`#### Jira ticket` / `Jira 工单`** when present; otherwise `N/A`.
-4. **Subject line** `[AI] <type>(<scope>): <subject>`: derive **type**, **scope**, and **subject** from Step 2 **requirement understanding** and **adopted approach**, using **git diff** only to align scope with paths actually changed when needed.
-5. **Fallback:** If Step 2 is missing or unusable, use **`## Step 1 Requirement Clarification`**, then **git diff**; use `N/A` where still unknown.
+3. **Subject line** `[AI] <type>(<scope>): <subject>`: derive **type**, **scope**, and **subject** from Step 2 **requirement understanding** and **adopted approach**, using **git diff** only to align scope with paths actually changed when needed.
+4. **Fallback:** If Step 2 is missing or unusable, use **`## Step 1 Requirement Clarification`**, then **git diff**; use `N/A` where still unknown.
 
 Generate one full commit message in a **single** template language (Chinese or English), following the conversation language unless the human overrides via the language input. Populate every required field; when reliable information is unavailable, use `N/A`.
 

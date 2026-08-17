@@ -27,7 +27,6 @@ Before generating message content, choose the primary context in this order:
 1. **HACA Workflow Contract**: If the **currently focused** editor file is a HACA Workflow Contract (e.g. `artifacts/<task-id>/haca-workflow.md`, or the file clearly identifies itself as such), derive the commit message primarily from that contract.
    - **Semantic source:** **`## Step 2 Solution Design`** → **`### AI Decision Summary`** (requirement understanding / 需求理解, adopted approach / 采用方案, rejected approach / 拒绝方案, key assumptions / 关键假设, known risks / 已知风险, uncovered scenarios / 未覆盖场景). Map these into the commit template fields; compress for length limits without changing meaning.
    - **Not a substitute for Step 2:** Do not use **`## Step 4 Build`** (TDD blocks, subtask checklists, changed-path laundry lists) as the primary narrative for *what* or *why*; Step 4 may only disambiguate concrete paths or wording together with git diff.
-   - **Jira:** Prefer Step 1 Jira field when present; else `N/A`.
    - **Subject:** Infer `[AI] <type>(<scope>): <subject>` from Step 2 understanding and approach; use git diff only to align scope with changed paths.
    - **Fallback:** If Step 2 is missing or empty, use Step 1 requirement clarification, then git diff; use `N/A` where unknown.
 2. **Git changes**: Otherwise use `git diff --staged`; if empty, use `git diff`.
@@ -126,7 +125,6 @@ Do not mix Chinese and English in one output unless the human explicitly request
 [AI] <type>(<scope>): <subject>
 
 ## Task Input
-- Jira ticket: ...
 - Requirement description: ...
 
 ## AI Decision Summary
@@ -144,7 +142,6 @@ Do not mix Chinese and English in one output unless the human explicitly request
 [AI] <type>(<scope>): <subject>
 
 ## 任务输入
-- Jira 工单: ...
 - 需求描述: ...
 
 ## AI 决策摘要
@@ -168,7 +165,6 @@ Below is a correctly formatted, length-compliant Chinese commit message:
 [AI] feat(order): 为订单列表添加游标分页支持
 
 ## 任务输入
-- Jira 工单: PROJ-123
 - 需求描述: 用户列表因数据量增长导致响应超时，需引入分页机制
 
 ## AI 决策摘要

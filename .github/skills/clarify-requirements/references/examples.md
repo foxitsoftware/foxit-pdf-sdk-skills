@@ -1,6 +1,6 @@
 # Requirement Clarification Scenario Examples
 
-## Scenario 1: Jira Ticket Provides Partial Information
+## Scenario 1: Requirement Source Provides Partial Information
 
 **Handling method:**
 1. Read available information from the ticket and fill it into the "Task Input" format.
