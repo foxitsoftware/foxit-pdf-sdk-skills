@@ -1,6 +1,6 @@
 ---
 agent: HACA
-description: HACA-SDK Step 1: identify Foxit SDK product/platform/language, assess feasibility, clarify requirements, and output structured task input for confirmation
+description: "HACA-SDK Step 1: identify Foxit SDK product/platform/language, assess feasibility, clarify requirements, and output structured task input for confirmation"
 tools:
   - read
   - search
