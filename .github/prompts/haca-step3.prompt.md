@@ -1,6 +1,6 @@
 ---
 agent: HACA
-description: HACA-SDK Step 3: decompose SDK solution into subtasks with proper SDK initialization/cleanup sequencing, annotate dependencies, and wait for confirmation
+description: "HACA-SDK Step 3: decompose SDK solution into subtasks with proper SDK initialization/cleanup sequencing, annotate dependencies, and wait for confirmation"
 tools:
   - read
   - search

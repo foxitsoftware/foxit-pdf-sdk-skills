@@ -1,6 +1,6 @@
 ---
 agent: HACA
-description: HACA-SDK Step 4 input template: execute build loop with SDK quality chain (compilation + runtime correctness), governed skills and confirmed subtasks
+description: "HACA-SDK Step 4 input template: execute build loop with SDK quality chain (compilation + runtime correctness), governed skills and confirmed subtasks"
 tools:
   - read
   - search

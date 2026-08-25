@@ -1,6 +1,6 @@
 ---
 agent: HACA
-description: HACA-SDK Step 2: consult SDK references, propose optimal solution with alternatives, systematically identify and mitigate risks, and output a complete AI decision summary for confirmation
+description: "HACA-SDK Step 2: consult SDK references, propose optimal solution with alternatives, systematically identify and mitigate risks, and output a complete AI decision summary for confirmation"
 tools:
   - read
   - search
