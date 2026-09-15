@@ -8,15 +8,20 @@ This file is the **governance layer**: it contains only global constraints. Step
 
 ## Foxit SDK Product Matrix
 
-HACA-SDK serves the following Foxit SDK product lines:
+HACA-SDK serves the following Foxit SDK product lines.
+
+The authoritative **product x platform x architecture x language** matrix, platform limits, and
+`foxit-sdk.config.json` enum values live in the single source of truth
+[`.github/sdk-references/sdk-matrix.md`](sdk-references/sdk-matrix.md). The summary below is a
+convenience index; when they disagree, `sdk-matrix.md` wins.
 
 | Product | Supported Platforms | Supported Languages | Product Overview |
 |---------|---------------------|---------------------|------------------|
-| **PDF SDK for Desktop** | Windows (x86/x86_64), Linux (x86/x86_64, armv7, armv8), Mac (x64/arm64) | C++, Python, Java, Node.js, C#, C (Windows only), Go, Objective-C | https://developers.fuxinsoft.cn/pdfsdk-pc/ |
-| **PDF SDK for Mobile** | Android, iOS | Java (Android), Objective-C / Swift (iOS) | https://developers.fuxinsoft.cn/pdfsdk-mobile/ |
-| **PDF SDK for Harmony** | HarmonyOS Next, OpenHarmony | ArkTS (C++ native core + ArkTS wrapper) | https://developers.fuxinsoft.cn/pdfsdk-harmony/ |
-| **PDF SDK for Web** | Browser | JavaScript / TypeScript | https://developers.fuxinsoft.cn/pdfsdk-web/ |
-| **Cloud API** | Cloud service | REST API (Embed Viewer API + PDF Services API) | https://cloudapi.fuxinsoft.cn/zh-CN |
+| **PDF SDK for Desktop** | Windows (x86/x86_64), Linux (x86/x86_64, armv7, armv8), Mac (x64/arm64) | C++, Python, Java, Node.js, C#, C (Windows only), Go, Objective-C | EN: https://developers.foxitsoftware.cn/pdfsdk-pc/ · ZH: https://developers.fuxinsoft.cn/pdfsdk-pc/ |
+| **PDF SDK for Mobile** | Android, iOS | Java (Android), Objective-C / Swift (iOS) | EN: https://developers.foxitsoftware.cn/pdfsdk-mobile/ · ZH: https://developers.fuxinsoft.cn/pdfsdk-mobile/ |
+| **PDF SDK for Harmony** | HarmonyOS Next, OpenHarmony | ArkTS (C++ native core + ArkTS wrapper) | EN: https://developers.foxitsoftware.cn/pdfsdk-harmony/ · ZH: https://developers.fuxinsoft.cn/pdfsdk-harmony/ |
+| **PDF SDK for Web** | Browser | JavaScript / TypeScript | EN: https://developers.foxitsoftware.cn/pdfsdk-web/ · ZH: https://developers.fuxinsoft.cn/pdfsdk-web/ |
+| **Cloud API** | Cloud service | REST API (Embed Viewer API + PDF Services API) | ZH only: https://cloudapi.fuxinsoft.cn/zh-CN (无英文站入口) |
 | **Conversion SDK** | Windows (x86/x86_64), Linux (x86/x86_64, armv7, armv8) | C++, Python, Java, Node.js, C#, C, Go | — |
 
 ### SDK Configuration File

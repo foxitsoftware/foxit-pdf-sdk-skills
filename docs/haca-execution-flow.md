@@ -9,7 +9,7 @@
 | 方式 | 说明 |
 |------|------|
 | **实现优先** | 若直接在 `.github/` 修改了 HACA 行为，应同步更新本文档，使描述与代码一致。 |
-| **规范优先** | 若先修改本文档以调整目标行为，应在评审后使用仓库提示 **`haca-apply-spec`**（源：`.github/prompts/haca-apply-spec.prompt.md`；Cursor 中对应 `/haca-apply-spec`）将变更落实到 `.github/`，再运行 **`/haca-sync`** 将 `.github/` 同步到 `.cursor/`、`.opencode/` 并校准手工适配层。 |
+| **规范优先** | 若先修改本文档以调整目标行为，应在评审后使用维护型提示 **`haca-apply-spec`**（源：`.github/prompts/haca-apply-spec.prompt.md`）将变更落实到 `.github/`，再按需使用 **`haca-sync`** 进行一致性校验。（`haca-apply-spec` / `haca-sync` 为仓库维护者专用提示，且仍保留历史的多平台表述；本仓库现仅面向 GitHub Copilot，这些提示不在发布范围内，详见发布报告。） |
 
 上述两种方式可以并存；合并前须保证 **本文档 ↔ `.github/`** 无未解决的语义冲突。
 
@@ -39,11 +39,11 @@
 11. `.github/prompts/haca-step4.prompt.md` — Step 4 prompt 入口
 12. `.github/prompts/commit-message.prompt.md` — 独立快捷入口：生成提交信息，并在人工明确确认后才执行提交
 13. `.github/prompts/haca-apply-spec.prompt.md` — 依据 `docs/haca-execution-flow.md` 将规范变更落实到 `.github/` 的执行入口
-14. `.github/prompts/haca-sync.prompt.md` — 将 `.github/` 同步到 `.cursor/`、`.opencode/` 并校准手工适配层的执行入口
+14. `.github/prompts/haca-sync.prompt.md` — 维护型入口：校验 `.github/` 配置树一致性（历史版本曾同步到 `.cursor/`、`.opencode/`；本仓库现仅面向 GitHub Copilot，该多平台同步已废弃）
 15. `.github/templates/haca-workflow-contract.template.md` — `HACA Workflow Contract` 单一模板源（初始化 artifacts 合同时使用）
 
 ### **Superpowers 能力库**
-16. `.github/skills/superpowers/` — 本地离线能力源（brainstorming、dispatching-parallel-agents、writing-plans、using-git-worktrees、test-driven-development、verification-before-completion、systematic-debugging、requesting-code-review、receiving-code-review、finishing-a-development-branch）
+16. `.github/skills/superpowers/` — 可选 Superpowers 技能安装位置（由用户自行安装，本仓库不内置；缺失时相关步骤回退到内置 HACA 等价流程）（brainstorming、dispatching-parallel-agents、writing-plans、using-git-worktrees、test-driven-development、verification-before-completion、systematic-debugging、requesting-code-review、receiving-code-review、finishing-a-development-branch）
 
 ### **参考示例（辅助，非执行规则）**
 17. `.github/skills/clarify-requirements/references/examples.md` — Step 1 澜清提问场景示例
@@ -347,10 +347,11 @@ repository-root/
 - [ ] 验收标准：如何验证完成（必须可测试）
 - [ ] 影响范围：涉及哪些模块、服务、数据表
 
-### 6.4 Superpowers 辅助
+### 6.4 Superpowers 辅助（可选）
 
 - **触发条件**：需求模糊、用户意图分歧、或范围跨多个独立子系统。
 - **可借用能力**：`brainstorming` 的澄清提问方法，用以提高覆盖度。
+- **可用性检查**：使用前先确认本地离线源 `.github/skills/superpowers/brainstorming/SKILL.md` 是否存在；不存在时记录 `Superpowers capability: Not Available (brainstorming)` 并使用内置提问模板，不得阻断。
 - **边界约束**：仅借用澄清提问能力，不执行 brainstorming 的完整流程（设计文档编写、git commit、spec review loop、writing-plans 过渡）。Step 1 的批量提问规则优先于 brainstorming 的逐条提问规则。
 - **禁区**：不进行实现操作，不做 Step 2 设计决策。
 
@@ -456,10 +457,11 @@ Mitigation: 改用游标分页，每次查询限制 100 条。
 - **已知风险**（Known Risks）：已识别且已通过方案调整解决。
 - **未覆盖场景**（Uncovered Scenarios）：已识别但在当前信息/能力范围内无法缓解，标注人工决策点。
 
-### 7.5 Superpowers 辅助
+### 7.5 Superpowers 辅助（可选）
 
 - **触发条件 A**：方案选项需要带有权衡分析的对比时，SHOULD 借用 `brainstorming` 的选项对比方法。
 - **触发条件 B**：分析领域相互独立时，SHOULD 使用 `dispatching-parallel-agents`。
+- **可用性检查**：使用前先确认对应的本地离线源 `.github/skills/superpowers/<能力名>/SKILL.md` 是否存在；不存在时记录 `Superpowers capability: Not Available (<能力名>)` 并使用内置方案对比模板与五维度检查清单，不得阻断。
 - **边界约束**：仅借用 brainstorming 的选项对比和权衡分析能力，不执行其完整流程。并行分派仅限各领域独立且无共享状态耦合时使用。
 
 ### 7.6 输出格式
@@ -585,10 +587,11 @@ Please choose Step 3 decomposition strategy: Decompose into subtasks (default) o
 | 测试依赖 | T2 的测试依赖 T1 的测试基础设施 | T1 搭建 mock，T2 使用 mock |
 | 配置依赖 | T2 依赖 T1 引入的配置 | T1 添加 flag，T2 读取 flag |
 
-### 8.5 Superpowers 辅助
+### 8.5 Superpowers 辅助（可选）
 
-- **触发条件 A**：分解需要持久化执行计划供 worker agent 使用时，**MUST** 使用 `writing-plans`。
-- **触发条件 B**：需要隔离执行工作区时，**MUST** 使用 `using-git-worktrees`。
+- **触发条件 A**：分解需要持久化执行计划供 worker agent 使用时，SHOULD 使用 `writing-plans`。
+- **触发条件 B**：需要隔离执行工作区时，SHOULD 使用 `using-git-worktrees`。
+- **可用性检查**：使用前先确认本地离线源 `.github/skills/superpowers/<能力名>/SKILL.md` 是否存在；不存在时记录 `Superpowers capability: Not Available (<能力名>)` 并使用内置子任务契约与执行顺序输出，不得阻断。
 - **边界**：保持 HACA 子任务粒度和输出契约不变，不用 plan-only 产物替代 Step 3 输出。
 
 ### 8.6 输出格式
@@ -645,7 +648,7 @@ Please choose Step 3 decomposition strategy: Decompose into subtasks (default) o
 
 同理，`/haca-step2` 和 `/haca-step3` 也必须分别对 `current_step: step1_draft` / `step2_draft` 以及 `Step Status Matrix` 中 Step 1 / Step 2 的 `status != confirmed` 执行同等级别的前置阻塞。
 
-### 9.3 子任务执行链（Build Loop）
+### 9.2 子任务执行链（Build Loop）
 
 对于每个子任务，按以下顺序执行：
 
@@ -673,7 +676,7 @@ Please choose Step 3 decomposition strategy: Decompose into subtasks (default) o
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 9.4 TDD 硬门禁
+### 9.3 TDD 硬门禁
 
 | 条件 | 结果 |
 |------|------|
@@ -683,7 +686,7 @@ Please choose Step 3 decomposition strategy: Decompose into subtasks (default) o
 | 行为变更子任务缺少 TDD 证据 | 阻断子任务完成 |
 | 已完成子任务缺少门禁与验证证据 | 阻断进入下一子任务 |
 
-### 9.5 TDD Evidence: N/A 的条件
+### 9.4 TDD Evidence: N/A 的条件
 
 当且仅当以下全部条件为真时，可使用 `TDD Evidence: N/A`：
 
@@ -705,24 +708,26 @@ Please choose Step 3 decomposition strategy: Decompose into subtasks (default) o
 - Uncovered scenarios:
 ```
 
-### 9.6 五类强制能力证据
+### 9.5 五类 Step 4 质量控制证据
 
-Step 4 中，以下五项 Superpowers 能力作为强制质量控制执行：
+Step 4 中，以下五项质量控制作为强制基线执行。每一项优先由其 Superpowers 能力承担；技能缺失时改由内置 HACA 等效流程完成，不得跳过。
 
-| 能力 | 职责 |
-|------|------|
-| `test-driven-development` | 强制行为变更工作使用 failing-test-first 执行 |
-| `verification-before-completion` | 在声称完成前要求提供新鲜的命令执行证据 |
-| `systematic-debugging` | 在尝试修复前要求先做根因分析 |
-| `requesting-code-review` | 完成前要求结构化审查 |
-| `receiving-code-review` | 在接受审查结果前要求技术评估和反馈处理 |
+| 能力 / 质量控制 | 职责 | 技能缺失时的内置等效流程 |
+|------|------|------|
+| `test-driven-development` | 强制行为变更工作使用 failing-test-first 执行 | 本文 §9.2 的 Red-Green-Refactor 规则 |
+| `verification-before-completion` | 在声称完成前要求提供新鲜的命令执行证据 | SDK 代码质量链 Q1（编译）/ Q2（运行） |
+| `systematic-debugging` | 在尝试修复前要求先做根因分析 | 本文 §9.2 的异常回滚规则 |
+| `requesting-code-review` | 完成前要求结构化审查 | 审查请求证据字段 |
+| `receiving-code-review` | 在接受审查结果前要求技术评估和反馈处理 | 审查接收证据字段 |
 
 对于每项能力：
-- 若触发：记录能力名称、触发原因、关键发现、建议措施、采纳/拒绝及理由。
+- 先检查本地离线源 `.github/skills/superpowers/<能力名>/SKILL.md` 是否存在。
+- 若存在且触发：记录能力名称、能力源路径、触发原因、关键发现、建议措施、采纳/拒绝及理由。
+- 若技能缺失：记录 `Superpowers capability: Not Available (<能力名>)`、所采用的内置等效流程及理由。
 - 若未触发：记录 `Not Triggered` 及理由，或提供显式批准的例外。
-- 缺失任何强制能力证据 → 阻断子任务完成（除非有 `Not Triggered` 证据或显式批准的例外记录）。
+- 缺失任何质量控制证据 → 阻断子任务完成（除非有 `Not Available`/`Not Triggered` 证据或显式批准的例外记录）。
 
-### 9.7 子任务全部完成后
+### 9.6 子任务全部完成后
 
 1. 执行最终 Evidence Gate 校验。
 2. 若通过，输出固定文本：`All subtasks are complete, pending human verification before human-led git commit.`
@@ -757,8 +762,8 @@ Evidence Gate 维护一个跨 HACA 步骤的统一证据包，在证据不完整
 | 风险证据 | 已知风险及缓解措施 | Step 2+ | Step 2 章节（artifacts/）|
 | 测试证据 | Red-Green-Refactor 记录和回归检查 | Step 1-3 可为 N/A；Step 4 强制 | Step 4 章节（artifacts/）|
 | 决策证据 | 未覆盖场景和决策责任人 | 所有步骤 | 各步骤章节（artifacts/）|
-| 能力执行证据 | Superpowers 使用记录（名称、源路径、触发原因、关键发现、建议措施、采纳/拒绝决策及理由） | 使用了 Superpowers 时 | 步骤章节补注（artifacts/）|
-| Step 4 强制能力证据 | 五类强制能力的执行证据或 Not Triggered 记录 | Step 4 | Step 4 章节（artifacts/）|
+| 能力执行证据 | Superpowers 使用记录（名称、源路径、触发原因、关键发现、建议措施、采纳/拒绝决策及理由）；技能缺失时记录 `Not Available` 与内置等效流程 | 使用了 Superpowers 或步骤引用了 Superpowers 能力时 | 步骤章节补注（artifacts/）|
+| Step 4 质量控制证据 | 五类质量控制（tdd / verification / debugging / review request / review reception）的执行证据，或 `Not Available`/`Not Triggered` / 显式批准例外记录 | Step 4 | Step 4 章节（artifacts/）|
 | 子任务交接证据 | 子任务完成状态、变更摘要、测试与门禁结果 | Step 4 | Step 4 章节（artifacts/）|
 | 完成提示语证据 | 精确的完成提示语文本和输出时间戳 | Step 4 最终门禁 | Step 4 章节（artifacts/）|
 
@@ -773,13 +778,14 @@ Evidence Gate 维护一个跨 HACA 步骤的统一证据包，在证据不完整
 - 验收标准不可测试 → 回退到 Step 1。
 - 风险条目缺少"触发-影响-缓解"格式 → 回退到 Step 2。
 - 子任务边界不清或依赖冲突 → 回退到 Step 3。
-- 使用了 Superpowers 但缺少能力执行证据 → 阻断步骤转换。
-- 使用了 Superpowers 但能力源路径不在 `.github/skills/superpowers/` 下 → 阻断步骤转换。
+- 使用了 Superpowers 能力但缺少能力执行证据 → 阻断步骤转换。
+- 使用了 Superpowers 能力但实际加载的能力源路径不在 `.github/skills/superpowers/` 下 → 阻断步骤转换。
+- Superpowers 技能不可用时：`Superpowers capability: Not Available (<能力名>)` 记录加内置 HACA 等效流程即为有效证据，不得阻断步骤转换。
 
 **Step 4 专用**：
 - Step 1-3 转换中，测试证据可为 `N/A`（非阻断）。
 - Step 4 中测试证据为强制项。纯文档/非行为变更子任务在提供理由和最低回归检查的前提下可接受 `TDD Evidence: N/A`。
-- 缺失任何强制能力证据（五类中的任一项）→ 阻断子任务完成（除非记录了 `Not Triggered` 或显式批准的例外）。
+- 缺失任何质量控制证据（五类中的任一项）→ 阻断子任务完成（除非记录了 `Not Available`/`Not Triggered` 或显式批准的例外）。
 - 已完成子任务缺少交接证据（变更摘要/测试结果/门禁结果）→ 阻断进入下一子任务。
 - 完成提示语文本不完全等于 `All subtasks are complete, pending human verification before human-led git commit.` → 阻断 Step 4 完成。
 
@@ -796,11 +802,11 @@ Evidence Gate 维护一个跨 HACA 步骤的统一证据包，在证据不完整
 - 当前步骤内验收标准不可测试 → 阻断。
 - 风险条目格式不符 → 阻断。
 - 子任务依赖冲突 → 阻断。
-- Superpowers 证据缺失或源路径不合法 → 阻断。
+- Superpowers 证据缺失或实际加载源路径不合法 → 阻断。
 
 **Step 4 特殊阻断**（文档模式）：
 - TDD 证据缺失（纯文档子任务除外，需提供理由）→ 阻断子任务完成。
-- 强制能力证据缺失 → 阻断子任务完成。
+- 质量控制证据缺失（五类中的任一项）→ 阻断子任务完成（除非记录了 `Not Available`/`Not Triggered` 或显式批准的例外）。
 - 子任务交接证据缺失 → 阻断 Step 4 完成。
 - 完成提示语不符 → 阻断 Step 4 完成。
 
@@ -882,32 +888,37 @@ Confirm?
 
 ## 12. Superpowers 融合汇总
 
-### 13.1 总体规则
+### 12.1 总体规则
 
 - 能力仅可在当前已确认的 HACA 步骤内使用。
 - 触发的能力结果必须记录在 AI Decision Summary 或证据包中。
+- 使用 Superpowers 能力前必须检查本地离线源是否存在
+  `.github/skills/superpowers/<能力名>/SKILL.md`；不存在时记录
+  `Superpowers capability: Not Available (<能力名>)` 并使用内置 HACA 等效流程，不得阻断步骤推进。
 - 所有能力源路径必须在 `.github/skills/superpowers/` 下。
 
-### 13.2 各步骤可用能力
+### 12.2 各步骤可用能力
 
 | 步骤 | 能力 | 触发条件 | 强度 | 边界约束 |
 |------|------|----------|------|----------|
 | Step 1 | `brainstorming` | 需求模糊/意图分歧/跨子系统 | SHOULD | 仅借用澄清提问，不执行完整流程；批量提问优先 |
 | Step 2 | `brainstorming` | 方案选项需带权衡对比 | SHOULD | 仅借用选项对比和权衡分析 |
 | Step 2 | `dispatching-parallel-agents` | 分析领域独立 | SHOULD | 仅限无共享状态耦合 |
-| Step 3 | `writing-plans` | 分解需要持久化执行计划 | MUST | 不替代 Step 3 输出 |
-| Step 3 | `using-git-worktrees` | 需要隔离工作区 | MUST | 保持子任务粒度不变 |
+| Step 3 | `writing-plans` | 分解需要持久化执行计划 | SHOULD | 不替代 Step 3 输出 |
+| Step 3 | `using-git-worktrees` | 需要隔离工作区 | SHOULD | 保持子任务粒度不变 |
 | Step 4 | `test-driven-development` | 行为变更工作 | 强制 | — |
 | Step 4 | `verification-before-completion` | 声称完成前 | 强制 | — |
 | Step 4 | `systematic-debugging` | 出现失败或意外结果 | 强制 | — |
 | Step 4 | `requesting-code-review` | 完成前 | 强制 | — |
 | Step 4 | `receiving-code-review` | 接受审查前 | 强制 | — |
 
-### 13.3 能力使用记录格式
+Step 4 的五个“强制”项为质量基线，Superpowers 技能缺失时以内置等效流程完成，并记录 `Not Available`。
+
+### 12.3 能力使用记录格式
 
 触发并使用时，在 AI Decision Summary 或证据包中记录：
-- 能力名称
-- 能力源路径
+- 能力名称（若不可用则记录 `Superpowers capability: Not Available (<能力名>)`）
+- 能力源路径（或内置等效流程名称）
 - 触发原因
 - 关键发现
 - 建议措施
@@ -929,7 +940,7 @@ Confirm?
 | `haca-step4.prompt.md` | `tdd-loop/SKILL.md` + `evidence-gate/SKILL.md` | `${input:subtasks}`（会话路由）或 `${input:artifact_path}`（文档路由） |
 | `commit-message.prompt.md` | `commit-message-rules/SKILL.md` | `${input:change_summary}`（可选）+ `${input:language}`（可选） |
 | `haca-apply-spec.prompt.md` | HACA 规范落地流程（针对 `.github/`） | 读取 `docs/haca-execution-flow.md` 变更集 |
-| `haca-sync.prompt.md` | HACA 同步维护流程（`.github/` → `.cursor/`/`.opencode/`） | 同步后进行 `--check` 一致性检查 |
+| `haca-sync.prompt.md` | HACA 一致性校验维护流程（仅限维护者；多平台同步已废弃） | 校验后执行 `--check` 一致性检查 |
 
 所有 Prompt 文件明确引用 `copilot-instructions.md` 和对应技能文件作为单一事实来源。
 
@@ -939,11 +950,7 @@ Confirm?
 - `haca-step2.prompt.md`、`haca-step3.prompt.md`、`haca-step4.prompt.md`：支持会话历史路由（不传 `artifact-path`）与文档上下文路由（传 `artifact-path`）两种入口。
 - 当同时存在会话历史上下文与 `artifact-path` 参数时，Prompt 层必须传递 `artifact-path` 并由编排层按路由 B 处理。
 
-`haca-sync.prompt.md` 严格限制只能操作以下**手工维护适配层文件**（其他文件禁止修改）：
-- `.cursor/AGENTS.md`
-- `.cursor/rules/haca.mdc`
-- `.opencode/agents/haca.agent.md`
-- `opencode.json`
+`haca-sync.prompt.md` 为仓库维护者专用提示，历史上用于校准手工维护适配层文件（`.cursor/AGENTS.md`、`.cursor/rules/haca.mdc`、`.opencode/agents/haca.agent.md`、`opencode.json`）。这些多平台适配文件**已随本仓库收敛为 GitHub Copilot-only 而移除**；当前该提示仅用于 `.github/` 配置树的一致性校验。此提示不在发布范围内，详见发布报告。
 
 ### 13.2 平台 Frontmatter 属性说明
 
@@ -953,7 +960,7 @@ Confirm?
 |------|---------|------|
 | `agent: HACA` | `haca-step*.prompt.md` | 将 Prompt 绑定到 HACA Agent 上下文执行 |
 | `tools: [read, search, edit, execute, agent]` | `haca.agent.md` | 声明该 Agent 的工具权限 |
-| `preserve_github_paths: true` | apply-spec / sync prompts | 防止同步脚本覆盖 `.github/` 下的源文件 |
+| `preserve_github_paths: true` | apply-spec / sync prompts | 防止历史同步脚本覆盖 `.github/` 下的源文件（历史遗留属性；当前 `sync_haca_customizations.py` 为只读校验器，不再写入任何目标） |
 
 ---
 

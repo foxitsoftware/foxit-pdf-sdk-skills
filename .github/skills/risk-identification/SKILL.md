@@ -124,15 +124,16 @@ Review each of the following five dimensions in current task context:
 - [ ] Effect on existing PDF processing pipeline
 - [ ] Output PDF compatibility with other PDF viewers
 
-## Trigger-Based Superpowers Assist (within Step 2 only)
+## Trigger-Based Superpowers Assist (within Step 2 only, optional)
 
 Use superpowers capabilities to improve option analysis quality, while preserving Step 2 required output fields.
 
 - Trigger condition A: you SHOULD selectively borrow `brainstorming`'s option-comparison approach when solution options need comparison with trade-offs.
 - Trigger condition B: you SHOULD use `dispatching-parallel-agents` when analysis domains are independent.
-- Local offline source A: `.github/skills/superpowers/brainstorming/SKILL.md`
-- Local offline source B: `.github/skills/superpowers/dispatching-parallel-agents/SKILL.md`
+- Expected install location A (exists only after the user installs Superpowers; not bundled in this repo): `.github/skills/superpowers/brainstorming/SKILL.md`
+- Expected install location B (exists only after the user installs Superpowers; not bundled in this repo): `.github/skills/superpowers/dispatching-parallel-agents/SKILL.md`
 - **HACA context constraint**: In Step 2, only borrow brainstorming's option comparison and trade-off analysis capability. Do NOT execute brainstorming's full flow (design doc writing, git commit, spec review loop, writing-plans transition); those phases are already governed by HACA Step 3 and Step 4.
+- **Availability check**: before using a capability, verify its expected install location exists. If it does not, record `Superpowers capability: Not Available (<capability-name>)` and use the built-in HACA solution comparison template and five-dimension checklist instead.
 
 Parallel dispatch constraints:
 - Use only when domains are independent and have no shared state coupling.

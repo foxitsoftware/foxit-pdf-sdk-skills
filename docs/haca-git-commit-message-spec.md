@@ -119,6 +119,7 @@ c9a2d3b [CI] chore(release): bump version to 2.4.1
 | `docs` | 文档变更 |
 | `style` | 代码格式（不影响逻辑） |
 | `chore` | 构建、依赖、工具链 |
+| `ci` | CI/CD 配置与流水线变更 |
 | `revert` | 回滚 |
 | `wip` | 进行中（仅用于临时保存，合并前必须整理） |
 

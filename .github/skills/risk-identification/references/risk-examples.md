@@ -62,3 +62,49 @@
 - Data retention policy: how long order history should be kept after account deletion involves legal requirements and needs legal confirmation.
 - Degradation strategy: whether to skip this step and continue flow when third-party services are unavailable requires product decision.
 ```
+
+---
+
+## Foxit PDF SDK Domain Examples
+
+These risk examples are grounded in the Foxit SDK lifecycle. Product/platform support claims must be
+checked against the single source of truth [`sdk-matrix.md`](../../../sdk-references/sdk-matrix.md).
+
+### Logic Boundary Risk — Desktop C++ lifecycle order
+
+**Scenario:** add a watermark to every page of a PDF (Desktop, C++, Windows).
+
+| Risk item | Description |
+|----------|------|
+| `Initialize` return code ignored | Foxit APIs are only valid after `Library::Initialize(sn, key)` returns `e_ErrSuccess`. Mitigation: check `code != foxit::e_ErrSuccess` and abort before any API call |
+| Operation before document load | Calling page APIs before `PDFDoc::Load` succeeds yields null page handles. Mitigation: validate load result and page count first |
+| Save before mutation completes | Saving mid-operation leaves a partially written output. Mitigation: complete all page mutations, then `SaveAs` once |
+
+### Dependency Coupling Risk — Web async / WASM initialization
+
+**Scenario:** embed a PDF viewer in a web page (Web, JavaScript).
+
+| Risk item | Description |
+|----------|------|
+| Synchronous use of async viewer | `new UIExtension.PDFUI({...})` initializes asynchronously (WASM + license); calling document APIs immediately fails intermittently. Mitigation: wait for the init callback/promise before use |
+| `libPath` mismatch | Wrong `libPath` causes WASM assets to 404 at runtime, not at build time. Mitigation: verify the deployed asset path in a real browser |
+| License SN/Key hard-coded | Shipping the license in client code leaks it. Mitigation: load from server-side config / env, not source |
+
+### Resource Leak Risk — Mobile handle release
+
+**Scenario:** render a page to a bitmap in a loop (Mobile, Android, Java).
+
+| Risk item | Description |
+|----------|------|
+| Page handle not closed | Each `doc.getPage()` handle must be `close()`d; leaking them grows native memory across iterations. Mitigation: close page in a `finally` block per iteration |
+| Document handle not closed | `PDFDoc` wraps native memory; skipping `doc.close()` leaks it. Mitigation: close in `finally` |
+| `Library.release()` called too early | Releasing the library while a document is still open crashes. Mitigation: release once, strictly after all documents/pages are closed |
+
+### Impact Scope Risk — product / platform mismatch
+
+**Scenario:** a task requests a product/language combination that the SDK does not support.
+
+| Risk item | Description |
+|----------|------|
+| Unsupported combination promised | e.g. Desktop `C` is Windows-only; Desktop `Objective-C` is macOS-only; Harmony OpenHarmony has no UI Extensions. Mitigation: confirm the combination against `sdk-matrix.md` before designing |
+| Cloud API assumed to have a local file system | Cloud API is a REST service — there is no local path; files are uploaded/downloaded over HTTP. Mitigation: redesign I/O around the REST contract, not local `File` APIs |

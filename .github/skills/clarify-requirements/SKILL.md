@@ -25,16 +25,15 @@ Before analyzing the programming requirement, you MUST establish the SDK environ
 
 ### 0.2 SDK Product Identification
 
-Determine the target SDK product from the following matrix (source: `.github/copilot-instructions.md`):
+Determine the target SDK product from the single source of truth:
+[`.github/sdk-references/sdk-matrix.md`](../../sdk-references/sdk-matrix.md).
 
-| Product | Platforms | Languages |
-|---------|-----------|-----------|
-| **PDF SDK for Desktop** | Windows (x86/x86_64), Linux (x86/x86_64, armv7, armv8), Mac (x64/arm64) | C++, Python, Java, Node.js, C#, C (Windows only), Go, Objective-C |
-| **PDF SDK for Mobile** | Android, iOS | Java (Android), Objective-C / Swift (iOS) |
-| **PDF SDK for Harmony** | HarmonyOS Next, OpenHarmony | ArkTS (C++ native core + ArkTS wrapper) |
-| **PDF SDK for Web** | Browser | JavaScript / TypeScript |
-| **Cloud API** | Cloud service | REST API (Embed Viewer API + PDF Services API) |
-| **Conversion SDK** | Windows (x86/x86_64), Linux (x86/x86_64, armv7, armv8) | C++, Python, Java, Node.js, C#, C, Go |
+The six products are: **PDF SDK for Desktop**, **PDF SDK for Mobile**, **PDF SDK for Harmony**,
+**PDF SDK for Web**, **Cloud API**, **Conversion SDK**.
+
+Do not restate the platform/language matrix here. Read `sdk-matrix.md` for the authoritative
+product × platform × architecture × language table, platform limits, and `foxit-sdk.config.json`
+enum values.
 
 **Identification priority:**
 1. If `foxit-sdk.config.json` specifies the product → use it directly (still validate against user's description).
@@ -55,8 +54,10 @@ If these can be inferred from context or config, state the inference and let the
 After identifying the SDK environment, assess whether the user's requirement can be fulfilled:
 
 1. **Consult SDK reference materials** in `.github/sdk-references/` to check if the requested functionality is supported.
-2. **Check the product capability matrix** for the target SDK product.
-3. **Evaluate against known SDK limitations**.
+2. **Confirm the product's platform/language support** against the single source of truth
+   [`.github/sdk-references/sdk-matrix.md`](../../sdk-references/sdk-matrix.md).
+3. **Evaluate against known SDK limitations** (the platform-limit notes in `sdk-matrix.md` and the
+   product `README.md` "样例风格注意事项").
 
 Output one of:
 - **✅ Feasible** — the SDK supports this functionality. Proceed to Phase 1.
@@ -116,14 +117,15 @@ After receiving the request, verify each item is known:
 - [ ] Acceptance criteria: how completion is verified (must be testable)
 - [ ] Scope impact: which modules, services, and data tables are involved
 
-## Trigger-Based Superpowers Assist (within Step 1 only)
+## Trigger-Based Superpowers Assist (within Step 1 only, optional)
 
 Use superpowers capability only as an aid; do not replace HACA Step 1 output format.
 
 - Trigger condition: requirements are ambiguous, user intent is divergent, or scope spans multiple independent subsystems.
 - Suggested action when triggered: you SHOULD selectively borrow `brainstorming`'s clarifying-question approach to improve coverage.
-- Local offline source: `.github/skills/superpowers/brainstorming/SKILL.md`
+- Expected install location (exists only after the user installs Superpowers; not bundled in this repo): `.github/skills/superpowers/brainstorming/SKILL.md`
 - **HACA context constraint**: In Step 1, only borrow brainstorming's clarifying-question capability. Do NOT execute brainstorming's full flow (design doc writing, git commit, spec review loop, writing-plans transition). Step 1's **batch questions rule takes precedence** over brainstorming's one-at-a-time rule.
+- **Availability check**: before using the capability, verify the expected install location exists. If it does not, record `Superpowers capability: Not Available (brainstorming)` and use the built-in HACA question template below instead.
 - Boundary: no implementation actions, no Step 2 design decisions.
 
 If triggered and used, record into the step output context: capability name, trigger reason, key findings, suggested action, adopted/rejected with reason.
@@ -179,7 +181,7 @@ Field mapping for `haca-workflow.md` Step 1 chapter:
 
 ## References
 
-- SDK product matrix -> `.github/copilot-instructions.md`
-- SDK reference materials -> `.github/sdk-references/`
+- SDK product matrix (single source of truth) -> `.github/sdk-references/sdk-matrix.md`
+- SDK reference materials -> `.github/sdk-references/` (per-product `.txt` extracts, indexed by each product `README.md`)
 - SDK config schema -> `.github/sdk-references/foxit-sdk-config-schema.md`
 - Detailed scenario examples -> `references/examples.md`

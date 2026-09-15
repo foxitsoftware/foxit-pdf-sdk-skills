@@ -202,9 +202,15 @@ Before starting Step 4:
 
 Step 4 executes the confirmed subtask plan and prepares acceptance-ready outputs. AI does not execute `git commit`; commits are performed by the human after acceptance.
 
-### 4.3 Step 4 + Superpowers (mandatory QC)
+### 4.3 Step 4 + quality controls (Superpowers optional)
 
-Capabilities may only be used inside the currently confirmed HACA step. Record triggered capability outcomes in the AI Decision Summary or evidence pack. Step 4 mandatory quality controls: `test-driven-development`, `verification-before-completion`, `systematic-debugging`, `requesting-code-review`, `receiving-code-review`.
+Capabilities may only be used inside the currently confirmed HACA step. Record triggered capability outcomes (or `Not Available`) in the AI Decision Summary or evidence pack. Step 4 quality controls:
+`test-driven-development`, `verification-before-completion`, `systematic-debugging`, `requesting-code-review`, `receiving-code-review`.
+
+When a Superpowers skill is missing at `.github/skills/superpowers/<name>/SKILL.md`, do not block:
+record `Superpowers capability: Not Available (<capability-name>)` and execute the built-in HACA
+equivalent (see `.github/skills/superpowers/README.md`). Never fabricate capability execution evidence
+for a skill that was not actually loaded.
 
 ### 4.3.1 SDK Code Quality Requirements (mandatory)
 

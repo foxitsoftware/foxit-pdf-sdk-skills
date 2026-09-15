@@ -154,14 +154,22 @@ Identify these four dependency types while splitting:
 | Test dependency | T2 tests depend on T1 test infrastructure | T1 builds mock, T2 uses mock |
 | Config dependency | T2 depends on config introduced in T1 | T1 adds flag, T2 reads flag |
 
-## Trigger-Based Superpowers Assist (within Step 3 only)
+## Trigger-Based Superpowers Assist (within Step 3 only, optional)
 
-Use superpowers capabilities to make decomposition directly executable in Step 4.
+Use superpowers capabilities only as an aid when they are available; the standard HACA decomposition
+contract below is self-sufficient and always runs.
 
-- Trigger condition A: you MUST use `writing-plans` when decomposition needs a persistent execution plan for worker agents.
-- Trigger condition B: you MUST use `using-git-worktrees` when isolated execution workspace is needed.
-- Local offline source A: `.github/skills/superpowers/writing-plans/SKILL.md`
-- Local offline source B: `.github/skills/superpowers/using-git-worktrees/SKILL.md`
+- Trigger condition A: you SHOULD use `writing-plans` when decomposition needs a persistent execution plan for worker agents.
+- Trigger condition B: you SHOULD use `using-git-worktrees` when isolated execution workspace is needed.
+- Expected install location A (exists only after the user installs Superpowers; not bundled in this repo): `.github/skills/superpowers/writing-plans/SKILL.md`
+- Expected install location B (exists only after the user installs Superpowers; not bundled in this repo): `.github/skills/superpowers/using-git-worktrees/SKILL.md`
+
+**Availability (mandatory check):** before using a Superpowers capability, verify its `SKILL.md`
+exists at the expected install location. If it does not exist:
+
+1. Record `Superpowers capability: Not Available (<capability-name>)` in the step output.
+2. Continue with the built-in HACA decomposition flow (subtask contract + execution order).
+3. Do not fabricate plan/worktree artifacts for a skill that was not actually loaded.
 
 Boundary:
 - Keep HACA subtask granularity and output contract unchanged.
