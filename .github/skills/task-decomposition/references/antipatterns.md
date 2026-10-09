@@ -96,3 +96,44 @@ Execution order:
 - T4 and T2 can run in parallel (no dependency)
 - T5 depends on both T3 and T4
 ```
+
+---
+
+## Correct Decomposition Example: Foxit Desktop C++ PDF Task
+
+**Scenario:** add a text watermark to every page of a PDF
+(Desktop, Windows, C++; strict SDK lifecycle: `Initialize` → `PDFDoc` → `SaveAs` → `Release`)
+
+```
+T1: [AI] feat(sdk): initialize Foxit library, open and save a PDF round-trip (verify return codes)
+T2: [AI] feat(sdk): add watermark to a single page with given text, angle, opacity
+T3: [AI] feat(sdk): apply watermark to all pages and save as a new file
+T4: [AI] test(sdk): verify output opens, watermark present on all pages, no handle leak
+
+Execution order:
+- T1 -> T2 -> T3 (strict lifecycle dependency — do not reorder)
+- T4 depends on T2 (and T3 for all-page assertions)
+```
+
+**Why this ordering:** T1 proves the SDK lifecycle works before any feature logic; skipping the
+round-trip means a broken `Initialize`/`SaveAs` only surfaces after feature code is written.
+
+## Anti-Pattern 6: Sheet-Metal Lifecycle (Foxit domain)
+
+**Problem:** initializing / releasing the Foxit library or document/page handles multiple times in
+different subtasks, or ignoring `Initialize` return codes.
+
+```
+[X] Wrong — each subtask re-initializes and releases:
+  T1: feat(sdk): initialize library and open PDF
+  T2: feat(sdk): re-initialize library to add watermark (Library::Initialize called again)
+  T3: feat(sdk): open same PDF again, save, and release (duplicate open)
+
+[OK] Correct — lifecycle owned by one flow:
+  T1: feat(sdk): initialize library once, open PDF, return doc handle
+  T2: feat(sdk): add watermarks to all pages (reuses the handle)
+  T3: feat(sdk): save as new file and release library once
+```
+
+**Rule of thumb:** the SDK lifecycle (`Initialize`/`Release`, document/page open/close) should be a
+single concern. If the AI proposes a second `Initialize` or `Release`, flag it during Review.

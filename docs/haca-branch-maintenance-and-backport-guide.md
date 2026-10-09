@@ -61,8 +61,8 @@ HACA 把仓库里的相关配置拆成 **治理层、编排层、技能层** 三
 
 ---
 
-## 多平台配置：以 `.github` 为主
+## 单一配置源：以 `.github` 为主
 
-HACA 在 GitHub / Cursor / OpenCode 等多套目录下都有对应文件。**主编辑源只有一处：`.github/`**，覆盖治理层、编排层、技能层及 prompts 等受管路径（与 [scripts/README.md](../scripts/README.md) 所列主编辑源一致；若仓库另有 `.github/scripts/` 亦同）。**凡改动上述主编辑源中的文件**，都应先在 `.github` 中修改并运行同步脚本，将内容**派发到 `.cursor/` 与 `.opencode/`**，勿在三个位置各改一份导致漂移。
+本仓库已收敛为 **GitHub Copilot-only**：HACA 配置只有一套目录 **`.github/`**，覆盖治理层、编排层、技能层及 prompts 等受管路径（与 [scripts/README.md](../scripts/README.md) 所列受管路径一致；若仓库另有 `.github/scripts/` 亦同）。此前的 `.cursor/`、`.opencode/` 多平台镜像目录及其同步机制**已移除**，`opencode.json`、`tool_mapping_template.json` 等文件也已删除。**凡改动受管路径中的文件**，都应在 `.github/` 中修改，并运行 `scripts/sync_haca_customizations.py --check` 校验配置树一致性（该脚本现为只读校验器，不再向任何平台派发）。
 
-同步命令、受管路径与校验说明见：[scripts/README.md](../scripts/README.md)。
+校验命令、受管路径与说明见：[scripts/README.md](../scripts/README.md)。

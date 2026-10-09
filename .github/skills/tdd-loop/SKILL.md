@@ -100,22 +100,33 @@ Before proceeding to each phase, verify:
 - If requirements changed, roll back to HACA Step 1.
 - If the subtask qualifies for the documented Step 4 exception, record `TDD Evidence: N/A` with justification and minimum regression checks.
 
-## Mandatory Superpowers Controls (within Step 4 only)
+## Mandatory Quality Controls (within Step 4 only)
 
-In Step 4, use these capabilities as mandatory quality controls to improve code quality:
+In Step 4, these five quality controls are mandatory. Each one is either executed via its Superpowers
+skill (when installed) or via the built-in equivalent defined in this skill and the SDK Code Quality
+Chain above — never skipped.
 
-- `test-driven-development`: enforce failing-test-first execution for behavior-changing work.
-- `verification-before-completion`: require fresh command evidence before completion claims.
-- `systematic-debugging`: require root-cause-first investigation before attempting fixes.
-- `requesting-code-review`: require structured review before completion.
-- `receiving-code-review`: require technical evaluation and feedback handling before accepting review outcomes.
+| Control | Superpowers skill | Built-in equivalent when the skill is absent |
+|---------|-------------------|---------------------------------------------|
+| failing-test-first | `test-driven-development` | The Red-Green-Refactor execution rules in this skill |
+| fresh completion evidence | `verification-before-completion` | Q1 Compilation Verification + Q2 Runtime Verification |
+| root-cause-first fixes | `systematic-debugging` | The exception-handling rollback rules in this skill |
+| structured pre-completion review | `requesting-code-review` | The review request evidence field in the execution chain |
+| feedback handling | `receiving-code-review` | The review reception evidence field in the execution chain |
 
-Local offline sources:
+Expected install locations (each exists only after the user installs Superpowers; none are bundled in this repo):
 - `.github/skills/superpowers/test-driven-development/SKILL.md`
 - `.github/skills/superpowers/verification-before-completion/SKILL.md`
 - `.github/skills/superpowers/systematic-debugging/SKILL.md`
 - `.github/skills/superpowers/requesting-code-review/SKILL.md`
 - `.github/skills/superpowers/receiving-code-review/SKILL.md`
+
+**Availability (mandatory check):** before invoking a capability, verify its `SKILL.md` exists at the
+corresponding expected install location. If it does not exist, record
+`Superpowers capability: Not Available (<capability-name>)` in the evidence pack together with the
+built-in equivalent that was executed instead. Do not fabricate capability execution evidence for a
+skill that was not actually loaded. A documented `Not Available` record plus the built-in equivalent
+satisfies the Evidence Gate requirement for that capability.
 
 Required execution chain per subtask:
 1. Red-Green-Refactor or `TDD Evidence: N/A` with justification for docs-only or non-behavior-changing work
@@ -131,7 +142,9 @@ Required execution chain per subtask:
    - If the final gate passes, output exactly `All subtasks are complete, pending human verification before human-led git commit.`.
    - After outputting the completion prompt, wait for human follow-up instructions.
 
-For mandatory Step 4 capabilities, record in the evidence pack: capability name, trigger reason, key findings, suggested action, adopted/rejected with reason.
+For each quality control, record in the evidence pack: control name, Superpowers skill used or
+`Not Available` with the built-in equivalent, trigger reason, key findings, suggested action,
+adopted/rejected with reason.
 
 ## Output format
 

@@ -84,8 +84,9 @@ Action: <specific repair instruction>
 - Test evidence: Red-Green-Refactor records and regression checks (required in Step 4; Step 1-3 may be N/A)
 - SDK quality evidence (Step 4 mandatory): compilation pass, runtime correctness, SDK API correctness, SDK lifecycle management
 - Decision evidence: uncovered scenarios and decision owner
-- Capability execution evidence (when superpowers is used): capability name, capability source path, trigger reason, key findings, suggested action, adopted/rejected decision with rationale
-- Step 4 mandatory capability evidence: execution evidence for `test-driven-development`, `verification-before-completion`, `systematic-debugging`, `requesting-code-review`, and `receiving-code-review`; if a capability is not triggered in the subtask, record `Not Triggered` evidence with rationale, or provide an explicitly approved exception
+- Capability execution evidence (when a superpowers capability is used): capability name, capability source path, trigger reason, key findings, suggested action, adopted/rejected decision with rationale
+- Superpowers availability evidence (always, when a step references a superpowers capability): either the capability source path that was loaded, or `Superpowers capability: Not Available (<capability-name>)` plus the built-in HACA equivalent that was executed instead
+- Step 4 quality-control evidence: for each of `test-driven-development`, `verification-before-completion`, `systematic-debugging`, `requesting-code-review`, and `receiving-code-review`, either execution evidence from the capability or `Not Available`/`Not Triggered` evidence with rationale, or an explicitly approved exception
 - Step 4 completion prompt evidence: exact completion prompt text and output timestamp
 
 ## Gate rules
@@ -98,12 +99,13 @@ Action: <specific repair instruction>
 - Non-testable acceptance criteria -> return to Step 1.
 - Risk entries missing trigger-impact-mitigation format -> return to Step 2.
 - Subtask boundaries unclear or dependency conflicts -> return to Step 3.
-- If superpowers is used but capability execution evidence is missing -> block step transition.
-- If superpowers is used but capability source path is not under `.github/skills/superpowers/` -> block step transition.
+- If a superpowers capability was invoked but its execution evidence is missing -> block step transition.
+- If a superpowers capability was invoked but its loaded source path is not under `.github/skills/superpowers/` -> block step transition.
+- If a superpowers capability is unavailable, a `Superpowers capability: Not Available (<capability-name>)` record plus the built-in HACA equivalent is sufficient evidence and must NOT block the transition.
 - In Step 1-3 transitions, test evidence may be `N/A` and is non-blocking.
 - In Step 4 and before each subtask completion handoff, test evidence is mandatory. For docs-only or non-behavior-changing subtasks, `TDD Evidence: N/A` is acceptable when justification and minimum regression checks are provided.
 - In Step 4, SDK quality evidence (compilation pass, runtime correctness) is mandatory for all code-producing subtasks. Missing compilation or runtime evidence -> block subtask completion.
-- In Step 4 and before each subtask completion handoff, missing evidence for any mandatory capability (`test-driven-development`, `verification-before-completion`, `systematic-debugging`, `requesting-code-review`, `receiving-code-review`) -> block progression unless `Not Triggered` evidence or an explicit approved exception is documented.
+- In Step 4 and before each subtask completion handoff, missing evidence for any quality control (`test-driven-development`, `verification-before-completion`, `systematic-debugging`, `requesting-code-review`, `receiving-code-review`) -> block progression unless `Not Available`/`Not Triggered` evidence or an explicit approved exception is documented.
 - In Step 4 final gate, if completion prompt text is not exactly `All subtasks are complete, pending human verification before human-led git commit.` -> block Step 4 completion.
 - Missing execution evidence in Step 4 -> block progression.
 
