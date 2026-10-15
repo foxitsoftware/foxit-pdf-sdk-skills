@@ -22,7 +22,8 @@ HACA-SDK is a Foxit PDF SDK programming assistant configuration built on the Hum
 ├── docs/                    # Design notes and workflow documentation
 ├── scripts/                 # HACA validation scripts
 │   └── sync_haca_customizations.py
-└── README.md
+├── README.md                # English README (default)
+└── README.zh-CN.md          # Chinese README
 ```
 
 The `.github/` directory contains the primary GitHub Copilot configuration and is the source of truth for the HACA workflow.
@@ -31,7 +32,7 @@ The `.github/` directory contains the primary GitHub Copilot configuration and i
 
 This repository currently supports GitHub Copilot.
 
-The Foxit SDK product references cover Desktop, Mobile, Harmony, Web, Cloud API, and Conversion SDK scenarios. See [.github/sdk-references/README.md](.github/sdk-references/README.md) for the reference material layout.
+The Foxit SDK product references cover Desktop, Mobile, Web, Cloud API, and Conversion SDK scenarios. See [.github/sdk-references/README.md](.github/sdk-references/README.md) for the reference material layout.
 
 ## Setup
 
@@ -55,15 +56,16 @@ Users must download the Superpowers skills from their official upstream source
 
 Installation commands per harness (upstream-documented):
 
-| Harness | Command / entry point |
-|---------|----------------------|
+
+| Harness            | Command / entry point                                                                                                           |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | GitHub Copilot CLI | `copilot plugin marketplace add obra/superpowers-marketplace` then `copilot plugin install superpowers@superpowers-marketplace` |
-| Claude Code | `/plugin install superpowers@claude-plugins-official` |
-| Cursor | `/add-plugin superpowers` |
-| Codex CLI | `/plugins` → search `superpowers` → Install Plugin |
-| OpenCode | Fetch and follow `https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md` |
-| Gemini CLI | `gemini extensions install https://github.com/obra/superpowers` |
-| Other harnesses | See the "Installation" section of the upstream README |
+| Claude Code        | `/plugin install superpowers@claude-plugins-official`                                                                           |
+| Cursor             | `/add-plugin superpowers`                                                                                                       |
+| Codex CLI          | `/plugins` → search `superpowers` → Install Plugin                                                                            |
+| OpenCode           | Fetch and follow `https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md`                      |
+| Gemini CLI         | `gemini extensions install https://github.com/obra/superpowers`                                                                 |
+| Other harnesses    | See the "Installation" section of the upstream README                                                                           |
 
 For example, after installation this directory may contain skills such as:
 
@@ -110,14 +112,15 @@ Each step requires explicit human confirmation before the workflow advances. The
 
 ## Skills
 
-| Skill | Purpose |
-|-------|---------|
+
+| Skill                  | Purpose                                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
 | `clarify-requirements` | Step 1 — Identify the target SDK product, platform, architecture, and language; clarify task requirements. |
-| `risk-identification` | Step 2 — Consult SDK references, compare solutions, and identify risks. |
-| `task-decomposition` | Step 3 — Split the confirmed solution into code-review-friendly subtasks and dependencies. |
-| `tdd-loop` | Step 4 — Enforce Red-Green-Refactor and compilation/runtime correctness. |
-| `evidence-gate` | Maintain a single evidence pack and block step transitions when evidence is incomplete. |
-| `commit-message-rules` | Internal rules for standardized commit messages (templates, length checks, validators). |
+| `risk-identification`  | Step 2 — Consult SDK references, compare solutions, and identify risks.                                    |
+| `task-decomposition`   | Step 3 — Split the confirmed solution into code-review-friendly subtasks and dependencies.                 |
+| `tdd-loop`             | Step 4 — Enforce Red-Green-Refactor and compilation/runtime correctness.                                   |
+| `evidence-gate`        | Maintain a single evidence pack and block step transitions when evidence is incomplete.                     |
+| `commit-message-rules` | Internal rules for standardized commit messages (templates, length checks, validators).                     |
 
 ## Documentation
 

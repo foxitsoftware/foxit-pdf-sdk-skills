@@ -22,7 +22,8 @@ HACA-SDK 是基于人机协作编程（HACA）工作流构建的福昕 PDF SDK �
 ├── docs/                    # 设计说明与工作流文档
 ├── scripts/                 # HACA 校验脚本
 │   └── sync_haca_customizations.py
-└── README.md
+├── README.md                # 英文版 README（默认）
+└── README.zh-CN.md          # 中文版 README
 ```
 
 `.github/` 目录包含 GitHub Copilot 的主配置，是 HACA 工作流的唯一事实来源（source of truth）。
